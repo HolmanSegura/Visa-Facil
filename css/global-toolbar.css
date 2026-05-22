@@ -1,0 +1,200 @@
+/* ============================================================
+   GLOBAL-TOOLBAR.CSS
+   Barra superior oscura con logo, buscador, atajos y perfil.
+   ============================================================ */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-shell-fondo);
+  padding: 0 var(--esp-3);
+  color: var(--color-shell-icono);
+  gap: var(--esp-2);
+}
+
+/* --- Logo (sprocket) --- */
+.toolbar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ancho-sidebar);
+  margin-left: calc(var(--esp-3) * -1); /* alinea con sidebar */
+  height: var(--alto-toolbar);
+  flex-shrink: 0;
+}
+
+/* --- Buscador global --- */
+.toolbar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 480px;
+  height: 28px;
+  background-color: var(--color-shell-fondo-2);
+  border-radius: var(--radio-md);
+  padding: 0 var(--esp-3);
+  transition: background-color var(--trans-rapida);
+}
+
+.toolbar__search:focus-within {
+  background-color: var(--color-shell-fondo);
+  box-shadow: inset 0 0 0 1px var(--color-acento);
+}
+
+.toolbar__search-icon {
+  color: var(--color-shell-icono);
+  margin-right: var(--esp-2);
+  opacity: 0.7;
+}
+
+.toolbar__search-input {
+  flex: 1;
+  height: 100%;
+  font-size: var(--font-tam-base);
+  color: var(--color-texto-blanco);
+}
+
+.toolbar__search-input::placeholder {
+  color: var(--color-shell-icono);
+  opacity: 0.65;
+}
+
+.toolbar__search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Atajo Ctrl+K visualmente */
+.toolbar__search-keys {
+  display: flex;
+  gap: 4px;
+  margin-left: var(--esp-2);
+}
+
+.toolbar__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: var(--font-peso-medio);
+  font-family: var(--font-familia);
+  color: var(--color-shell-icono);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radio-sm);
+}
+
+/* --- Botón de creación rápida (+) --- */
+.toolbar__quick-create {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-shell-fondo-2);
+  color: var(--color-shell-icono);
+  border-radius: var(--radio-md);
+  flex-shrink: 0;
+  transition: background-color var(--trans-rapida);
+}
+
+.toolbar__quick-create:hover {
+  background: var(--color-acento);
+  color: #fff;
+}
+
+/* --- Cluster de iconos a la derecha --- */
+.toolbar__icons {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+  margin-left: auto;
+}
+
+.toolbar__icon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--color-shell-icono);
+  transition: background-color var(--trans-rapida), color var(--trans-rapida);
+}
+
+.toolbar__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-shell-icono-hov);
+}
+
+/* Badge con contador rojo sobre el icono de notificaciones */
+.toolbar__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background-color: var(--color-badge);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--font-peso-semibold);
+  line-height: 16px;
+  text-align: center;
+  border-radius: var(--radio-pill);
+  border: 2px solid var(--color-shell-fondo);
+}
+
+/* --- Divisor entre iconos y perfil --- */
+.toolbar__divider {
+  width: 1px;
+  height: 22px;
+  background-color: var(--color-shell-divisor);
+  margin: 0 var(--esp-2);
+}
+
+/* --- Perfil de usuario --- */
+.toolbar__profile {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: 0 var(--esp-3);
+  height: 32px;
+  border-radius: var(--radio-md);
+  color: var(--color-shell-icono);
+  transition: background-color var(--trans-rapida);
+}
+
+.toolbar__profile:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.toolbar__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.toolbar__profile-name {
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  color: #fff;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .toolbar__search-keys,
+  .toolbar__profile-name {
+    display: none;
+  }
+  .toolbar__icon-btn:not(.toolbar__icon-btn--notif) {
+    display: none;
+  }
+}

@@ -1,0 +1,140 @@
+/* ============================================================
+   SIDEBAR.CSS
+   Navegación vertical lateral. Por defecto colapsada (solo
+   iconos), se expande al hacer click en el botón de toggle.
+   ============================================================ */
+
+.sidebar {
+  background-color: var(--color-shell-fondo);
+  color: var(--color-shell-icono);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* (Removido el "diente" decorativo: ya no se ve porque el
+   panel principal flota con margen 24px) */
+
+/* --- Flechas de scroll arriba/abajo (decorativas) --- */
+.sidebar__scroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 24px;
+  color: var(--color-shell-icono);
+  opacity: 0;
+  transition: opacity var(--trans-rapida);
+}
+
+.sidebar:hover .sidebar__scroll-btn {
+  opacity: 0.4;
+}
+
+/* --- Lista de ítems --- */
+.sidebar__nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar__list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--esp-1) 0;
+}
+
+.sidebar__item {
+  position: relative;
+  padding: 0 var(--esp-2);
+}
+
+/* Botón principal de cada ítem */
+.sidebar__btn {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--esp-3);
+  color: var(--color-shell-icono);
+  border-radius: var(--radio-md);
+  transition:
+    background-color var(--trans-rapida),
+    color var(--trans-rapida);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar__btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-shell-icono-hov);
+}
+
+.sidebar__btn svg {
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+/* Etiqueta de texto: oculta cuando el sidebar está colapsado */
+.sidebar__label {
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  opacity: 1;
+  transition: opacity var(--trans-rapida);
+}
+
+.sidebar--colapsado .sidebar__label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Item activo: fondo destacado teal y barra lateral acento */
+.sidebar__item--activo .sidebar__btn {
+  background-color: var(--color-sidebar-activo-bg);
+  color: #fff;
+}
+
+.sidebar__item--activo::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  background-color: var(--color-acento);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+}
+
+/* Separadores entre grupos */
+.sidebar__divider {
+  height: 1px;
+  background-color: var(--color-shell-divisor);
+  margin: var(--esp-2) var(--esp-3);
+  opacity: 0.6;
+}
+
+/* --- Botón de toggle (colapsar/expandir) --- */
+.sidebar__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: var(--esp-2) auto;
+  color: var(--color-shell-icono);
+  border-radius: var(--radio-md);
+  transition: background-color var(--trans-rapida), transform var(--trans-media);
+  flex-shrink: 0;
+}
+
+.sidebar__toggle:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Cuando está expandido, la flecha apunta a la izquierda */
+.sidebar:not(.sidebar--colapsado) .sidebar__toggle svg {
+  transform: scaleX(-1);
+}

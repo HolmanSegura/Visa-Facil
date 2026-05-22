@@ -1,0 +1,297 @@
+/* ============================================================
+   COMPONENTS.CSS
+   Componentes reutilizables: botones (primario, ghost, icon,
+   link), badges de estado con dot de color, modal y toast.
+   ============================================================ */
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  height: 32px;
+  padding: 0 var(--esp-3);
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  font-family: inherit;
+  border-radius: var(--radio-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--trans-rapida),
+    color var(--trans-rapida),
+    border-color var(--trans-rapida),
+    box-shadow var(--trans-rapida);
+}
+
+.btn svg {
+  fill: currentColor;
+}
+
+/* Primario: fondo teal sólido */
+.btn--primario {
+  background-color: var(--color-btn-primario);
+  color: #fff;
+}
+
+.btn--primario:hover:not(:disabled) {
+  background-color: var(--color-btn-primario-hov);
+}
+
+.btn--primario:disabled {
+  background-color: var(--color-btn-primario-dis);
+  color: #fff;
+  cursor: not-allowed;
+}
+
+/* Ghost: transparente con hover suave */
+.btn--ghost {
+  background: transparent;
+  color: var(--color-texto);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: var(--color-fondo-suave);
+}
+
+.btn--ghost:disabled {
+  color: var(--color-texto-debil);
+  cursor: not-allowed;
+}
+
+.btn--ghost.btn--activo {
+  background-color: var(--color-fondo-suave);
+  font-weight: var(--font-peso-semibold);
+}
+
+/* Icon-only: cuadrado pequeño */
+.btn--icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-texto-suave);
+  border-radius: var(--radio-md);
+}
+
+.btn--icon:hover:not(:disabled) {
+  background-color: var(--color-fondo-suave);
+  color: var(--color-texto);
+}
+
+/* Variante con contorno: fondo blanco + borde (para el kebab de cabecera) */
+.btn--bordered {
+  background-color: #fff;
+  border: 1px solid var(--color-borde);
+}
+
+.btn--bordered:hover:not(:disabled) {
+  background-color: var(--color-fondo-suave);
+  border-color: var(--color-borde-fuerte);
+}
+
+/* Link: solo texto con color de acento */
+.btn--link {
+  background: transparent;
+  padding: 0 var(--esp-2);
+  color: var(--color-texto-link);
+  font-weight: var(--font-peso-semibold);
+}
+
+.btn--link:hover {
+  color: var(--color-texto-link-hover);
+  text-decoration: underline;
+}
+
+/* Mutado: estilo apagado/gris para acciones secundarias o sin permisos */
+.btn--mutado {
+  background-color: #eaf0f6;
+  color: #7c98b6;
+}
+
+.btn--mutado:hover:not(:disabled) {
+  background-color: #dbe4ee;
+  color: #516f90;
+}
+
+.btn--mutado:disabled {
+  background-color: #eaf0f6;
+  color: #b0c1d4;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   BADGE DE ESTADO (dot + texto)
+   ============================================================ */
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-2);
+  color: var(--color-texto);
+}
+
+.estado-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-estado-borrador);
+  flex-shrink: 0;
+}
+
+.estado-dot--publicado { background-color: var(--color-estado-publicado); }
+.estado-dot--aprobado  { background-color: var(--color-estado-aprobado); }
+.estado-dot--vencido   { background-color: var(--color-estado-vencido); }
+.estado-dot--rechazado { background-color: var(--color-estado-vencido); }
+.estado-dot--borrador  { background-color: var(--color-estado-borrador); }
+.estado-dot--revision  { background-color: var(--color-estado-revision); }
+
+/* ============================================================
+   MODAL (para "Crear cotización" simulado, opcional)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(45, 62, 80, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.modal-overlay.visible {
+  display: flex;
+}
+
+.modal {
+  background: var(--color-fondo-panel);
+  border-radius: var(--radio-lg);
+  width: 90%;
+  max-width: 480px;
+  box-shadow: var(--sombra-lg);
+  overflow: hidden;
+}
+
+.modal__header {
+  padding: var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal__titulo {
+  font-size: var(--font-tam-lg);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto);
+}
+
+.modal__body {
+  padding: var(--esp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+}
+
+.modal__footer {
+  padding: var(--esp-3) var(--esp-4);
+  border-top: 1px solid var(--color-borde);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+.modal-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+}
+
+.modal-form-field label {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  font-weight: var(--font-peso-medio);
+}
+
+.modal-form-field input,
+.modal-form-field select {
+  height: 32px;
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  font-size: var(--font-tam-md);
+  color: var(--color-texto);
+  background: var(--color-fondo-panel);
+  transition: border-color var(--trans-rapida), box-shadow var(--trans-rapida);
+}
+
+.modal-form-field input:focus,
+.modal-form-field select:focus {
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 3px var(--color-acento-claro);
+}
+
+/* ============================================================
+   TOAST (notificación inferior)
+   ============================================================ */
+.toast {
+  position: fixed;
+  bottom: var(--esp-5);
+  right: var(--esp-5);
+  background: #2d3e50;
+  color: #fff;
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--radio-md);
+  box-shadow: var(--sombra-lg);
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  z-index: var(--z-toast);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--trans-media), transform var(--trans-media);
+  pointer-events: none;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   CONFIGURACIÓN DE TABLA: altura de filas y zebra striping
+   ============================================================ */
+.tabla-cotizaciones.tabla--compacto td { padding: 4px var(--esp-3); font-size: 12px; }
+.tabla-cotizaciones.tabla--default  td { padding: 10px var(--esp-3); }
+.tabla-cotizaciones.tabla--comodo   td { padding: 16px var(--esp-3); font-size: 14px; }
+
+.tabla-cotizaciones.tabla--zebra tbody tr:nth-child(even) {
+  background-color: #f7fafc;
+}
+
+/* ============================================================
+   TOAST notificación
+   ============================================================ */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2d3e50;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--radio-pill);
+  font-size: var(--font-tam-md);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  pointer-events: none;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}

@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Módulo de Caja - registro de gastos e ingresos de operación diaria" />
+  <title>Caja | Todos los movimientos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/global-toolbar.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/main-content.css" />
+  <link rel="stylesheet" href="css/popovers.css" />
+  <link rel="stylesheet" href="css/caja.css" />
+</head>
+
+<body>
+
+  <!-- ============================================
+       BARRA SUPERIOR GLOBAL
+       ============================================ -->
+  <header class="toolbar" role="banner">
+    <a href="#" class="toolbar__logo" aria-label="Ir al inicio">
+      <svg viewBox="0 0 32 32" width="22" height="22">
+        <path fill="#00a4bd"
+          d="M22 12.5V8.7a2.6 2.6 0 1 0-2 0v3.8a8 8 0 0 0-4.2 1.9L7.5 8a2.7 2.7 0 1 0-1.1 1.9l8.3 6.4a8 8 0 1 0 5.1-3.5l1.2-.3Zm-2.5 11.7a3.7 3.7 0 1 1 0-7.4 3.7 3.7 0 0 1 0 7.4Z" />
+      </svg>
+    </a>
+    <div class="toolbar__search">
+      <svg class="toolbar__search-icon" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor"
+          d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+      </svg>
+      <input type="search" class="toolbar__search-input" placeholder="Buscar" aria-label="Buscar" />
+      <div class="toolbar__search-keys"><kbd class="toolbar__key">Ctrl</kbd><kbd class="toolbar__key">K</kbd></div>
+    </div>
+    <button class="toolbar__quick-create"><svg viewBox="0 0 12 12" width="12" height="12">
+        <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+      </svg></button>
+    <nav class="toolbar__icons">
+      <button class="toolbar__icon-btn"><svg viewBox="0 0 32 32" width="16" height="16">
+          <path fill="currentColor"
+            d="M16 2a14 14 0 1 0 0 28 14 14 0 0 0 0-28Zm0 26a12 12 0 1 1 0-24 12 12 0 0 1 0 24Zm1-21v14a1 1 0 1 1-2 0V7a1 1 0 1 1 2 0Z" />
+        </svg></button>
+      <button class="toolbar__icon-btn"><svg viewBox="0 0 24 24" width="14" height="14">
+          <path fill="currentColor"
+            d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.2c1.1.4 2.3.6 3.5.6a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.2.2 2.4.6 3.5a1 1 0 0 1-.3 1l-2.2 2.3Z" />
+        </svg></button>
+      <button class="toolbar__icon-btn"><svg viewBox="0 0 32 32" width="16" height="16">
+          <path fill="currentColor"
+            d="M4 4h24l-1 8a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0L4 4Zm2 11.5a5 5 0 0 0 4-2 5 5 0 0 0 8 0 5 5 0 0 0 8 0 5 5 0 0 0 4 2V28H6V15.5Zm4 4.5h6v8h-6v-8Z" />
+        </svg></button>
+      <button class="toolbar__icon-btn"><svg viewBox="0 0 32 32" width="16" height="16">
+          <path fill="currentColor"
+            d="M16 2a14 14 0 1 0 0 28 14 14 0 0 0 0-28Zm0 26a12 12 0 1 1 0-24 12 12 0 0 1 0 24Zm-1-9.5c0-2 1-3 2.5-4 1-.6 1.5-1 1.5-2a2 2 0 0 0-4 0H13a4 4 0 1 1 7 2.6c-1 .8-2 1.4-2 3v.4h-3v-.4ZM16 22.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z" />
+        </svg></button>
+      <button class="toolbar__icon-btn"><svg viewBox="0 0 32 32" width="16" height="16">
+          <path fill="currentColor"
+            d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+        </svg></button>
+      <button class="toolbar__icon-btn toolbar__icon-btn--notif"><svg viewBox="0 0 32 32" width="16" height="16">
+          <path fill="currentColor"
+            d="m15.98,3.84h0c3.42,0,6.21,2.79,6.21,6.21v9.24c0,.57.25,1.12.68,1.5l1.86,1.63H7.23l1.87-1.65c.43-.38.68-.93.68-1.5v-9.23c0-3.42,2.79-6.21,6.21-6.21m0-2h0c-4.53,0-8.21,3.67-8.21,8.21v9.23l-3.75,3.31c-.42.42-.43,1.1,0,1.52.19.19.44.3.71.32h22.56c.59-.03,1.05-.54,1.02-1.13-.01-.27-.13-.52-.32-.71h-.04l-3.75-3.3v-9.24c0-4.53-3.68-8.21-8.21-8.21h0Z" />
+        </svg><span class="toolbar__badge">42</span></button>
+    </nav>
+    <div class="toolbar__divider"></div>
+    <button class="toolbar__profile">
+      <span class="toolbar__avatar"><svg viewBox="0 0 32 32" width="20" height="20">
+          <circle cx="16" cy="16" r="16" fill="#cbd5e0" />
+          <circle cx="16" cy="13" r="5" fill="#fff" />
+          <path fill="#fff" d="M6 28a10 10 0 0 1 20 0v2H6v-2Z" />
+        </svg></span>
+      <span class="toolbar__profile-name">Oblicua</span>
+      <svg viewBox="0 0 8 8" width="8" height="8">
+        <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+      </svg>
+    </button>
+  </header>
+
+  <!-- ============================================
+       SIDEBAR
+       ============================================ -->
+  <aside id="sidebar" class="sidebar sidebar--colapsado">
+    <button class="sidebar__scroll-btn"><svg viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M12 8 4 16h16L12 8Z" />
+      </svg></button>
+    <nav class="sidebar__nav">
+      <ul class="sidebar__list">
+        <li class="sidebar__item"><button class="sidebar__btn" title="Marcadores"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor" d="M7 2h18v28l-9-7-9 7V2Z" />
+            </svg><span class="sidebar__label">Marcadores</span></button></li>
+        <li class="sidebar__divider"></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="CRM"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor"
+                d="M5 4h22v24H5V4Zm2 2v20h18V6H7Zm3 3h4v2h-4V9Zm0 5h4v2h-4v-2Zm0 5h4v2h-4v-2Zm9-3a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm-4 7a4 4 0 0 1 8 0v1h-8v-1Z" />
+            </svg><span class="sidebar__label">CRM</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Marketing"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor" d="M2 14 22 4l4 16L4 22 2 14Zm6 11a4 4 0 1 0 8 0v-2H8v2Z" />
+            </svg><span class="sidebar__label">Marketing</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Contenido"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor"
+                d="M4 4h24v24H4V4Zm2 2v6h20V6H6Zm0 8v12h20V14H6Zm2 2h16v2H8v-2Zm0 4h10v2H8v-2Z" />
+            </svg><span class="sidebar__label">Contenido</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Ventas"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor" d="M2 4h28v6H2V4Zm3 8h22v6H5v-6Zm3 8h16v8H8v-8Z" />
+            </svg><span class="sidebar__label">Ventas</span></button></li>
+        <li class="sidebar__item sidebar__item--activo"><button class="sidebar__btn" title="Comercio"
+            aria-current="page"><svg viewBox="0 0 32 32" width="18" height="18">
+              <path fill="currentColor"
+                d="M5 6h20a3 3 0 0 1 3 3v2H5a1 1 0 0 0 0 2h22v3h-6a3 3 0 0 0-3 3v2a3 3 0 0 0 3 3h6v3a3 3 0 0 1-3 3H5a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5Z" />
+            </svg><span class="sidebar__label">Comercio</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Servicio"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor"
+                d="M3 28h26l-1-4a3 3 0 0 0-3-2H7a3 3 0 0 0-3 2l-1 4Zm23-10a10 10 0 0 0-20 0h2a8 8 0 0 1 16 0h2ZM14 4h4v4h-4V4Z" />
+            </svg><span class="sidebar__label">Servicio</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Datos"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor" d="M16 3c-6 0-11 2-11 5v16c0 3 5 5 11 5s11-2 11-5V8c0-3-5-5-11-5Z" />
+            </svg><span class="sidebar__label">Datos</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Automatización"><svg viewBox="0 0 32 32"
+              width="18" height="18">
+              <path fill="currentColor"
+                d="M11 2h10v8H11V2Zm-9 18h8v8H2v-8Zm20 0h8v8h-8v-8ZM6 15h20v3H6v-3Zm9-5h2v6h-2v-6Z" />
+            </svg><span class="sidebar__label">Automatización</span></button></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Reportes"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor" d="M2 18h6v10H2V18Zm10-6h6v16h-6V12Zm10-8h6v24h-6V4Z" />
+            </svg><span class="sidebar__label">Reportes</span></button></li>
+        <li class="sidebar__divider"></li>
+        <li class="sidebar__item"><button class="sidebar__btn" title="Breeze AI"><svg viewBox="0 0 32 32" width="18"
+              height="18">
+              <path fill="currentColor" d="M16 1.5 18 14l12 2-12 2-2 12.5L14 18 2 16l12-2L16 1.5Z" />
+            </svg><span class="sidebar__label">Breeze AI</span></button></li>
+      </ul>
+    </nav>
+    <button class="sidebar__scroll-btn sidebar__scroll-btn--abajo"><svg viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M12 16 4 8h16l-8 8Z" />
+      </svg></button>
+    <button id="btn-toggle-sidebar" class="sidebar__toggle"><svg viewBox="0 0 24 24" width="14" height="14">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" d="M3 3h18v18H3V3Zm6 4 4 5-4 5" />
+      </svg></button>
+  </aside>
+
+  <!-- ============================================
+       CONTENIDO PRINCIPAL
+       ============================================ -->
+  <main id="contenido-principal" class="contenido" role="main">
+
+    <!-- Dashboard de tarjetas resumen (ahora debajo de la tabla) -->
+    <section class="dashboard-caja" aria-label="Resumen de caja">
+      <div class="tarjeta-resumen" data-card="gastos-mes">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Gastos del mes</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--rojo">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M19 13H5v-2h14v2Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor tarjeta-resumen__valor--negativo" id="card-gastos">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span><span id="card-gastos-count">0</span> movimientos</span>
+          <span class="tarjeta-resumen__cambio" id="card-gastos-cambio">↓ 0% vs mes ant.</span>
+        </div>
+      </div>
+
+      <div class="tarjeta-resumen" data-card="ingresos-mes">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Ingresos del mes</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--verde">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M13 5v6h6v2h-6v6h-2v-6H5v-2h6V5h2Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor tarjeta-resumen__valor--positivo" id="card-ingresos">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span><span id="card-ingresos-count">0</span> movimientos</span>
+          <span class="tarjeta-resumen__cambio" id="card-ingresos-cambio">↑ 0% vs mes ant.</span>
+        </div>
+      </div>
+
+      <div class="tarjeta-resumen" data-card="balance">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Balance</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M3 4h18v6H3V4Zm0 10h18v6H3v-6Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor" id="card-balance">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span>Ingresos − Gastos</span>
+          <span class="tarjeta-resumen__cambio" id="card-balance-cambio">+0%</span>
+        </div>
+      </div>
+
+      <div class="tarjeta-resumen" data-card="pendientes">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Gastos pendientes</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--naranja">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-2V6h2v7Zm0 4h-2v-2h2v2Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor" id="card-pendientes">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span><span id="card-pendientes-count">0</span> sin validar</span>
+          <span class="tarjeta-resumen__cambio" id="card-pendientes-cambio">Requiere atención</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cabecera con selector Caja + tabs + acciones -->
+    <section class="cabecera">
+      <div class="cabecera__selector">
+        <button class="selector-objeto" id="btn-selector-objeto" data-popover="popover-objetos" aria-haspopup="true"
+          aria-expanded="false">
+          <svg viewBox="0 0 32 32" width="12" height="12">
+            <path fill="currentColor"
+              d="M3 7h26v18H3V7Zm2 2v14h22V9H5Zm11 1a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm-9 0h3v3H7v-3Zm18 0h3v3h-3v-3Z" />
+          </svg>
+          <span>Caja</span>
+          <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="cabecera__sep" aria-hidden="true"></div>
+
+      <!-- Tabs de vistas guardadas con flechas de scroll -->
+      <div class="tabs-wrapper">
+        <button class="tabs__scroll" id="btn-tab-scroll-left" type="button" aria-label="Desplazar tabs a la izquierda"
+          hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path fill="currentColor" d="M15 5l2 2-5 5 5 5-2 2-7-7 7-7Z" />
+          </svg>
+        </button>
+        <div class="tabs" id="tabs-vistas" role="tablist"></div>
+        <button class="tabs__scroll" id="btn-tab-scroll-right" type="button" aria-label="Desplazar tabs a la derecha"
+          hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path fill="currentColor" d="M9 5l-2 2 5 5-5 5 2 2 7-7-7-7Z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="cabecera__sep" aria-hidden="true"></div>
+
+      <button class="tab__agregar" id="btn-add-tab" data-popover="popover-tab-add">
+        <svg viewBox="0 0 12 12" width="12" height="12">
+          <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+        </svg>
+      </button>
+
+      <div class="cabecera__acciones">
+        <button class="btn btn--ghost" id="btn-exportar">
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" />
+          </svg>
+          Exportar
+        </button>
+        <button class="btn btn--icon btn--bordered" id="btn-cabecera-menu" data-popover="popover-cabecera-menu">
+          <svg viewBox="0 0 32 32" width="14" height="14">
+            <circle cx="16" cy="6" r="3" fill="currentColor" />
+            <circle cx="16" cy="16" r="3" fill="currentColor" />
+            <circle cx="16" cy="26" r="3" fill="currentColor" />
+          </svg>
+        </button>
+        <button id="btn-registrar-ingreso" class="btn btn--ghost">
+          <svg viewBox="0 0 12 12" width="10" height="10">
+            <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z"></path>
+          </svg>
+          Registrar ingreso
+        </button>
+        <button id="btn-registrar-gasto" class="btn btn--primario">
+          <svg viewBox="0 0 12 12" width="10" height="10">
+            <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+          </svg>
+          Registrar gasto
+        </button>
+      </div>
+    </section>
+
+    <div class="beta-fab">Beta</div>
+
+    <!-- Bloque unificado: toolbar + filtros + tabla + paginación dentro de un solo contenedor con borde -->
+    <div class="bloque-tabla">
+
+      <!-- Toolbar de tabla -->
+      <section class="toolbar-tabla">
+        <div class="toolbar-tabla__grupo">
+          <div class="campo-busqueda">
+            <svg viewBox="0 0 24 24" width="14" height="14" class="campo-busqueda__icono">
+              <path fill="currentColor"
+                d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+            </svg>
+            <input type="search" id="input-buscar-tabla" class="campo-busqueda__input"
+              placeholder="Buscar por concepto, asesor o referencia" />
+          </div>
+          <div class="toolbar-tabla__sep"></div>
+          <button class="btn btn--ghost" disabled>
+            <svg viewBox="0 0 32 32" width="14" height="14">
+              <path fill="currentColor" d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z" />
+            </svg>
+            Vista de tabla
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+            </svg>
+          </button>
+          <button class="btn btn--icon" id="btn-config-tabla"><svg viewBox="0 0 32 32" width="14" height="14">
+              <path fill="currentColor"
+                d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+            </svg></button>
+          <button class="btn btn--ghost" id="btn-editar-columnas">Editar columnas</button>
+          <div class="toolbar-tabla__sep"></div>
+          <button class="btn btn--ghost btn--activo">
+            <svg viewBox="0 0 32 32" width="14" height="14">
+              <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z" />
+            </svg>
+            Filtros
+          </button>
+          <button class="btn btn--ghost" id="btn-ordenar" data-popover="popover-ordenar">
+            <svg viewBox="0 0 32 32" width="14" height="14">
+              <path fill="currentColor" d="M12 24H10V4H8v20H6l3 3 3-3Zm6-17v2h10V7H18Zm0 6v2h8v-2h-8Zm0 6v2h6v-2h-6Z" />
+            </svg>
+            Ordenar
+          </button>
+        </div>
+
+        <div class="toolbar-tabla__grupo toolbar-tabla__grupo--final">
+          <div class="toolbar-tabla__sep"></div>
+          <button class="btn btn--icon"><svg viewBox="0 0 32 32" width="14" height="14">
+              <path fill="currentColor"
+                d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
+            </svg></button>
+          <button class="btn btn--ghost" disabled>Guardar</button>
+        </div>
+      </section>
+
+      <!-- Filtros rápidos -->
+      <section class="filtros-rapidos">
+        <button class="filtro-pill" data-popover="popover-filtro-tipo" data-filtro="tipo">
+          Tipo <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+        <button class="filtro-pill" data-popover="popover-filtro-categoria" data-filtro="categoria">
+          Categoría <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+        <button class="filtro-pill" data-popover="popover-filtro-fecha" data-filtro="fecha">
+          Fecha <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+        <button class="filtro-pill" data-popover="popover-filtro-asesor" data-filtro="asesor">
+          Responsable <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+        <button class="filtro-pill" data-popover="popover-filtro-estado" data-filtro="estado">
+          Estado <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+        <button class="filtro-icon" id="btn-add-filtro" data-popover="popover-filtro-add"><svg viewBox="0 0 12 12"
+            width="12" height="12">
+            <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+          </svg></button>
+        <button class="filtro-icon" id="btn-edit-filtros"><svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
+          </svg></button>
+        <button class="filtro-avanzados"><svg viewBox="0 0 32 32" width="14" height="14">
+            <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Z" />
+          </svg>Filtros avanzados</button>
+      </section>
+
+      <!-- Tabla -->
+      <section class="tabla-wrapper">
+        <div class="tabla-scroll">
+          <table class="tabla-cotizaciones" id="tabla-cotizaciones">
+            <thead>
+              <tr>
+                <th data-columna="fecha" data-orden="desc" class="th th--orden"><span>FECHA</span><span
+                    class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10">
+                      <path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6" />
+                    </svg></span></th>
+                <th data-columna="tipo" class="th">TIPO</th>
+                <th data-columna="categoria" class="th">CATEGORÍA</th>
+                <th data-columna="descripcion" class="th">DESCRIPCIÓN</th>
+                <th data-columna="responsable" class="th">RESPONSABLE</th>
+                <th data-columna="valor" class="th th--num">VALOR</th>
+                <th data-columna="estado" class="th">ESTADO</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-cotizaciones"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Paginación -->
+      <section class="paginacion">
+        <button class="pag-btn pag-btn--nav" disabled>
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z" />
+          </svg>
+          Anterior
+        </button>
+        <div class="pag-numeros" id="pag-numeros">
+          <button class="pag-num pag-num--activo">1</button>
+          <button class="pag-num">2</button>
+          <button class="pag-num">3</button>
+        </div>
+        <button class="pag-btn pag-btn--nav">Siguiente <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z" />
+          </svg></button>
+        <button class="pag-tamano" id="btn-tamano-pagina" data-popover="popover-tamano-pagina" aria-haspopup="true"
+          aria-expanded="false">
+          <span id="lbl-tamano">25 por página</span>
+          <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"></path>
+          </svg>
+        </button>
+        <div class="popover" id="popover-tamano-pagina" hidden style="width: 180px;">
+          <div class="popover__lista">
+            <button class="popover__item" data-page-size="25">25 por página</button>
+            <button class="popover__item" data-page-size="50">50 por página</button>
+            <button class="popover__item" data-page-size="100">100 por página</button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /.bloque-tabla -->
+
+  </main>
+
+  <!-- ============================================================
+       POPOVERS
+       ============================================================ -->
+
+  <!-- Selector de objeto -->
+  <div class="popover" id="popover-objetos" hidden style="width: 260px;">
+    <div class="popover__buscar">
+      <input type="search" class="popover__buscar-input" placeholder="Buscar" data-buscar="objetos" />
+      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z" />
+      </svg>
+    </div>
+    <div class="popover__lista">
+      <div class="popover__grupo-titulo">Usadas recientemente</div>
+      <a href="index.html" class="popover__item" style="text-decoration:none;"><span class="tipo-icono"><svg
+            viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M5 2h14v20H5V2Zm2 5h10V5H7v2Zm0 4h10V9H7v2Zm0 4h7v-2H7v2Z" />
+          </svg></span>Cotizaciones</a>
+      <div class="popover__divisor"></div>
+      <div class="popover__grupo-titulo">Todos los objetos</div>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 3h3l2 4h13l-2 8H8l-1 2h13v2H6l3-6L5 5H3V3Z" />
+          </svg></span>Carritos</button>
+      <button class="popover__item popover__item--activo"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14"
+            height="14">
+            <path fill="currentColor" d="M3 7h18v12H3V7Zm2 2v8h14V9H5Zm7 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
+          </svg></span>Caja</button>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />
+          </svg></span>Clientes de partners</button>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />
+          </svg></span>Contactos</button>
+      <a href="index.html" class="popover__item" style="text-decoration:none;"><span class="tipo-icono"><svg
+            viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M5 2h14v20H5V2Z" />
+          </svg></span>Cotizaciones</a>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 4h18v4H3V4Z" />
+          </svg></span>Empresas</button>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M6 2h12l3 4H3l3-4Z" />
+          </svg></span>Negocios</button>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 3h18v18H3V3Z" />
+          </svg></span>Productos</button>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M4 2h16v20H4V2Z" />
+          </svg></span>Pedidos</button>
+      <button class="popover__item"><span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 5h18v3H3V5Z" />
+          </svg></span>Tareas</button>
+    </div>
+  </div>
+
+  <!-- Tab menú -->
+  <div class="popover" id="popover-tab-menu" hidden style="width: 240px;">
+    <div class="popover__lista">
+      <button class="popover__item" type="button" data-accion="tab-rename">Cambiar nombre</button>
+      <button class="popover__item" type="button" data-accion="tab-clonar">Clonar</button>
+      <button class="popover__item popover__item--deshabilitado" type="button">Gestionar lo que se comparte</button>
+      <button class="popover__item" type="button" data-accion="tab-eliminar">Eliminar</button>
+    </div>
+  </div>
+
+  <!-- Tab + -->
+  <div class="popover" id="popover-tab-add" hidden style="width: 200px;">
+    <div class="popover__lista">
+      <button class="popover__item" data-accion="crear-vista">Crear nueva vista</button>
+      <button class="popover__item" data-accion="agregar-vista">Agregar vista (3/50)</button>
+    </div>
+  </div>
+
+  <!-- Cabecera menú -->
+  <div class="popover" id="popover-cabecera-menu" hidden style="width: 280px;">
+    <div class="popover__lista">
+      <button class="popover__item" data-accion="cab-informes">Ir a informes de caja <span
+          class="popover__item-icono-ext"><svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M14 3v2h4.6l-9.3 9.3 1.4 1.4L20 6.4V11h2V3h-8Z" />
+          </svg></span></button>
+      <button class="popover__item popover__item--deshabilitado">Configurar categorías</button>
+      <button class="popover__item popover__item--deshabilitado">Restaurar movimientos</button>
+      <button class="popover__item" data-accion="cab-cierre">Cierre diario de caja</button>
+    </div>
+  </div>
+
+  <!-- Ordenar -->
+  <div class="popover popover-ordenar" id="popover-ordenar" hidden>
+    <div class="popover-ordenar__titulo">Ordenar por</div>
+    <div class="popover-ordenar__fila">
+      <select class="popover-ordenar__select" id="select-orden">
+        <option value="fecha">Fecha</option>
+        <option value="valor">Valor</option>
+        <option value="tipo">Tipo</option>
+        <option value="categoria">Categoría</option>
+        <option value="responsable">Responsable</option>
+      </select>
+      <div class="popover-ordenar__dir">
+        <button data-dir="desc" class="activo">Z → A</button>
+        <button data-dir="asc">A → Z</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtro: Tipo -->
+  <div class="popover" id="popover-filtro-tipo" hidden style="width: 220px;">
+    <div class="popover__lista">
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="ingreso" /> Ingreso</label>
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="gasto" /> Gasto</label>
+    </div>
+  </div>
+
+  <!-- Filtro: Categoría -->
+  <div class="popover" id="popover-filtro-categoria" hidden style="width: 240px;">
+    <div class="popover__buscar">
+      <input type="search" class="popover__buscar-input" placeholder="Buscar categoría" />
+      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z" />
+      </svg>
+    </div>
+    <div class="popover__lista" id="lista-categorias"></div>
+  </div>
+
+  <!-- Filtro: Fecha -->
+  <div class="popover" id="popover-filtro-fecha" hidden style="width: 220px;">
+    <div class="popover__lista">
+      <button class="popover__item" data-filtro-val="hoy">Hoy</button>
+      <button class="popover__item" data-filtro-val="semana">Esta semana</button>
+      <button class="popover__item" data-filtro-val="mes">Este mes</button>
+      <button class="popover__item" data-filtro-val="trimestre">Último trimestre</button>
+      <button class="popover__item" data-filtro-val="">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Filtro: Asesor / Responsable -->
+  <div class="popover" id="popover-filtro-asesor" hidden style="width: 260px;">
+    <div class="popover__buscar">
+      <input type="search" class="popover__buscar-input" placeholder="Buscar responsable" />
+      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z" />
+      </svg>
+    </div>
+    <div class="popover__lista" id="lista-asesores"></div>
+  </div>
+
+  <!-- Filtro: Estado -->
+  <div class="popover" id="popover-filtro-estado" hidden style="width: 220px;">
+    <div class="popover__lista">
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="pagado" /> Pagado</label>
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="pendiente" /> Pendiente</label>
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="anulado" /> Anulado</label>
+    </div>
+  </div>
+
+  <!-- + agregar filtro -->
+  <div class="popover" id="popover-filtro-add" hidden style="width: 280px;">
+    <div class="popover__buscar">
+      <input type="search" class="popover__buscar-input" placeholder="Buscar" />
+      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z" />
+      </svg>
+    </div>
+    <div class="popover__lista">
+      <div class="popover__grupo-titulo">Información del movimiento</div>
+      <button class="popover__item"><span class="tipo-icono">#</span>Valor</button>
+      <button class="popover__item"><span class="tipo-icono">📅</span>Fecha de creación</button>
+      <button class="popover__item"><span class="tipo-icono">Abc</span>Método de pago</button>
+      <button class="popover__item"><span class="tipo-icono">Abc</span>Referencia</button>
+      <button class="popover__item"><span class="tipo-icono">Abc</span>Cliente relacionado</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODALES
+       ============================================================ -->
+
+  <!-- Modal: Registrar gasto -->
+  <div class="modal-overlay" id="modal-registrar-gasto" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo">Registrar gasto</div>
+        <button class="modal__cerrar" data-cerrar-modal><svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg></button>
+      </div>
+      <div class="modal__body">
+        <form id="form-gasto">
+          <input type="hidden" id="form-tipo-mov" value="gasto" />
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label form-label--req" for="g-categoria">Categoría</label>
+              <select id="g-categoria" class="form-select">
+                <option value="alimentacion">Alimentación</option>
+                <option value="transporte">Transporte</option>
+                <option value="papeleria">Papelería</option>
+                <option value="publicidad">Publicidad</option>
+                <option value="comisiones">Comisiones</option>
+                <option value="servicios">Servicios públicos</option>
+                <option value="tramites">Trámites</option>
+                <option value="otros">Otros</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label form-label--req" for="g-valor">Valor</label>
+              <input type="number" id="g-valor" class="form-input" placeholder="0" min="0" step="100" />
+            </div>
+          </div>
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label" for="g-moneda">Moneda</label>
+              <select id="g-moneda" class="form-select">
+                <option value="COP">COP</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label form-label--req" for="g-fecha">Fecha</label>
+              <input type="date" id="g-fecha" class="form-input" />
+            </div>
+          </div>
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label" for="g-responsable">Responsable</label>
+              <select id="g-responsable" class="form-select">
+                <option>Néstor Goyes</option>
+                <option>Maria González</option>
+                <option>Carlos Ramírez</option>
+                <option>Lizeth Carrillo</option>
+                <option>Jennifer Acosta</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="g-metodo">Método de pago</label>
+              <select id="g-metodo" class="form-select">
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label form-label--req" for="g-descripcion">Descripción</label>
+            <input type="text" id="g-descripcion" class="form-input"
+              placeholder="Ej: Jugo para reunión con cliente Acme" />
+          </div>
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label" for="g-estado">Estado</label>
+              <select id="g-estado" class="form-select">
+                <option value="pagado">Pagado</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="anulado">Anulado</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="g-cliente">Cliente / Trámite (opcional)</label>
+              <input type="text" id="g-cliente" class="form-input" placeholder="—" />
+            </div>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="g-soporte">Adjuntar soporte</label>
+            <input type="file" id="g-soporte" class="form-input" style="padding:6px;" />
+            <span class="form-help">Sube factura, recibo o comprobante (PDF, JPG, PNG)</span>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="g-observaciones">Observaciones</label>
+            <textarea id="g-observaciones" class="form-textarea"
+              placeholder="Notas adicionales del movimiento..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--naranja" id="guardar-movimiento">Guardar</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar columnas -->
+  <div class="modal-overlay" id="modal-editar-columnas" hidden>
+    <div class="modal modal--ancho">
+      <div class="modal__header">
+        <div class="modal__titulo">Elige qué columnas ver</div>
+        <button class="modal__cerrar" data-cerrar-modal><svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg></button>
+      </div>
+      <div class="modal__body">
+        <div class="editar-columnas">
+          <div class="editar-columnas__col">
+            <div class="editar-columnas__head">
+              <div style="position:relative;flex:1;">
+                <input type="search" class="form-input" placeholder="Buscar columnas..." style="width:100%;" />
+              </div>
+            </div>
+            <div class="editar-columnas__lista">
+              <div class="editar-columnas__categoria">Movimiento</div>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Método de pago</label>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Referencia</label>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Cliente relacionado</label>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Adjuntos</label>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Observaciones</label>
+              <div class="editar-columnas__categoria">Auditoría</div>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Creado por</label>
+              <label class="editar-columnas__opt"><input type="checkbox" /> Fecha de modificación</label>
+            </div>
+          </div>
+          <div class="editar-columnas__col">
+            <div class="editar-columnas__head">
+              <div class="editar-columnas__titulo">Columnas seleccionadas (<span id="contador-cols">7</span>)</div>
+            </div>
+            <div class="editar-columnas__lista">
+              <div class="editar-columnas__seleccionada editar-columnas__seleccionada--fija">Fecha</div>
+              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Tipo<button
+                  class="editar-columnas__remover">×</button></div>
+              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Categoría<button
+                  class="editar-columnas__remover">×</button></div>
+              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Descripción<button
+                  class="editar-columnas__remover">×</button></div>
+              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Responsable<button
+                  class="editar-columnas__remover">×</button></div>
+              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Valor<button
+                  class="editar-columnas__remover">×</button></div>
+              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Estado<button
+                  class="editar-columnas__remover">×</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--naranja">Aplicar</button>
+        <button class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar filtros rápidos -->
+  <div class="modal-overlay" id="modal-editar-filtros" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo">Editar filtros rápidos</div>
+        <button class="modal__cerrar" data-cerrar-modal><svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg></button>
+      </div>
+      <div class="modal__body">
+        <div class="contador-uso">Filtros rápidos usados: <span id="contador-filtros">5</span>/10</div>
+        <div class="popover-fila-editor">
+          <div class="popover-fila-editor__item">
+            <div class="popover-fila-editor__icono">📊</div><select class="popover-fila-editor__select">
+              <option>Tipo</option>
+            </select><button class="popover-fila-editor__remover">🗑</button>
+          </div>
+          <div class="popover-fila-editor__item">
+            <div class="popover-fila-editor__icono">🏷</div><select class="popover-fila-editor__select">
+              <option>Categoría</option>
+            </select><button class="popover-fila-editor__remover">🗑</button>
+          </div>
+          <div class="popover-fila-editor__item">
+            <div class="popover-fila-editor__icono">📅</div><select class="popover-fila-editor__select">
+              <option>Fecha</option>
+            </select><button class="popover-fila-editor__remover">🗑</button>
+          </div>
+          <div class="popover-fila-editor__item">
+            <div class="popover-fila-editor__icono">👤</div><select class="popover-fila-editor__select">
+              <option>Responsable</option>
+            </select><button class="popover-fila-editor__remover">🗑</button>
+          </div>
+          <div class="popover-fila-editor__item">
+            <div class="popover-fila-editor__icono">𝑓𝑥</div><select class="popover-fila-editor__select">
+              <option>Estado</option>
+            </select><button class="popover-fila-editor__remover">🗑</button>
+          </div>
+        </div>
+        <div class="popover-fila-editor__acciones">
+          <button class="btn btn--blanco">+ Agregar filtro rápido</button>
+          <button class="btn btn--blanco">🗑 Eliminar todos</button>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--naranja" data-cerrar-modal>Listo</button>
+        <button class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral: Configuración de tabla -->
+  <aside class="panel-lateral" id="panel-config-tabla">
+    <div class="panel-lateral__header">
+      <div class="panel-lateral__titulo">Configuración de la tabla</div>
+      <button class="modal__cerrar" data-cerrar-panel style="color: var(--color-texto-suave);"><svg viewBox="0 0 24 24"
+          width="16" height="16">
+          <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+        </svg></button>
+    </div>
+    <div class="panel-lateral__body">
+      <div class="panel-lateral__seccion">
+        <div class="panel-lateral__seccion-titulo">Registros por página</div>
+        <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="25" checked /> 25 por
+          página</label>
+        <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="50" /> 50 por página</label>
+        <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="100" /> 100 por página</label>
+      </div>
+      <div class="panel-lateral__seccion">
+        <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
+        <label class="panel-lateral__radio"><input type="radio" name="altura" value="compacto" /> Compacto</label>
+        <label class="panel-lateral__radio"><input type="radio" name="altura" value="default" checked /> Valor
+          predeterminado</label>
+        <label class="panel-lateral__radio"><input type="radio" name="altura" value="comodo" /> Cómodo</label>
+      </div>
+      <div class="panel-lateral__seccion">
+        <div class="panel-lateral__switch-row">
+          <span>Zebra striping ⓘ</span>
+          <div class="switch" id="switch-zebra"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Panel lateral: Detalle de movimiento -->
+  <aside class="panel-detalle" id="panel-detalle-movimiento">
+    <div class="panel-detalle__header">
+      <div class="panel-detalle__top">
+        <div></div>
+        <button class="panel-detalle__cerrar" data-cerrar-detalle><svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg></button>
+      </div>
+      <div class="panel-detalle__avatar" id="detalle-avatar"></div>
+      <div class="panel-detalle__titulo" id="detalle-titulo">—</div>
+      <div class="panel-detalle__subtitulo" id="detalle-subtitulo">—</div>
+      <div class="panel-detalle__monto" id="detalle-monto">COP 0</div>
+      <div class="panel-detalle__acciones">
+        <button class="btn btn--ghost" id="detalle-editar">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Z" />
+          </svg>
+          Editar
+        </button>
+        <button class="btn btn--ghost" id="detalle-anular" style="color:#dc2626;">
+          <svg viewBox="0 0 24 24" width="12" height="12">
+            <path fill="currentColor" d="M19 13H5v-2h14v2Z" />
+          </svg>
+          Anular
+        </button>
+      </div>
+    </div>
+    <div class="panel-detalle__body">
+      <div class="panel-detalle__seccion">
+        <div class="panel-detalle__seccion-titulo">Información general <span class="toggle-seccion">⌃</span></div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Tipo</span><span
+            class="panel-detalle__campo-valor" id="detalle-tipo">—</span></div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Fecha</span><span
+            class="panel-detalle__campo-valor" id="detalle-fecha">—</span></div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Responsable</span><span
+            class="panel-detalle__campo-valor" id="detalle-responsable">—</span></div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Método de pago</span><span
+            class="panel-detalle__campo-valor" id="detalle-metodo">—</span></div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Estado</span><span
+            class="panel-detalle__campo-valor" id="detalle-estado">—</span></div>
+      </div>
+      <div class="panel-detalle__seccion">
+        <div class="panel-detalle__seccion-titulo">Información administrativa <span class="toggle-seccion">⌃</span>
+        </div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Categoría</span><span
+            class="panel-detalle__campo-valor" id="detalle-categoria">—</span></div>
+        <div class="panel-detalle__campo"><span class="panel-detalle__campo-label">Cliente / Trámite</span><span
+            class="panel-detalle__campo-valor" id="detalle-cliente">—</span></div>
+        <div style="margin-top: 12px;">
+          <div class="panel-detalle__campo-label" style="margin-bottom: 6px;">Observaciones</div>
+          <div class="panel-detalle__observaciones" id="detalle-observaciones">—</div>
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="panel-detalle__campo-label" style="margin-bottom: 6px;">Adjuntos</div>
+          <div class="panel-detalle__adjunto" id="detalle-adjunto">
+            <div class="panel-detalle__adjunto-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+                <path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" />
+              </svg></div>
+            <div>
+              <div style="color:var(--color-texto);font-weight:500;">factura.pdf</div>
+              <div style="font-size:11px;">Sin adjuntos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-detalle__seccion">
+        <div class="panel-detalle__seccion-titulo">Actividad <span class="toggle-seccion">⌃</span></div>
+        <div class="panel-detalle__actividad">
+          <div class="panel-detalle__actividad-icono"><svg viewBox="0 0 24 24" width="10" height="10">
+              <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-2V6h2v7Z" />
+            </svg></div>
+          <div>
+            <div class="panel-detalle__actividad-texto"><strong id="actividad-creador">—</strong> creó este movimiento
+            </div>
+            <div class="panel-detalle__actividad-fecha" id="actividad-creacion">—</div>
+          </div>
+        </div>
+        <div class="panel-detalle__actividad">
+          <div class="panel-detalle__actividad-icono"><svg viewBox="0 0 24 24" width="10" height="10">
+              <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Z" />
+            </svg></div>
+          <div>
+            <div class="panel-detalle__actividad-texto">Última actualización</div>
+            <div class="panel-detalle__actividad-fecha" id="actividad-actualizacion">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Scripts -->
+  <script src="js/caja-main.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/caja-views.js"></script>
+  <script src="js/caja-table.js"></script>
+  <script src="js/caja-filters.js"></script>
+  <script src="js/caja-interactions.js"></script>
+</body>
+
+</html>

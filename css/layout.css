@@ -1,0 +1,81 @@
+/* ============================================================
+   LAYOUT.CSS
+   Estructura general del layout en 3 zonas: topbar fija
+   arriba, sidebar lateral fijo y contenido principal con
+   panel blanco redondeado.
+   ============================================================ */
+
+/* La topbar es fija arriba a todo lo ancho */
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--alto-toolbar);
+  z-index: var(--z-toolbar);
+}
+
+/* Sidebar fijo a la izquierda, debajo de la topbar */
+.sidebar {
+  position: fixed;
+  top: var(--alto-toolbar);
+  left: 0;
+  bottom: 0;
+  width: var(--ancho-sidebar);
+  z-index: var(--z-sidebar);
+  transition: width var(--trans-media);
+}
+
+.sidebar:not(.sidebar--colapsado) {
+  width: var(--ancho-sidebar-exp);
+}
+
+/* Contenido principal: panel blanco flotante con margen 24px
+   en todos los lados, redondeado y con sombra suave.
+   Se ve como un "card" sobre el fondo navy oscuro. */
+.contenido {
+  position: fixed;
+  top: calc(var(--alto-toolbar));
+  left: calc(var(--ancho-sidebar));
+  right: 0px;
+  bottom: 0px;
+  background-color: rgb(245, 248, 250);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-xl);
+  overflow: auto;
+  transition: left var(--trans-media);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(45, 62, 80, 0.06);
+}
+
+.sidebar:not(.sidebar--colapsado) ~ .contenido {
+  left: calc(var(--ancho-sidebar-exp) + 24px);
+}
+
+/* --- Responsive: Tablet --- */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: var(--ancho-sidebar);
+  }
+  .contenido {
+    left: calc(var(--ancho-sidebar) + 24px);
+  }
+}
+
+/* --- Responsive: Mobile --- */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--trans-media);
+  }
+  .sidebar.sidebar--abierto {
+    transform: translateX(0);
+  }
+  .contenido {
+    left: 16px;
+    right: 16px;
+    top: calc(var(--alto-toolbar) + 16px);
+    bottom: 16px;
+  }
+}

@@ -1,0 +1,112 @@
+/* ============================================================
+   VARIABLES.CSS
+   Tokens de diseño: colores, tipografía, espaciados y radios.
+   Paleta personalizada (NO usa colores exactos de HubSpot).
+   ============================================================ */
+
+:root {
+  /* --- Colores de marca (acento teal en vez del naranja HS) --- */
+  --color-acento:           #00a4bd;
+  --color-acento-hover:     #008ea3;
+  --color-acento-claro:     #e5f5f8;
+
+  /* --- Topbar y sidebar (azul navy oscuro) --- */
+  --color-shell-fondo:      #2d3e50;
+  --color-shell-fondo-2:    #344659;
+  --color-shell-icono:      #dfe3eb;
+  --color-shell-icono-hov:  #ffffff;
+  --color-shell-divisor:    #475669;
+
+  /* --- Sidebar item activo (con halo teal sutil) --- */
+  --color-sidebar-activo:   #00a4bd;
+  --color-sidebar-activo-bg:#1f4d56;
+
+  /* --- Fondos del área principal --- */
+  --color-fondo-app:        #2d3e50;
+  --color-fondo-panel:      #ffffff;
+  --color-fondo-suave:      #f5f8fa;
+  --color-fondo-hover:      #f0f5f7;
+  --color-fondo-selec:      #e5f5f8;
+
+  /* --- Bordes --- */
+  --color-borde:            #e1e5eb;
+  --color-borde-fuerte:     #cbd6e2;
+
+  /* --- Texto --- */
+  --color-texto:            #33475b;
+  --color-texto-suave:      #516f90;
+  --color-texto-debil:      #7c98b6;
+  --color-texto-link:       #0091ae;
+  --color-texto-link-hover: #007a8c;
+  --color-texto-blanco:     #ffffff;
+
+  /* --- Estados (dots de tabla) --- */
+  --color-estado-publicado: #00bda5;
+  --color-estado-vencido:   #f2545b;
+  --color-estado-borrador:  #b0c1d4;
+  --color-estado-revision:  #f5c26b;
+  --color-estado-aprobado:  #00bda5;
+
+  /* --- Botón primario (teal sólido) --- */
+  --color-btn-primario:     #f27454;
+  --color-btn-primario-hov: #ff7a58;
+  --color-btn-primario-dis: #c5d4e0;
+
+  /* --- Badge / contador rojo (notificaciones) --- */
+  --color-badge:            #f2545b;
+
+  /* --- Tipografía --- */
+  --font-familia:           "Inter", -apple-system, BlinkMacSystemFont,
+                            "Segoe UI", Roboto, sans-serif;
+  --font-tam-xs:            11px;
+  --font-tam-sm:            12px;
+  --font-tam-base:          13px;
+  --font-tam-md:            14px;
+  --font-tam-lg:            16px;
+  --font-tam-xl:            18px;
+
+  --font-peso-normal:       400;
+  --font-peso-medio:        500;
+  --font-peso-semibold:     600;
+  --font-peso-bold:         700;
+
+  --line-height-base:       1.45;
+
+  /* --- Espaciados (escala de 4) --- */
+  --esp-0:   0;
+  --esp-1:   4px;
+  --esp-2:   8px;
+  --esp-3:   12px;
+  --esp-4:   16px;
+  --esp-5:   20px;
+  --esp-6:   24px;
+  --esp-8:   32px;
+
+  /* --- Radios --- */
+  --radio-sm:   3px;
+  --radio-md:   4px;
+  --radio-lg:   6px;
+  --radio-xl:   12px;
+  --radio-pill: 999px;
+
+  /* --- Sombras --- */
+  --sombra-sm:  0 1px 2px rgba(45, 62, 80, 0.08);
+  --sombra-md:  0 2px 6px rgba(45, 62, 80, 0.10);
+  --sombra-lg:  0 8px 24px rgba(45, 62, 80, 0.15);
+
+  /* --- Dimensiones del layout --- */
+  --alto-toolbar:        44px;
+  --ancho-sidebar:       64px;
+  --ancho-sidebar-exp:   236px;
+
+  /* --- Transiciones --- */
+  --trans-rapida:   120ms ease;
+  --trans-media:    220ms ease;
+  --trans-lenta:    320ms ease;
+
+  /* --- Z-index --- */
+  --z-sidebar:   90;
+  --z-toolbar:   100;
+  --z-modal:     200;
+  --z-toast:     300;
+}
