@@ -8,6 +8,7 @@
       this.contenedor = document.getElementById("tabs-vistas");
       this.editandoId = null;
       this.nombreOriginalEdicion = "";
+      this.editandoEsNueva = false;
       if (!this.contenedor) return;
       this.renderizar();
       this.escucharEventos();
@@ -79,6 +80,15 @@
             <path fill="currentColor" d="m3 5 2-2 11 11 11-11 2 2-11 11 11 11-2 2-11-11-11 11-2-2 11-11L3 5Z"></path>
           </svg>
         </button>
+        <button
+          class="tab__guardar"
+          type="button"
+          aria-label="Guardar nombre"
+          data-guardar-vista="${vista.id}">
+          <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+            <path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 12l5 5L20 7"/>
+          </svg>
+        </button>
       ` : ""}
     `;
 
@@ -91,9 +101,19 @@
         this.contenedor.appendChild(this.construirTab(vista));
       });
 
+      this.actualizarContadorVistas();
+
       if (this.actualizarFlechas) {
         requestAnimationFrame(() => this.actualizarFlechas());
       }
+    }
+
+    actualizarContadorVistas() {
+      const total = window.estadoApp.vistas.length;
+      const max = 50;
+      document.querySelectorAll('[data-accion="agregar-vista"]').forEach(btn => {
+        btn.textContent = `Agregar vista (${total}/${max})`;
+      });
     }
 
     activarVista(id) {
@@ -161,7 +181,7 @@
       return nuevaVista;
     }
 
-    renombrarVista(id, nuevoNombre) {
+    renombrarVista(id, nuevoNombre, opciones = {}) {
       const vista = this.obtenerVista(id);
       if (!vista || this.esVistaFija(vista)) return false;
 
@@ -171,7 +191,7 @@
 
       vista.nombre = limpio;
       this.renderizar();
-      window.mostrarToast?.("✓ Vista renombrada");
+      if (!opciones.silencioso) window.mostrarToast?.("✓ Vista renombrada");
       return true;
     }
 
@@ -193,6 +213,12 @@
 
       this.activarVista(nueva.id);
       window.mostrarToast?.("✓ Vista clonada");
+
+      // Entrar a edición inline para renombrar inmediatamente
+      requestAnimationFrame(() => {
+        this.iniciarEdicionInline(nueva.id, { esNueva: false });
+      });
+
       return nueva;
     }
 
@@ -216,20 +242,25 @@
       window.mostrarToast?.("✓ Vista eliminada");
     }
 
-    iniciarEdicionInline(id) {
+    iniciarEdicionInline(id, opciones = {}) {
       const vista = this.obtenerVista(id);
       if (!vista || this.esVistaFija(vista)) return;
 
       this.editandoId = id;
       this.nombreOriginalEdicion = vista.nombre;
+      this.editandoEsNueva = !!opciones.esNueva;
 
       const tab = this.contenedor.querySelector(`.tab[data-vista-id="${id}"]`);
       const titulo = tab?.querySelector("[data-tab-titulo]");
-      if (!titulo) return;
+      if (!titulo || !tab) return;
 
+      tab.classList.add("tab--editando");
       titulo.setAttribute("contenteditable", "true");
       titulo.setAttribute("spellcheck", "false");
       titulo.classList.add("tab__titulo--editando");
+
+      // Asegurar que el tab editado quede visible
+      tab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
 
       const rango = document.createRange();
       rango.selectNodeContents(titulo);
@@ -241,26 +272,78 @@
       titulo.focus();
     }
 
+    /**
+     * Crea una vista nueva con nombre placeholder y entra a edición inline.
+     * Si el usuario cancela o deja el nombre vacío, la vista se elimina.
+     */
+    crearVistaInline() {
+      const id = "custom_" + Date.now();
+      const nombreInicial = "Nueva vista";
+
+      const nueva = this.agregarVista(id, nombreInicial, () => true, {
+        filtrosPill: {},
+        fija: false
+      });
+      if (!nueva) return null;
+
+      this.activarVista(id);
+      requestAnimationFrame(() => {
+        this.iniciarEdicionInline(id, { esNueva: true });
+      });
+      return nueva;
+    }
+
     confirmarEdicionInline(id) {
+      // Guard contra doble-confirmación (clic en ✓ + blur simultáneo)
+      if (this.editandoId !== id) return;
+
       const tab = this.contenedor.querySelector(`.tab[data-vista-id="${id}"]`);
       const titulo = tab?.querySelector("[data-tab-titulo]");
       if (!titulo) return;
 
       const nuevo = titulo.textContent.trim();
-      const ok = this.renombrarVista(id, nuevo);
 
-      if (!ok) {
-        this.cancelarEdicionInline(id);
+      // Vista recién creada sin nombre → descartar
+      if (this.editandoEsNueva && !nuevo) {
+        this._eliminarVistaSilencioso(id);
+        this._resetEstadoEdicion();
+        window.mostrarToast?.("Vista descartada (sin nombre)");
         return;
       }
 
-      this.editandoId = null;
-      this.nombreOriginalEdicion = "";
+      const ok = this.renombrarVista(id, nuevo, { silencioso: this.editandoEsNueva });
+
+      if (!ok) {
+        if (this.editandoEsNueva) {
+          this._eliminarVistaSilencioso(id);
+          window.mostrarToast?.("Vista descartada (nombre inválido)");
+          this._resetEstadoEdicion();
+        } else {
+          this.cancelarEdicionInline(id);
+        }
+        return;
+      }
+
+      if (this.editandoEsNueva) {
+        window.mostrarToast?.("✓ Vista creada");
+      }
+
+      this._resetEstadoEdicion();
     }
 
     cancelarEdicionInline(id) {
       const vista = this.obtenerVista(id);
-      if (!vista) return;
+      if (!vista) {
+        this._resetEstadoEdicion();
+        return;
+      }
+
+      // Si era vista recién creada, cancelar = eliminar
+      if (this.editandoEsNueva) {
+        this._eliminarVistaSilencioso(id);
+        this._resetEstadoEdicion();
+        return;
+      }
 
       const tab = this.contenedor.querySelector(`.tab[data-vista-id="${id}"]`);
       const titulo = tab?.querySelector("[data-tab-titulo]");
@@ -269,11 +352,32 @@
         titulo.removeAttribute("contenteditable");
         titulo.removeAttribute("spellcheck");
         titulo.classList.remove("tab__titulo--editando");
+        tab?.classList.remove("tab--editando");
         titulo.blur();
       }
 
+      this._resetEstadoEdicion();
+    }
+
+    _resetEstadoEdicion() {
       this.editandoId = null;
       this.nombreOriginalEdicion = "";
+      this.editandoEsNueva = false;
+    }
+
+    _eliminarVistaSilencioso(id) {
+      const idx = window.estadoApp.vistas.findIndex(v => v.id === id);
+      if (idx === -1) return;
+
+      const eraActiva = window.estadoApp.vistas[idx].activa;
+      window.estadoApp.vistas.splice(idx, 1);
+
+      if (eraActiva) {
+        const fallback = window.estadoApp.vistas.find(v => v.fija) || window.estadoApp.vistas[0];
+        if (fallback) this.activarVista(fallback.id);
+      } else {
+        this.renderizar();
+      }
     }
 
     finalizarEdicionDOM(id) {
@@ -284,10 +388,22 @@
       titulo.removeAttribute("contenteditable");
       titulo.removeAttribute("spellcheck");
       titulo.classList.remove("tab__titulo--editando");
+      tab.classList.remove("tab--editando");
     }
 
     escucharEventos() {
       this.contenedor.addEventListener("click", (e) => {
+        // Botón ✓ (guardar) durante edición inline
+        const guardar = e.target.closest("[data-guardar-vista]");
+        if (guardar) {
+          e.stopPropagation();
+          e.preventDefault();
+          const id = guardar.dataset.guardarVista;
+          this.finalizarEdicionDOM(id);
+          this.confirmarEdicionInline(id);
+          return;
+        }
+
         const cerrar = e.target.closest("[data-cerrar-vista]");
         if (cerrar) {
           e.stopPropagation();

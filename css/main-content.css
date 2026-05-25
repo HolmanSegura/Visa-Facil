@@ -42,6 +42,13 @@
 
 .selector-objeto svg {
   fill: currentColor;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+}
+.selector-objeto svg:first-of-type {
+  width: 14px;
+  height: 14px;
 }
 
 /* Separador vertical entre el selector "Cotizaciones" y los tabs */
@@ -201,6 +208,64 @@
 
 .tab--activo .tab__titulo {
   max-width: calc(100% - 84px);
+}
+
+/* Estado: editando el nombre inline (rename, clone o crear). Da feedback
+   visual claro de que el título está activo. El estilo queda DENTRO del
+   tab — no usamos outline (se sale del contenedor); usamos border. */
+.tab__titulo--editando {
+  position: relative;
+  border: 2px solid var(--color-acento);
+  background: #fff;
+  border-radius: var(--radio-md);
+  cursor: text;
+  padding: 2px 20px 2px 8px;  /* 20px a la derecha para el dot indicador */
+  margin: -2px 4px -2px -2px;
+  min-width: 60px;
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tab__titulo--editando:focus { outline: none; }
+
+/* Dot verde dentro del input, indica "estás editando" */
+.tab__titulo--editando::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00bda5;
+}
+
+/* Mientras el tab está en modo edición, ocultamos badge, menú (3 puntos) y X */
+.tab.tab--editando .tab__badge,
+.tab.tab--editando .tab__menu,
+.tab.tab--editando .tab__cerrar {
+  display: none !important;
+}
+
+/* Botón "aceptar" (✓) que solo aparece durante la edición — reemplaza visualmente la X */
+.tab__guardar {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  border-radius: var(--radio-sm);
+  color: var(--color-acento);
+  flex-shrink: 0;
+}
+.tab__guardar:hover {
+  background: var(--color-acento-claro);
+}
+.tab.tab--editando .tab__guardar {
+  display: inline-flex;
 }
 
 .tab__badge {

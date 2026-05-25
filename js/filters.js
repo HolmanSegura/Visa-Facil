@@ -1,10 +1,19 @@
 /* ============================================================
    FILTERS.JS
-   Aplicación combinada de: vista activa + filtros pill +
-   búsqueda. Único punto de orquestación del dataset visible.
+   Aplicación combinada de: vista activa + filtros pill + búsqueda.
+   Único punto de orquestación del dataset visible.
+
+   El filtro de "actividad" (Última actividad) admite dos formatos:
+     - Preset (string):   "hoy" | "ayer" | "semana" | "mes" |
+                          "mes_pasado" | "trimestre" | "anio"
+     - Rango (objeto):    { desde: "YYYY-MM-DD", hasta: "YYYY-MM-DD" }
+   Se aplica sobre `fechaCreacion`.
    ============================================================ */
 
 (function () {
+
+  // Fecha de referencia: en producción debería ser new Date().
+  const HOY_REF = new Date("2026-05-20");
 
   function debounce(fn, wait = 300) {
     let timer;
@@ -12,6 +21,95 @@
       clearTimeout(timer);
       timer = setTimeout(() => fn.apply(this, args), wait);
     };
+  }
+
+  function inicioDia(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }
+
+  function finDia(d) {
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  }
+
+  // Resuelve un preset de fecha a un rango concreto
+  function rangoDesdePreset(preset, hoy = HOY_REF) {
+    const desde = new Date(hoy);
+    switch (preset) {
+      case "hoy":
+        return { desde: inicioDia(hoy), hasta: finDia(hoy) };
+      case "ayer":
+        desde.setDate(hoy.getDate() - 1);
+        return { desde: inicioDia(desde), hasta: finDia(desde) };
+      case "semana":
+        desde.setDate(hoy.getDate() - 6);
+        return { desde: inicioDia(desde), hasta: finDia(hoy) };
+      case "mes":
+        return {
+          desde: inicioDia(new Date(hoy.getFullYear(), hoy.getMonth(), 1)),
+          hasta: finDia(hoy)
+        };
+      case "mes_pasado": {
+        const ini = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+        const fin = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+        return { desde: inicioDia(ini), hasta: finDia(fin) };
+      }
+      case "trimestre":
+        desde.setMonth(hoy.getMonth() - 3);
+        return { desde: inicioDia(desde), hasta: finDia(hoy) };
+      case "anio":
+        return {
+          desde: inicioDia(new Date(hoy.getFullYear(), 0, 1)),
+          hasta: finDia(hoy)
+        };
+      default:
+        return null;
+    }
+  }
+
+  function resolverRangoFecha(valorFiltro) {
+    if (!valorFiltro) return null;
+    if (typeof valorFiltro === "string") return rangoDesdePreset(valorFiltro);
+    if (valorFiltro.desde || valorFiltro.hasta) {
+      return {
+        desde: valorFiltro.desde ? inicioDia(new Date(valorFiltro.desde)) : null,
+        hasta: valorFiltro.hasta ? finDia(new Date(valorFiltro.hasta)) : null
+      };
+    }
+    return null;
+  }
+
+  const ETIQUETAS_PRESET = {
+    hoy:         "Hoy",
+    ayer:        "Ayer",
+    semana:      "Últimos 7 días",
+    mes:         "Este mes",
+    mes_pasado:  "Mes pasado",
+    trimestre:   "Último trimestre",
+    anio:        "Este año"
+  };
+
+  function fechaCorta(iso) {
+    if (!iso) return "";
+    const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+    const f = new Date(iso);
+    return `${f.getDate()} ${meses[f.getMonth()]} ${f.getFullYear()}`;
+  }
+
+  function etiquetaFecha(valorFiltro) {
+    if (!valorFiltro) return null;
+    if (typeof valorFiltro === "string") return ETIQUETAS_PRESET[valorFiltro] || valorFiltro;
+    if (valorFiltro.desde || valorFiltro.hasta) {
+      if (valorFiltro.desde && valorFiltro.hasta) {
+        return `${fechaCorta(valorFiltro.desde)} → ${fechaCorta(valorFiltro.hasta)}`;
+      }
+      if (valorFiltro.desde) return `Desde ${fechaCorta(valorFiltro.desde)}`;
+      if (valorFiltro.hasta) return `Hasta ${fechaCorta(valorFiltro.hasta)}`;
+    }
+    return null;
   }
 
   class Filtros {
@@ -22,7 +120,7 @@
 
     /**
      * Punto único de actualización del dataset visible.
-     * Se aplica:
+     * Aplica:
      *   1. Filtro de vista activa (tab)
      *   2. Búsqueda de texto
      *   3. Filtros pill (estado, actividad, propietario, firma)
@@ -48,16 +146,17 @@
         resultado = resultado.filter(it => est.filtros.estado.includes(it.estado));
       }
 
-      // Filtro: actividad (últimos N días desde fecha creación)
+      // Filtro: actividad (preset o rango personalizado sobre fechaCreacion)
       if (est.filtros.actividad) {
-        const hoy = new Date("2026-05-20");
-        const valor = est.filtros.actividad;
-        const dias = valor === "hoy" ? 0 : parseInt(valor, 10);
-        resultado = resultado.filter(it => {
-          const fc = new Date(it.fechaCreacion);
-          const diff = (hoy - fc) / 86400000;
-          return diff >= 0 && diff <= (dias === 0 ? 1 : dias);
-        });
+        const rango = resolverRangoFecha(est.filtros.actividad);
+        if (rango) {
+          resultado = resultado.filter(it => {
+            const fc = new Date(it.fechaCreacion);
+            if (rango.desde && fc < rango.desde) return false;
+            if (rango.hasta && fc > rango.hasta) return false;
+            return true;
+          });
+        }
       }
 
       // Filtro: propietario
@@ -74,34 +173,45 @@
       est.paginaActual = 1;
 
       if (window.tablaInstance) window.tablaInstance.renderizar();
+      if (window.actualizarContadoresExport) window.actualizarContadoresExport();
       this.actualizarPillsUI();
     }
 
-    /** Actualiza el estado visual de los pills (activos, contadores). */
+    /** Actualiza el estado visual de los pills (activos, contadores, etiqueta de fecha). */
     actualizarPillsUI() {
       const est = window.estadoApp;
       document.querySelectorAll(".filtro-pill").forEach(pill => {
         const tipo = pill.dataset.filtro;
         let count = 0;
+        let etiqueta = null;
+
         if (tipo === "estado")      count = est.filtros.estado.length;
         if (tipo === "propietario") count = est.filtros.propietario.length;
         if (tipo === "firma")       count = est.filtros.firma.length;
-        if (tipo === "actividad")   count = est.filtros.actividad ? 1 : 0;
+        if (tipo === "actividad") {
+          etiqueta = etiquetaFecha(est.filtros.actividad);
+          count = etiqueta ? 1 : 0;
+        }
 
         const tieneValor = count > 0;
         pill.classList.toggle("tiene-valor", tieneValor);
 
-        // Limpiar contadores previos
-        const contadorPrevio = pill.querySelector(".filtro-pill__contador");
-        if (contadorPrevio) contadorPrevio.remove();
+        // Limpiar marcadores previos (contador o valor)
+        pill.querySelectorAll(".filtro-pill__contador, .filtro-pill__valor").forEach(n => n.remove());
 
         if (tieneValor) {
-          const cont = document.createElement("span");
-          cont.className = "filtro-pill__contador";
-          cont.textContent = count;
-          // Insertar antes del caret SVG
           const caret = pill.querySelector("svg");
-          pill.insertBefore(cont, caret);
+          if (tipo === "actividad" && etiqueta) {
+            const v = document.createElement("span");
+            v.className = "filtro-pill__valor";
+            v.textContent = etiqueta;
+            pill.insertBefore(v, caret);
+          } else {
+            const cont = document.createElement("span");
+            cont.className = "filtro-pill__contador";
+            cont.textContent = count;
+            pill.insertBefore(cont, caret);
+          }
         }
       });
     }
@@ -138,5 +248,8 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     window.filtrosInstance = new Filtros();
+    window.resolverRangoFecha = resolverRangoFecha;
+    window.etiquetaFecha = etiquetaFecha;
+    window.fechaCortaIso = fechaCorta;
   });
 })();

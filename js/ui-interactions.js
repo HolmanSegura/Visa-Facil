@@ -267,12 +267,8 @@
       Popovers.cerrar();
 
       if (accion === "crear-vista") {
-        const nombre = prompt("Nombre para la nueva vista:");
-        if (nombre && nombre.trim() && window.vistasInstance) {
-          const id = "custom_" + Date.now();
-          window.vistasInstance.agregarVista(id, nombre.trim(), () => true);
-          window.vistasInstance.activarVista(id);
-          window.mostrarToast("✓ Vista creada");
+        if (window.vistasInstance && typeof window.vistasInstance.crearVistaInline === "function") {
+          window.vistasInstance.crearVistaInline();
         }
       }
 
@@ -347,8 +343,11 @@
     if (popover) {
       popover.addEventListener("click", (e) => {
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
-        if (accion === "cab-informes") window.mostrarToast("🔗 Abriendo informes de cotizaciones...");
-        if (accion === "cab-descargar") window.mostrarToast("⬇ Descargando cotizaciones publicadas...");
+        if (!accion) return;
+        if (accion === "cab-informes")            window.mostrarToast("🔗 Abriendo informes de cotizaciones...");
+        if (accion === "cab-descargar")           window.mostrarToast("⬇ Descargando cotizaciones publicadas...");
+        if (accion === "cab-config-comisiones")   Modales.abrir("modal-config-comisiones");
+        if (accion === "cab-reporte-comisiones")  Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
       });
     }
@@ -528,15 +527,57 @@
       });
     }
 
-    // ACTIVIDAD
+    // ACTIVIDAD — presets + rango personalizado
     const popAct = document.getElementById("popover-filtro-actividad");
     if (popAct) {
-      popAct.querySelectorAll(".popover__item").forEach(it => {
+      // Presets (clic directo aplica)
+      popAct.querySelectorAll(".popover__item[data-filtro-val]").forEach(it => {
         it.addEventListener("click", () => {
           const val = it.dataset.filtroVal;
           window.estadoApp.filtros.actividad = val || null;
+          // Limpiar inputs del rango personalizado
+          const inDesde = document.getElementById("filtro-actividad-desde");
+          const inHasta = document.getElementById("filtro-actividad-hasta");
+          if (inDesde) inDesde.value = "";
+          if (inHasta) inHasta.value = "";
           if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
           Popovers.cerrar();
+        });
+      });
+
+      // Rango personalizado: Aplicar / Limpiar
+      popAct.querySelectorAll("[data-actividad-accion]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const accion = btn.dataset.actividadAccion;
+          const inDesde = document.getElementById("filtro-actividad-desde");
+          const inHasta = document.getElementById("filtro-actividad-hasta");
+          if (accion === "limpiar") {
+            if (inDesde) inDesde.value = "";
+            if (inHasta) inHasta.value = "";
+            window.estadoApp.filtros.actividad = null;
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            Popovers.cerrar();
+            return;
+          }
+          if (accion === "aplicar") {
+            const desde = inDesde ? inDesde.value : "";
+            const hasta = inHasta ? inHasta.value : "";
+            if (!desde && !hasta) {
+              window.mostrarToast("⚠ Selecciona al menos una fecha");
+              return;
+            }
+            if (desde && hasta && desde > hasta) {
+              window.mostrarToast("⚠ La fecha 'Desde' no puede ser posterior a 'Hasta'");
+              return;
+            }
+            window.estadoApp.filtros.actividad = {
+              desde: desde || null,
+              hasta: hasta || null
+            };
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            Popovers.cerrar();
+          }
         });
       });
     }

@@ -288,12 +288,8 @@
       if (!accion) return;
       Popovers.cerrar();
       if (accion === "crear-vista") {
-        const n = prompt("Nombre de la nueva vista:");
-        if (n && n.trim() && window.vistasInstance) {
-          const id = "custom_" + Date.now();
-          window.vistasInstance.agregarVista(id, n.trim(), () => true);
-          window.vistasInstance.activarVista(id);
-          window.mostrarToast("✓ Vista creada");
+        if (window.vistasInstance && typeof window.vistasInstance.crearVistaInline === "function") {
+          window.vistasInstance.crearVistaInline();
         }
       }
       if (accion === "agregar-vista") {
@@ -302,23 +298,21 @@
     });
   }
 
-  /* ---------- CABECERA MENU + EXPORTAR ---------- */
+  /* ---------- CABECERA MENU ----------
+     El botón "Exportar" ahora abre un popover (data-popover) gestionado
+     por `caja-export.js`. Aquí solo manejamos las opciones secundarias
+     del menú de 3 puntos. */
   function initCabeceraMenu() {
     const popover = document.getElementById("popover-cabecera-menu");
     if (popover) {
       popover.addEventListener("click", (e) => {
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
-        if (accion === "cab-informes") window.mostrarToast("📊 Abriendo informes de caja...");
-        if (accion === "cab-cierre") window.mostrarToast("🔒 Iniciando cierre diario de caja...");
+        if (!accion) return;
+        if (accion === "cab-informes")            window.mostrarToast("📊 Abriendo informes de caja...");
+        if (accion === "cab-cierre")              window.mostrarToast("🔒 Iniciando cierre diario de caja...");
+        if (accion === "cab-config-comisiones")   Modales.abrir("modal-config-comisiones");
+        if (accion === "cab-reporte-comisiones")  Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
-      });
-    }
-
-    const btnExp = document.getElementById("btn-exportar");
-    if (btnExp) {
-      btnExp.addEventListener("click", () => {
-        const total = window.estadoApp.datosVisibles.length;
-        window.mostrarToast(`⬇ Exportando ${total} movimientos a Excel (filtros aplicados)`);
       });
     }
   }
@@ -491,15 +485,57 @@
       });
     }
 
-    // FECHA
+    // FECHA — presets + rango personalizado
     const popFecha = document.getElementById("popover-filtro-fecha");
     if (popFecha) {
-      popFecha.querySelectorAll(".popover__item").forEach(it => {
+      // Presets (clic directo aplica)
+      popFecha.querySelectorAll(".popover__item[data-filtro-val]").forEach(it => {
         it.addEventListener("click", () => {
           const v = it.dataset.filtroVal;
           window.estadoApp.filtros.fecha = v || null;
+          // Limpiar inputs del rango personalizado
+          const inDesde = document.getElementById("filtro-fecha-desde");
+          const inHasta = document.getElementById("filtro-fecha-hasta");
+          if (inDesde) inDesde.value = "";
+          if (inHasta) inHasta.value = "";
           if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
           Popovers.cerrar();
+        });
+      });
+
+      // Rango personalizado: Aplicar / Limpiar
+      popFecha.querySelectorAll("[data-fecha-accion]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const accion = btn.dataset.fechaAccion;
+          const inDesde = document.getElementById("filtro-fecha-desde");
+          const inHasta = document.getElementById("filtro-fecha-hasta");
+          if (accion === "limpiar") {
+            if (inDesde) inDesde.value = "";
+            if (inHasta) inHasta.value = "";
+            window.estadoApp.filtros.fecha = null;
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            Popovers.cerrar();
+            return;
+          }
+          if (accion === "aplicar") {
+            const desde = inDesde ? inDesde.value : "";
+            const hasta = inHasta ? inHasta.value : "";
+            if (!desde && !hasta) {
+              window.mostrarToast("⚠ Selecciona al menos una fecha");
+              return;
+            }
+            if (desde && hasta && desde > hasta) {
+              window.mostrarToast("⚠ La fecha 'Desde' no puede ser posterior a 'Hasta'");
+              return;
+            }
+            window.estadoApp.filtros.fecha = {
+              desde: desde || null,
+              hasta: hasta || null
+            };
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            Popovers.cerrar();
+          }
         });
       });
     }

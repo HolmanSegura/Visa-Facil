@@ -64,6 +64,7 @@
     color var(--trans-rapida);
   white-space: nowrap;
   overflow: hidden;
+  text-decoration: none;
 }
 
 .sidebar__btn:hover {

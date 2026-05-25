@@ -391,3 +391,356 @@
     width: auto;
   }
 }
+/* ============================================================
+   NUEVOS COMPONENTES — POLISH iteración 3
+   - Filtro de fecha (presets + rango personalizado)
+   - Popover de opciones de exportación
+   - Modales de configuración y reporte de comisiones
+   ============================================================ */
+
+/* ----- Pill: etiqueta cuando muestra el valor del filtro de fecha ----- */
+.filtro-pill__valor {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  margin-right: 4px;
+  font-size: 11px;
+  font-weight: var(--font-peso-medio);
+  color: var(--color-acento);
+  background: var(--color-acento-claro);
+  border-radius: var(--radio-md);
+  white-space: nowrap;
+}
+
+/* ----- Popover de fecha — sección de rango personalizado ----- */
+.popover__seccion-fecha {
+  padding: var(--esp-3);
+  border-top: 1px solid var(--color-borde);
+  background: var(--color-fondo-suave);
+}
+
+.popover__rango-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  margin-bottom: var(--esp-3);
+}
+
+.popover__rango-fila .form-input--sm {
+  flex: 1;
+  min-width: 0;
+}
+
+.popover__rango-sep {
+  color: var(--color-texto-debil);
+  font-size: 14px;
+  font-weight: var(--font-peso-bold);
+}
+
+.popover__rango-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--esp-2);
+}
+
+/* Variantes pequeñas de inputs y botones (reusables) */
+.form-input--sm,
+.form-select--sm {
+  height: 30px;
+  padding: 0 var(--esp-2);
+  font-size: var(--font-tam-sm);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo-panel);
+  color: var(--color-texto);
+}
+
+.btn--sm {
+  height: 28px;
+  padding: 0 var(--esp-3);
+  font-size: var(--font-tam-sm);
+}
+
+/* ----- Popover de exportación ----- */
+.popover__nota {
+  padding: 0 var(--esp-3) var(--esp-3);
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  line-height: 1.4;
+}
+
+.popover__item--rico {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--trans-rapida);
+}
+
+.popover__item--rico:hover {
+  background: var(--color-fondo-hover);
+}
+
+.popover__item-icono {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-acento-claro);
+  color: var(--color-acento);
+  border-radius: var(--radio-md);
+}
+
+.popover__item-cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.popover__item-titulo {
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto);
+  line-height: 1.3;
+}
+
+.popover__item-sub {
+  margin-top: 2px;
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-debil);
+}
+
+/* ----- Modal: Configurar comisiones ----- */
+.modal__intro {
+  margin: 0 0 var(--esp-4);
+  padding: var(--esp-3);
+  background: var(--color-fondo-suave);
+  border-left: 3px solid var(--color-acento);
+  border-radius: var(--radio-md);
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  line-height: 1.5;
+}
+
+.config-comisiones__tabs {
+  display: flex;
+  gap: var(--esp-2);
+  margin-bottom: var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.config-comisiones__tab {
+  padding: var(--esp-2) var(--esp-3);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: all var(--trans-rapida);
+}
+
+.config-comisiones__tab:hover {
+  color: var(--color-texto);
+}
+
+.config-comisiones__tab--activo {
+  color: var(--color-acento);
+  border-bottom-color: var(--color-acento);
+}
+
+.tabla-config-comisiones {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-tam-md);
+}
+
+.tabla-config-comisiones th,
+.tabla-config-comisiones td {
+  padding: var(--esp-2) var(--esp-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+  vertical-align: middle;
+}
+
+.tabla-config-comisiones th {
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: var(--color-fondo-suave);
+}
+
+.tabla-config-comisiones__vacio {
+  text-align: center;
+  padding: var(--esp-6);
+  color: var(--color-texto-debil);
+  font-style: italic;
+}
+
+.input-pct {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100px;
+}
+
+.input-pct .form-input {
+  width: 100%;
+  padding-right: 24px;
+  text-align: right;
+}
+
+.input-pct__suffix {
+  position: absolute;
+  right: var(--esp-2);
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-debil);
+  pointer-events: none;
+}
+
+.btn-icono-mini {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radio-md);
+  color: var(--color-texto-debil);
+  cursor: pointer;
+  transition: all var(--trans-rapida);
+}
+
+.btn-icono-mini:hover {
+  background: var(--color-fondo-hover);
+  color: var(--color-estado-vencido);
+  border-color: var(--color-borde);
+}
+
+/* ----- Modal: Reporte de comisiones ----- */
+.reporte-comisiones__filtros {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  background: var(--color-fondo-suave);
+  border-radius: var(--radio-lg);
+  margin-bottom: var(--esp-4);
+  align-items: end;
+}
+
+.reporte-comisiones__filtros .form-grupo {
+  margin: 0;
+}
+
+.form-grupo--acciones {
+  display: flex;
+  align-items: flex-end;
+}
+
+.reporte-comisiones__resumen {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--esp-3);
+  margin-bottom: var(--esp-4);
+}
+
+.reporte-comisiones__kpi {
+  padding: var(--esp-3);
+  background: var(--color-fondo-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+}
+
+.reporte-comisiones__kpi-titulo {
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: var(--esp-2);
+}
+
+.reporte-comisiones__kpi-valor {
+  font-size: 20px;
+  font-weight: var(--font-peso-bold);
+  color: var(--color-texto);
+  line-height: 1.1;
+}
+
+.reporte-comisiones__kpi-valor.diff-pos { color: #059669; }
+.reporte-comisiones__kpi-valor.diff-neg { color: #dc2626; }
+
+.reporte-comisiones__kpi-sub {
+  margin-top: var(--esp-1);
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-debil);
+}
+
+.tabla-reporte-comisiones {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-tam-md);
+}
+
+.tabla-reporte-comisiones th,
+.tabla-reporte-comisiones td {
+  padding: var(--esp-2) var(--esp-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tabla-reporte-comisiones th {
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: var(--color-fondo-suave);
+  position: sticky;
+  top: 0;
+}
+
+.tabla-reporte-comisiones .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-reporte-comisiones tfoot th,
+.tabla-reporte-comisiones tfoot td {
+  font-weight: var(--font-peso-bold);
+  background: var(--color-fondo-suave);
+  border-top: 2px solid var(--color-borde-fuerte);
+}
+
+.tabla-reporte-comisiones__vacio {
+  text-align: center;
+  padding: var(--esp-6) !important;
+  color: var(--color-texto-debil);
+  font-style: italic;
+}
+
+.diff-pos { color: #059669; }
+.diff-neg { color: #dc2626; }
+
+/* Responsive — filtros del reporte */
+@media (max-width: 768px) {
+  .reporte-comisiones__filtros {
+    grid-template-columns: 1fr;
+  }
+  .reporte-comisiones__resumen {
+    grid-template-columns: 1fr;
+  }
+}
