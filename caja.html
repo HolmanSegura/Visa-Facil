@@ -632,6 +632,15 @@
               <input type="number" id="g-valor" class="form-input" placeholder="0" min="0" step="100" />
             </div>
           </div>
+          <!-- Campo visible solo cuando categoría = "Comisiones" -->
+          <div class="form-grupo" id="g-producto-comision-wrap" hidden>
+            <label class="form-label form-label--req" for="g-producto-comision">Producto asociado</label>
+            <input type="text" id="g-producto-comision" class="form-input"
+                   placeholder="Busca el producto vendido…"
+                   data-autocomplete-prod autocomplete="off" />
+            <span class="form-help">El valor de la comisión se calcula automáticamente.</span>
+          </div>
+
           <div class="form-grupo form-grupo--fila">
             <div>
               <label class="form-label" for="g-moneda">Moneda</label>

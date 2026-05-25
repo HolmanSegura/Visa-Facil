@@ -1,41 +1,73 @@
 /* ============================================================
    CAJA-COMISIONES.JS
-   Tareas 4 y 5 — configuración y reporte de comisiones.
+   Configuración, cálculo automático y reporte de comisiones.
 
-   Modelo frontend (contrato propuesto para el backend):
-     configComisiones = {
-       version:  1,
-       porAsesor: [
-         { responsable: "Néstor Goyes", porcentaje: 5, base: "ingresos" }
-       ],
-       porProducto: [
-         { producto: "Implementación Shopify", porcentaje: 8 }
-       ]
-     }
+   Modelo de datos (localStorage "caja:configComisiones"):
+   {
+     version: 2,
+     porAsesor: [
+       { responsable: "Néstor Goyes", porcentaje: 5, base: "ingresos", activo: true }
+     ],
+     porProducto: [
+       { productoId: "hs-123", producto: "Consultoría HubSpot", porcentaje: 8 }
+     ]
+   }
 
-   Persistencia: localStorage (clave "caja:configComisiones").
-   Cuando el backend exponga endpoints, basta reemplazar
-   `cargarConfig()` y `guardarConfig()` por llamadas HTTP.
+   Motor calcularComisionesAutomaticas(facturas):
+   - Acepta facturas normalizadas de obtenerFacturas() o movimientos
+     de caja con tipo === "ingreso".
+   - Filtra por estados cerrados (paid / pagado / aprobado).
+   - Prioridad 1: comisión por producto específico.
+   - Prioridad 2: comisión global del asesor propietario.
    ============================================================ */
 (function () {
 
-  const KEY_LS  = "caja:configComisiones";
-  const DEFAULT = {
-    version: 1,
-    porAsesor: [],
-    porProducto: []
-  };
+  const KEY_LS         = "caja:configComisiones";
+  const DEFAULT        = { version: 2, porAsesor: [], porProducto: [] };
+  const CACHE_KEY_PROD = "hubspot:productos:v1";   // clave compartida con cotizaciones-productos.js
+  const CACHE_TTL_PROD = 15 * 60 * 1000;           // 15 minutos
+
+  // Catálogo HubSpot en memoria (compartido entre renders)
+  let catalogoProductos = [];
+  let catalogoCargando  = false;
+
+  // Fallback idéntico al de cotizaciones-productos.js — se usa cuando la
+  // API no responde y el caché también está vacío.
+  const PRODUCTOS_FALLBACK = [
+    { id: "ej-1",  nombre: "Sitio web corporativo",          descripcion: "Diseño y desarrollo responsive",          precio: 4500000  },
+    { id: "ej-2",  nombre: "Tienda Shopify",                  descripcion: "E-commerce con integración de pagos",      precio: 8200000  },
+    { id: "ej-3",  nombre: "SEO técnico mensual",             descripcion: "Optimización en motores de búsqueda",      precio: 1200000  },
+    { id: "ej-4",  nombre: "Soporte y mantenimiento mensual", descripcion: "Mantenimiento + soporte 20 h/mes",         precio: 980000   },
+    { id: "ej-5",  nombre: "Consultoría HubSpot",             descripcion: "Configuración y onboarding CRM",          precio: 2800000  },
+    { id: "ej-6",  nombre: "Integración API personalizada",   descripcion: "Desarrollo de integraciones a medida",     precio: 3600000  },
+    { id: "ej-7",  nombre: "App móvil MVP (iOS y Android)",   descripcion: "Desarrollo multiplataforma React Native",  precio: 35000000 },
+    { id: "ej-8",  nombre: "Migración Google Cloud",          descripcion: "Migración, configuración e IaC en GCP",   precio: 12000000 },
+    { id: "ej-9",  nombre: "Capacitación HubSpot (4 h)",      descripcion: "Sesión de formación para el equipo",      precio: 800000   },
+    { id: "ej-10", nombre: "Auditoría UX/UI",                 descripcion: "Evaluación heurística + mapa de mejoras", precio: 4200000  }
+  ];
 
   // -----------------------------------------------------------------
-  // PERSISTENCIA (placeholder frontend)
+  // UTILIDADES DE ESCAPE
+  // -----------------------------------------------------------------
+  function escHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // -----------------------------------------------------------------
+  // PERSISTENCIA
   // -----------------------------------------------------------------
   function cargarConfig() {
     try {
       const raw = localStorage.getItem(KEY_LS);
       if (!raw) return clonarDefault();
       const parsed = JSON.parse(raw);
-      // Validación mínima del shape esperado
       if (!parsed || !Array.isArray(parsed.porAsesor)) return clonarDefault();
+      // Migrar registros sin campo `activo` (versión 1 → 2)
+      parsed.porAsesor = (parsed.porAsesor || []).map(a =>
+        a.activo === undefined ? { ...a, activo: true } : a
+      );
       return Object.assign(clonarDefault(), parsed);
     } catch (e) {
       console.warn("[Comisiones] Config corrupta, usando default", e);
@@ -56,17 +88,21 @@
   }
 
   // -----------------------------------------------------------------
-  // SEED: si nunca se ha configurado, sembramos a partir de los
-  // responsables que aparecen en los movimientos (5% por defecto).
+  // SEED INICIAL
+  // Puebla la config con todos los responsables de los movimientos
+  // (5% por defecto, activo: true) si nunca se ha configurado.
   // -----------------------------------------------------------------
   function asegurarConfigInicial() {
     const cfg = cargarConfig();
     if (cfg.porAsesor.length === 0 && window.estadoApp) {
-      const unicos = [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable))].sort();
+      const unicos = [...new Set(
+        window.estadoApp.datosOriginales.map(m => m.responsable).filter(Boolean)
+      )].sort();
       cfg.porAsesor = unicos.map(n => ({
         responsable: n,
         porcentaje:  5,
-        base:        "ingresos"
+        base:        "ingresos",
+        activo:      true
       }));
       guardarConfig(cfg);
     }
@@ -74,99 +110,456 @@
   }
 
   // -----------------------------------------------------------------
-  // MODAL: CONFIGURAR COMISIONES (Task 4)
+  // CATÁLOGO DE PRODUCTOS HUBSPOT
+  // Orden de fuentes:
+  //   1. Módulo cotizaciones-productos (ya cargado en memoria)
+  //   2. Caché localStorage compartida (hubspot:productos:v1, TTL 15 min)
+  //   3. API HubSpot a través del proxy CORS
+  //   4. PRODUCTOS_FALLBACK (garantiza que el select nunca quede vacío)
   // -----------------------------------------------------------------
-  function renderConfigComisiones() {
+  async function cargarCatalogoProductos(forzar = false) {
+    if (catalogoCargando) return catalogoProductos;
+    if (catalogoProductos.length > 0 && !forzar) return catalogoProductos;
+
+    // 1. Módulo de cotizaciones ya tiene el catálogo en memoria → reutilizar
+    const enMemoria = window.ProductosCotizacion?.getCatalogo?.();
+    if (Array.isArray(enMemoria) && enMemoria.length > 0 && !forzar) {
+      catalogoProductos = enMemoria;
+      console.log(`[Comisiones] Catálogo reutilizado de cotizaciones-productos (${catalogoProductos.length})`);
+      return catalogoProductos;
+    }
+
+    // 2. Caché localStorage compartida
+    if (!forzar) {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY_PROD);
+        if (raw) {
+          const { ts, data } = JSON.parse(raw);
+          if (Date.now() - ts < CACHE_TTL_PROD && Array.isArray(data) && data.length > 0) {
+            catalogoProductos = data;
+            console.log(`[Comisiones] Catálogo cargado desde caché (${catalogoProductos.length})`);
+            return catalogoProductos;
+          }
+        }
+      } catch (_) { /* caché corrupta — continuar */ }
+    }
+
+    // 3. Llamada a la API
+    catalogoCargando = true;
+    try {
+      const productos = await window.HubSpotAPI?.obtenerTodosLosProductos?.();
+      if (Array.isArray(productos) && productos.length > 0) {
+        catalogoProductos = productos;
+        console.log(`[Comisiones] Catálogo cargado desde HubSpot (${catalogoProductos.length})`);
+      } else {
+        console.warn("[Comisiones] HubSpot devolvió 0 productos — usando fallback de prueba.");
+        catalogoProductos = PRODUCTOS_FALLBACK;
+      }
+    } catch (e) {
+      console.warn("[Comisiones] No se pudo cargar catálogo HubSpot:", e.message);
+      // 4. Fallback garantizado — el select nunca queda bloqueado en "Cargando…"
+      catalogoProductos = PRODUCTOS_FALLBACK;
+    } finally {
+      catalogoCargando = false;
+    }
+
+    return catalogoProductos;
+  }
+
+  /** Genera los <option> del select de producto para una fila. */
+  function opcionesProductos(selectedNombre = "") {
+    // Si el catálogo aún está vacío (no debería ocurrir después del await,
+    // pero por seguridad mostramos un placeholder no bloqueante).
+    if (catalogoProductos.length === 0) {
+      return selectedNombre
+        ? `<option value="">Seleccionar producto…</option>
+           <option value="${escHtml(selectedNombre)}" selected>${escHtml(selectedNombre)}</option>`
+        : `<option value="">Sin productos disponibles</option>`;
+    }
+
+    const base = `<option value="">Seleccionar producto…</option>`;
+    const opts = catalogoProductos.map(p => {
+      const sel = p.nombre === selectedNombre ? "selected" : "";
+      return `<option value="${escHtml(p.nombre)}" data-id="${escHtml(p.id)}" ${sel}>${escHtml(p.nombre)}</option>`;
+    }).join("");
+    return base + opts;
+  }
+
+  // -----------------------------------------------------------------
+  // MOTOR DE CÁLCULO AUTOMÁTICO
+  // -----------------------------------------------------------------
+
+  /**
+   * Dada una lista de facturas (invoices HubSpot normalizadas, o
+   * movimientos de caja con tipo === "ingreso"), filtra las que están
+   * cerradas/pagadas y calcula la comisión que corresponde a cada
+   * línea de artículo aplicando las reglas de configuración.
+   *
+   * @param  {Array} facturas
+   * @returns {Array} liquidaciones — listas para renderizar en tabla
+   *   Cada objeto: { facturaId, facturaTitulo, responsable, producto,
+   *                  fuente, porcentaje, base, comision, fecha }
+   */
+  function calcularComisionesAutomaticas(facturas) {
+    if (!Array.isArray(facturas) || facturas.length === 0) return [];
+
     const cfg = cargarConfig();
 
-    // --- Tab Asesor ---
-    const tbodyA = document.getElementById("config-comisiones-tbody-asesor");
-    if (tbodyA) {
-      tbodyA.innerHTML = cfg.porAsesor.map((row, idx) => `
-        <tr data-row-asesor="${idx}">
+    // Solo asesores activos participan en nuevos cálculos
+    const asesoresActivos = cfg.porAsesor.filter(a => a.activo !== false);
+
+    // Estados que identifican una venta cerrada / pagada
+    const ESTADOS_CERRADOS = new Set(["paid", "pagado", "aprobado", "pago"]);
+
+    const cerradas = facturas.filter(f => {
+      const est = (f.estado || f.hs_invoice_status || "").toLowerCase().trim();
+      return ESTADOS_CERRADOS.has(est);
+    });
+
+    const resultado = [];
+
+    cerradas.forEach(factura => {
+      const responsable = (
+        factura.responsable || factura.propietario || factura.hs_owner || ""
+      ).trim();
+
+      // Asesor activo que coincide con el propietario de la factura
+      const configAsesor = asesoresActivos.find(a =>
+        a.responsable.toLowerCase() === responsable.toLowerCase()
+      );
+
+      // Construir líneas: si la factura tiene items explícitos los usa;
+      // si no (Invoices HubSpot Starter), trata la factura como un ítem único.
+      const lineas = Array.isArray(factura.lineas) && factura.lineas.length > 0
+        ? factura.lineas
+        : [{
+            nombre:     factura.etiqueta || factura.titulo || factura.descripcion || "Servicio",
+            productoId: null,
+            subtotal:   factura.total ?? factura.cantidad ?? factura.valor ?? 0
+          }];
+
+      lineas.forEach(linea => {
+        const montoBase = Number(linea.subtotal ?? linea.monto ?? linea.valor ?? 0);
+        if (montoBase <= 0) return;
+
+        // ── Prioridad 1: regla por producto específico ──────────────
+        const configProducto = cfg.porProducto.find(p =>
+          (p.productoId && p.productoId === linea.productoId) ||
+          p.producto.toLowerCase() === (linea.nombre || "").toLowerCase()
+        );
+
+        if (configProducto) {
+          resultado.push({
+            facturaId:     factura.id,
+            facturaTitulo: factura.etiqueta || factura.titulo || factura.descripcion || "",
+            responsable,
+            producto:      linea.nombre,
+            fuente:        "producto",
+            porcentaje:    configProducto.porcentaje,
+            base:          montoBase,
+            comision:      Math.round(montoBase * configProducto.porcentaje / 100),
+            fecha:         factura.creado || factura.fechaCreacion || factura.fecha || ""
+          });
+          return; // no aplicar también la regla de asesor
+        }
+
+        // ── Prioridad 2: comisión global del asesor ─────────────────
+        if (configAsesor) {
+          resultado.push({
+            facturaId:     factura.id,
+            facturaTitulo: factura.etiqueta || factura.titulo || factura.descripcion || "",
+            responsable,
+            producto:      linea.nombre,
+            fuente:        "asesor",
+            porcentaje:    configAsesor.porcentaje,
+            base:          montoBase,
+            comision:      Math.round(montoBase * configAsesor.porcentaje / 100),
+            fecha:         factura.creado || factura.fechaCreacion || factura.fecha || ""
+          });
+        }
+        // Sin regla aplicable → sin comisión (no se registra)
+      });
+    });
+
+    return resultado;
+  }
+
+  // -----------------------------------------------------------------
+  // RENDER DEL MODAL DE CONFIGURACIÓN
+  // -----------------------------------------------------------------
+
+  function renderConfigComisiones() {
+    const cfg = cargarConfig();
+    renderTabAsesor(cfg);
+    renderTabProducto(cfg);
+  }
+
+  function renderTabAsesor(cfg) {
+    const tbody = document.getElementById("config-comisiones-tbody-asesor");
+    if (!tbody) return;
+
+    if (cfg.porAsesor.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="tabla-config-comisiones__vacio">Sin asesores. Se generan automáticamente al guardar movimientos.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = cfg.porAsesor.map((row, idx) => {
+      const activo = row.activo !== false;
+      const iconToggle = activo
+        ? `<svg viewBox="0 0 24 24" width="14" height="14" title="Inactivar"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4Zm0 3a5 5 0 1 0 0 10A5 5 0 0 0 12 7Z"/></svg>`
+        : `<svg viewBox="0 0 24 24" width="14" height="14" title="Reactivar"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4Z"/></svg>`;
+
+      return `
+        <tr data-row-asesor="${idx}"
+            data-responsable="${escHtml(row.responsable)}"
+            data-activo="${activo}"
+            class="${activo ? "" : "asesor-row--inactivo"}">
           <td>
             <div class="celda-avatar">
-              <span class="celda-avatar__circulo" style="width:24px;height:24px;font-size:10px;">${window.obtenerIniciales(row.responsable)}</span>
-              ${row.responsable}
+              <span class="celda-avatar__circulo" style="width:24px;height:24px;font-size:10px;">
+                ${window.obtenerIniciales(row.responsable)}
+              </span>
+              <span class="asesor-nombre">${escHtml(row.responsable)}</span>
+              ${activo ? "" : `<span class="badge-inactivo">Inactivo</span>`}
             </div>
           </td>
           <td>
             <div class="input-pct">
               <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
-                     value="${row.porcentaje}" data-field="porcentaje" />
+                     value="${row.porcentaje}" data-field="porcentaje" ${activo ? "" : "disabled"} />
               <span class="input-pct__suffix">%</span>
             </div>
           </td>
           <td>
-            <select class="form-select form-select--sm" data-field="base">
+            <select class="form-select form-select--sm" data-field="base" ${activo ? "" : "disabled"}>
               <option value="ingresos"  ${row.base === "ingresos"  ? "selected" : ""}>Ingresos del asesor</option>
               <option value="por_venta" ${row.base === "por_venta" ? "selected" : ""}>Por venta cerrada</option>
             </select>
           </td>
           <td>
-            <button class="btn-icono-mini" data-accion-asesor="quitar" title="Quitar">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
+            <button class="btn-icono-mini ${activo ? "btn-activo--on" : "btn-activo--off"}"
+                    data-accion-asesor="toggle-activo"
+                    title="${activo ? "Inactivar asesor (soft-delete)" : "Reactivar asesor"}">
+              ${iconToggle}
             </button>
           </td>
-        </tr>
-      `).join("");
-    }
-
-    // --- Tab Producto ---
-    const tbodyP = document.getElementById("config-comisiones-tbody-producto");
-    if (tbodyP) {
-      if (cfg.porProducto.length === 0) {
-        tbodyP.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">No hay productos configurados todavía. Usa el botón "+ Agregar producto" para empezar.</td></tr>`;
-      } else {
-        tbodyP.innerHTML = cfg.porProducto.map((row, idx) => `
-          <tr data-row-producto="${idx}">
-            <td>
-              <input type="text" class="form-input form-input--sm" value="${row.producto}" data-field="producto" placeholder="Ej: Implementación Shopify"/>
-            </td>
-            <td>
-              <div class="input-pct">
-                <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
-                       value="${row.porcentaje}" data-field="porcentaje"/>
-                <span class="input-pct__suffix">%</span>
-              </div>
-            </td>
-            <td>
-              <button class="btn-icono-mini" data-accion-producto="quitar" title="Quitar">
-                <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
-              </button>
-            </td>
-          </tr>
-        `).join("");
-      }
-    }
+        </tr>`;
+    }).join("");
   }
 
+  function renderTabProducto(cfg) {
+    const tbody = document.getElementById("config-comisiones-tbody-producto");
+    if (!tbody) return;
+
+    if (cfg.porProducto.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin productos configurados todavía. Usa "+ Agregar producto".</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = cfg.porProducto.map((row, idx) => `
+      <tr data-row-producto="${idx}">
+        <td>
+          <input type="text" class="form-input form-input--sm"
+                 data-field="producto-texto" data-autocomplete-prod
+                 value="${escHtml(row.producto)}"
+                 data-prod-id="${escHtml(row.productoId || '')}"
+                 placeholder="Busca un producto…" autocomplete="off"
+                 style="width:100%;max-width:260px;" />
+        </td>
+        <td>
+          <div class="input-pct">
+            <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
+                   value="${row.porcentaje}" data-field="porcentaje" />
+            <span class="input-pct__suffix">%</span>
+          </div>
+        </td>
+        <td>
+          <button class="btn-icono-mini" data-accion-producto="quitar" title="Quitar">
+            <svg viewBox="0 0 24 24" width="14" height="14">
+              <path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/>
+            </svg>
+          </button>
+        </td>
+      </tr>`
+    ).join("");
+  }
+
+  // -----------------------------------------------------------------
+  // LEER CONFIG DESDE LA UI (antes de guardar)
+  // -----------------------------------------------------------------
   function leerConfigDesdeUI() {
     const cfg = clonarDefault();
 
     document.querySelectorAll("[data-row-asesor]").forEach(tr => {
-      const nombre = tr.querySelector(".celda-avatar")?.textContent.trim() || "";
-      const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]').value) || 0;
-      const base   = tr.querySelector('[data-field="base"]').value;
-      if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base });
+      const nombre = tr.dataset.responsable || "";
+      const activo = tr.dataset.activo !== "false";
+      const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      const base   = tr.querySelector('[data-field="base"]')?.value || "ingresos";
+      if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
 
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
-      const prod = tr.querySelector('[data-field="producto"]').value.trim();
-      const pct  = parseFloat(tr.querySelector('[data-field="porcentaje"]').value) || 0;
-      if (prod) cfg.porProducto.push({ producto: prod, porcentaje: pct });
+      const inputEl = tr.querySelector('[data-field="producto-texto"]');
+      const prod    = inputEl?.value?.trim() || "";
+      const prodId  = inputEl?.dataset?.prodId || "";
+      const pct     = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      if (prod) cfg.porProducto.push({ productoId: prodId, producto: prod, porcentaje: pct });
     });
 
     return cfg;
   }
 
+  // -----------------------------------------------------------------
+  // AUTOCOMPLETADO DE PRODUCTOS — FÁBRICA REUTILIZABLE
+  // Convierte cualquier input[data-autocomplete-prod] dentro de
+  // containerEl en un buscador predictivo con dropdown flotante.
+  // Usa delegación de eventos → funciona con inputs dinámicos.
+  // Al seleccionar dispara: CustomEvent("autocomplete:seleccionado", { bubbles:true })
+  // -----------------------------------------------------------------
+  function initAutocompletoProd(containerEl) {
+    if (!containerEl) return;
+
+    let dropdown    = null;
+    let inputActivo = null;
+
+    function obtenerCatalogo() {
+      if (catalogoProductos.length > 0) return catalogoProductos;
+      try {
+        const raw = localStorage.getItem(CACHE_KEY_PROD);
+        if (raw) {
+          const { ts, data } = JSON.parse(raw);
+          if (Date.now() - ts < CACHE_TTL_PROD && Array.isArray(data) && data.length > 0) return data;
+        }
+      } catch (_) {}
+      return PRODUCTOS_FALLBACK;
+    }
+
+    function cerrarDropdown() {
+      dropdown?.remove();
+      dropdown    = null;
+      inputActivo = null;
+    }
+
+    function mostrarDropdown(input, termino) {
+      cerrarDropdown();
+      const cat  = obtenerCatalogo();
+      const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      const q    = norm(termino);
+      const filtrados = q.length < 1
+        ? cat.slice(0, 10)
+        : cat.filter(p =>
+            norm(p.nombre).includes(q) ||
+            norm(p.sku || "").includes(q) ||
+            norm(p.descripcion || "").includes(q)
+          ).slice(0, 10);
+
+      if (filtrados.length === 0) return;
+
+      const ul = document.createElement("ul");
+      ul.className = "prod-autocomplete__lista";
+      ul.setAttribute("role", "listbox");
+      ul._datos = filtrados;
+
+      filtrados.forEach((p, i) => {
+        const li  = document.createElement("li");
+        li.className = "prod-autocomplete__item";
+        li.setAttribute("role", "option");
+        li.setAttribute("tabindex", "-1");
+        li.dataset.prodIdx = i;
+        const fmt = window.formatearMoneda
+          ? window.formatearMoneda(p.precio, "COP")
+          : new Intl.NumberFormat("es-CO").format(p.precio);
+        li.innerHTML =
+          `<span class="prod-ac__nombre">${escHtml(p.nombre)}</span>` +
+          (p.sku ? `<span class="prod-ac__sku">${escHtml(p.sku)}</span>` : "") +
+          `<span class="prod-ac__precio">${fmt}</span>`;
+        ul.appendChild(li);
+      });
+
+      const rect = input.getBoundingClientRect();
+      ul.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;` +
+                         `width:${rect.width}px;z-index:9999;`;
+      document.body.appendChild(ul);
+      dropdown    = ul;
+      inputActivo = input;
+    }
+
+    function seleccionarProducto(prod) {
+      if (!prod || !inputActivo) return;
+      inputActivo.value              = prod.nombre;
+      inputActivo.dataset.prodId     = prod.id    || "";
+      inputActivo.dataset.prodPrecio = prod.precio != null ? prod.precio : 0;
+      const captured = inputActivo;
+      cerrarDropdown();
+      captured.dispatchEvent(
+        new CustomEvent("autocomplete:seleccionado", { bubbles: true, detail: prod })
+      );
+    }
+
+    // Input con debounce → mostrar dropdown
+    containerEl.addEventListener("input", (e) => {
+      const input = e.target.closest("[data-autocomplete-prod]");
+      if (!input) return;
+      clearTimeout(input._acTimer);
+      input._acTimer = setTimeout(() => mostrarDropdown(input, input.value.trim()), 200);
+    });
+
+    // Focus → abrir si ya hay texto
+    containerEl.addEventListener("focusin", (e) => {
+      const input = e.target.closest("[data-autocomplete-prod]");
+      if (!input || input.value.trim().length < 1) return;
+      mostrarDropdown(input, input.value.trim());
+    });
+
+    // Teclado en el input + dropdown
+    containerEl.addEventListener("keydown", (e) => {
+      const input = e.target.closest("[data-autocomplete-prod]");
+      if (input) {
+        if (e.key === "Escape") { cerrarDropdown(); return; }
+        if (e.key === "ArrowDown" && dropdown) {
+          e.preventDefault();
+          dropdown.querySelector("[role='option']")?.focus();
+          return;
+        }
+      }
+      if (!dropdown) return;
+      const li    = e.target.closest("[role='option']");
+      if (!li) return;
+      const items = [...dropdown.querySelectorAll("[role='option']")];
+      const idx   = items.indexOf(li);
+      if      (e.key === "ArrowDown")              { e.preventDefault(); items[idx + 1]?.focus(); }
+      else if (e.key === "ArrowUp")                { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
+      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarProducto(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); }
+      else if (e.key === "Escape")                 { cerrarDropdown(); inputActivo?.focus(); }
+    });
+
+    // Click en ítem o click fuera
+    document.addEventListener("click", (e) => {
+      if (!dropdown) return;
+      const li = e.target.closest(".prod-autocomplete__item");
+      if (li && dropdown.contains(li)) {
+        seleccionarProducto(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]);
+        return;
+      }
+      if (!dropdown.contains(e.target) && !containerEl.contains(e.target)) {
+        cerrarDropdown();
+      }
+    });
+  }
+
+  // -----------------------------------------------------------------
+  // INIT DEL MODAL DE CONFIGURACIÓN
+  // -----------------------------------------------------------------
   function initModalConfigComisiones() {
     const modal = document.getElementById("modal-config-comisiones");
     if (!modal) return;
 
-    // Re-render al abrir
+    // Re-render al abrir. También precarga el catálogo en background.
     const observer = new MutationObserver(() => {
-      if (!modal.hasAttribute("hidden")) renderConfigComisiones();
+      if (!modal.hasAttribute("hidden")) {
+        renderConfigComisiones();
+        cargarCatalogoProductos(); // warm-up silencioso
+      }
     });
     observer.observe(modal, { attributes: true, attributeFilter: ["hidden"] });
 
@@ -175,82 +568,132 @@
       tab.addEventListener("click", () => {
         const target = tab.dataset.tabComisiones;
         modal.querySelectorAll("[data-tab-comisiones]").forEach(t =>
-          t.classList.toggle("config-comisiones__tab--activo", t === tab));
+          t.classList.toggle("config-comisiones__tab--activo", t === tab)
+        );
         modal.querySelectorAll("[data-panel-comisiones]").forEach(p => {
-          if (p.dataset.panelComisiones === target) p.removeAttribute("hidden");
-          else p.setAttribute("hidden", "");
+          p.hidden = p.dataset.panelComisiones !== target;
         });
       });
     });
 
-    // Quitar fila asesor
-    modal.addEventListener("click", (e) => {
-      const btnA = e.target.closest('[data-accion-asesor="quitar"]');
-      if (btnA) { btnA.closest("tr").remove(); return; }
-      const btnP = e.target.closest('[data-accion-producto="quitar"]');
-      if (btnP) {
-        btnP.closest("tr").remove();
-        // Si quedó vacío, mostrar estado vacío
+    // Delegación de clicks del modal
+    modal.addEventListener("click", async (e) => {
+
+      // ── Quitar fila de producto (hard delete — solo afecta si no se guarda) ──
+      const btnQuitarP = e.target.closest('[data-accion-producto="quitar"]');
+      if (btnQuitarP) {
+        btnQuitarP.closest("tr").remove();
         const tbody = document.getElementById("config-comisiones-tbody-producto");
-        if (tbody && tbody.children.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">No hay productos configurados todavía.</td></tr>`;
+        if (tbody && tbody.querySelectorAll("[data-row-producto]").length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin productos configurados.</td></tr>`;
         }
+        return;
+      }
+
+      // ── Toggle activo / inactivo de asesor (soft-delete) ────────────────────
+      const btnToggle = e.target.closest('[data-accion-asesor="toggle-activo"]');
+      if (btnToggle) {
+        const tr        = btnToggle.closest("tr");
+        const eraActivo = tr.dataset.activo !== "false";
+        const ahoraActivo = !eraActivo;
+
+        tr.dataset.activo = ahoraActivo;
+        tr.classList.toggle("asesor-row--inactivo", !ahoraActivo);
+
+        // Habilitar/deshabilitar inputs
+        tr.querySelectorAll("input, select").forEach(el => {
+          el.disabled = !ahoraActivo;
+        });
+
+        // Badge "Inactivo"
+        const celda = tr.querySelector(".celda-avatar");
+        const badge = celda?.querySelector(".badge-inactivo");
+        if (ahoraActivo) {
+          badge?.remove();
+          btnToggle.classList.replace("btn-activo--off", "btn-activo--on");
+          btnToggle.title = "Inactivar asesor (soft-delete)";
+        } else {
+          if (celda && !badge) {
+            const sp = document.createElement("span");
+            sp.className   = "badge-inactivo";
+            sp.textContent = "Inactivo";
+            celda.appendChild(sp);
+          }
+          btnToggle.classList.replace("btn-activo--on", "btn-activo--off");
+          btnToggle.title = "Reactivar asesor";
+        }
+        return;
       }
     });
 
-    // Agregar producto
+    // ── Agregar producto: inserta fila inmediatamente, precarga catálogo en bg ──
     const btnAdd = document.getElementById("btn-agregar-producto-comision");
     if (btnAdd) {
       btnAdd.addEventListener("click", () => {
         const tbody = document.getElementById("config-comisiones-tbody-producto");
         if (!tbody) return;
-        // Si está el placeholder vacío, eliminarlo
+
+        // Pre-cargar catálogo en background (el autocomplete lo leerá al escribir)
+        cargarCatalogoProductos();
+
         const vacia = tbody.querySelector(".tabla-config-comisiones__vacio");
         if (vacia) tbody.innerHTML = "";
+
         const idx = tbody.querySelectorAll("[data-row-producto]").length;
-        const tr = document.createElement("tr");
+        const tr  = document.createElement("tr");
         tr.dataset.rowProducto = idx;
         tr.innerHTML = `
-          <td><input type="text" class="form-input form-input--sm" data-field="producto" placeholder="Nombre del producto"/></td>
+          <td>
+            <input type="text" class="form-input form-input--sm"
+                   data-field="producto-texto" data-autocomplete-prod
+                   placeholder="Busca un producto…" autocomplete="off"
+                   style="width:100%;max-width:260px;" />
+          </td>
           <td>
             <div class="input-pct">
-              <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1" value="5" data-field="porcentaje"/>
+              <input type="number" class="form-input form-input--sm"
+                     min="0" max="100" step="0.1" value="5" data-field="porcentaje" />
               <span class="input-pct__suffix">%</span>
             </div>
           </td>
           <td>
-            <button class="btn-icono-mini" data-accion-producto="quitar">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
+            <button class="btn-icono-mini" data-accion-producto="quitar" title="Quitar">
+              <svg viewBox="0 0 24 24" width="14" height="14">
+                <path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/>
+              </svg>
             </button>
           </td>`;
         tbody.appendChild(tr);
-        tr.querySelector('[data-field="producto"]').focus();
+        tr.querySelector("[data-autocomplete-prod]").focus();
       });
     }
 
-    // Guardar
-    const btnGuardar = document.getElementById("btn-guardar-config-comisiones");
-    if (btnGuardar) {
-      btnGuardar.addEventListener("click", () => {
+    // ── Autocomplete de productos en toda la tabla (delegación) ─────
+    initAutocompletoProd(modal);
+
+    // ── Guardar config ───────────────────────────────────────────────
+    document.getElementById("btn-guardar-config-comisiones")
+      ?.addEventListener("click", () => {
         const cfg = leerConfigDesdeUI();
         guardarConfig(cfg);
-        window.mostrarToast(`✓ Configuración guardada (${cfg.porAsesor.length} asesores, ${cfg.porProducto.length} productos)`);
+        const activos = cfg.porAsesor.filter(a => a.activo !== false).length;
+        const inactivos = cfg.porAsesor.length - activos;
+        window.mostrarToast?.(
+          `✓ Config guardada — ${activos} asesor(es) activo(s)` +
+          (inactivos > 0 ? `, ${inactivos} inactivo(s)` : "") +
+          `, ${cfg.porProducto.length} producto(s)`
+        );
         if (window.Modales) window.Modales.cerrar(modal);
       });
-    }
   }
 
   // -----------------------------------------------------------------
-  // MODAL: REPORTE DE COMISIONES (Task 5)
+  // MODAL DE REPORTE DE COMISIONES
   // -----------------------------------------------------------------
   function fechaIso(d) {
-    const yyyy = d.getFullYear();
-    const mm   = String(d.getMonth() + 1).padStart(2, "0");
-    const dd   = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
-  // Estado mientras el modal está abierto
   let ultimoReporte = null;
 
   function calcularReporte() {
@@ -258,17 +701,16 @@
     const est = window.estadoApp;
     if (!est) return null;
 
-    const desde = document.getElementById("rep-com-desde").value;
-    const hasta = document.getElementById("rep-com-hasta").value;
-    const asesorFiltro = document.getElementById("rep-com-asesor").value;
+    const desde       = document.getElementById("rep-com-desde")?.value  || "";
+    const hasta       = document.getElementById("rep-com-hasta")?.value  || "";
+    const asesorFiltro = document.getElementById("rep-com-asesor")?.value || "";
 
-    // Filtrar por rango
     let movs = est.datosOriginales.slice();
     if (desde) movs = movs.filter(m => m.fecha >= desde);
     if (hasta) movs = movs.filter(m => m.fecha <= hasta);
 
-    // Agrupar por responsable
     const responsables = [...new Set(movs.map(m => m.responsable))];
+
     const filas = responsables
       .filter(r => !asesorFiltro || r === asesorFiltro)
       .map(r => {
@@ -279,21 +721,22 @@
         const totalRegistrado = comisPagos.reduce((s, m) => s + m.valor, 0);
 
         const cfgAsesor = cfg.porAsesor.find(c => c.responsable === r);
-        const pct = cfgAsesor ? cfgAsesor.porcentaje : 0;
+        const pct       = cfgAsesor ? cfgAsesor.porcentaje : 0;
+        const activo    = cfgAsesor ? cfgAsesor.activo !== false : true;
         const totalTeorico = Math.round(totalIngresos * pct / 100);
-        const diff = totalRegistrado - totalTeorico;
 
         return {
           responsable: r,
-          ingresos: totalIngresos,
-          porcentaje: pct,
-          teorico: totalTeorico,
-          registrado: totalRegistrado,
-          pagos: comisPagos.length,
-          diferencia: diff
+          activo,
+          ingresos:    totalIngresos,
+          porcentaje:  pct,
+          teorico:     totalTeorico,
+          registrado:  totalRegistrado,
+          pagos:       comisPagos.length,
+          diferencia:  totalRegistrado - totalTeorico
         };
       })
-      .filter(f => f.ingresos > 0 || f.registrado > 0)  // ocultar filas sin datos
+      .filter(f => f.ingresos > 0 || f.registrado > 0)
       .sort((a, b) => b.registrado - a.registrado);
 
     return { desde, hasta, asesorFiltro, filas };
@@ -307,64 +750,64 @@
     const tbody = document.getElementById("rep-com-tbody");
     if (!tbody) return;
 
+    const fmt = v => window.formatearMoneda(v, "COP");
+
     if (reporte.filas.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="tabla-reporte-comisiones__vacio">Sin datos para el período seleccionado.</td></tr>`;
-      ["rep-com-foot-ingresos","rep-com-foot-teorico","rep-com-foot-registrado","rep-com-foot-pagos","rep-com-foot-diff"].forEach(id => {
-        const el = document.getElementById(id); if (el) el.textContent = "—";
-      });
-      document.getElementById("rep-com-kpi-registrado").textContent = window.formatearMoneda(0, "COP");
-      document.getElementById("rep-com-kpi-registrado-cnt").textContent = "0 movimientos";
-      document.getElementById("rep-com-kpi-teorico").textContent = window.formatearMoneda(0, "COP");
-      document.getElementById("rep-com-kpi-diff").textContent = window.formatearMoneda(0, "COP");
+      ["rep-com-foot-ingresos","rep-com-foot-teorico","rep-com-foot-registrado","rep-com-foot-pagos","rep-com-foot-diff"]
+        .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = "—"; });
+      ["rep-com-kpi-registrado","rep-com-kpi-registrado-cnt","rep-com-kpi-teorico","rep-com-kpi-diff"]
+        .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = id.includes("cnt") ? "0 movimientos" : fmt(0); });
       return;
     }
 
     tbody.innerHTML = reporte.filas.map(f => {
       const clsDiff = f.diferencia > 0 ? "neg" : (f.diferencia < 0 ? "pos" : "");
+      const badgeInactivo = f.activo ? "" : `<span class="badge-inactivo" style="margin-left:4px;">Inactivo</span>`;
       return `
-        <tr>
+        <tr class="${f.activo ? "" : "asesor-row--inactivo"}">
           <td>
             <div class="celda-avatar">
               <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${window.obtenerIniciales(f.responsable)}</span>
-              ${f.responsable}
+              ${escHtml(f.responsable)}${badgeInactivo}
             </div>
           </td>
-          <td class="num">${window.formatearMoneda(f.ingresos, "COP")}</td>
+          <td class="num">${fmt(f.ingresos)}</td>
           <td class="num">${f.porcentaje.toFixed(1)}%</td>
-          <td class="num">${window.formatearMoneda(f.teorico, "COP")}</td>
-          <td class="num">${window.formatearMoneda(f.registrado, "COP")}</td>
+          <td class="num">${fmt(f.teorico)}</td>
+          <td class="num">${fmt(f.registrado)}</td>
           <td class="num">${f.pagos}</td>
-          <td class="num diff-${clsDiff}">${f.diferencia >= 0 ? "+" : ""}${window.formatearMoneda(f.diferencia, "COP")}</td>
+          <td class="num diff-${clsDiff}">${f.diferencia >= 0 ? "+" : ""}${fmt(f.diferencia)}</td>
         </tr>`;
     }).join("");
 
-    // Totales
     const totIng = reporte.filas.reduce((s, f) => s + f.ingresos, 0);
     const totTeo = reporte.filas.reduce((s, f) => s + f.teorico, 0);
     const totReg = reporte.filas.reduce((s, f) => s + f.registrado, 0);
     const totPag = reporte.filas.reduce((s, f) => s + f.pagos, 0);
     const totDif = totReg - totTeo;
 
-    document.getElementById("rep-com-foot-ingresos").textContent   = window.formatearMoneda(totIng, "COP");
-    document.getElementById("rep-com-foot-teorico").textContent    = window.formatearMoneda(totTeo, "COP");
-    document.getElementById("rep-com-foot-registrado").textContent = window.formatearMoneda(totReg, "COP");
-    document.getElementById("rep-com-foot-pagos").textContent      = totPag;
-    document.getElementById("rep-com-foot-diff").textContent       = (totDif >= 0 ? "+" : "") + window.formatearMoneda(totDif, "COP");
+    document.getElementById("rep-com-foot-ingresos")  ?.textContent && (document.getElementById("rep-com-foot-ingresos").textContent   = fmt(totIng));
+    document.getElementById("rep-com-foot-teorico")   ?.textContent !== undefined && (document.getElementById("rep-com-foot-teorico").textContent    = fmt(totTeo));
+    document.getElementById("rep-com-foot-registrado")?.textContent !== undefined && (document.getElementById("rep-com-foot-registrado").textContent = fmt(totReg));
+    document.getElementById("rep-com-foot-pagos")     ?.textContent !== undefined && (document.getElementById("rep-com-foot-pagos").textContent      = totPag);
+    document.getElementById("rep-com-foot-diff")      ?.textContent !== undefined && (document.getElementById("rep-com-foot-diff").textContent       = (totDif >= 0 ? "+" : "") + fmt(totDif));
 
-    // KPIs
-    document.getElementById("rep-com-kpi-registrado").textContent = window.formatearMoneda(totReg, "COP");
-    document.getElementById("rep-com-kpi-registrado-cnt").textContent = `${totPag} movimientos`;
-    document.getElementById("rep-com-kpi-teorico").textContent = window.formatearMoneda(totTeo, "COP");
+    document.getElementById("rep-com-kpi-registrado")    ?.textContent !== undefined && (document.getElementById("rep-com-kpi-registrado").textContent     = fmt(totReg));
+    document.getElementById("rep-com-kpi-registrado-cnt")?.textContent !== undefined && (document.getElementById("rep-com-kpi-registrado-cnt").textContent  = `${totPag} movimientos`);
+    document.getElementById("rep-com-kpi-teorico")       ?.textContent !== undefined && (document.getElementById("rep-com-kpi-teorico").textContent         = fmt(totTeo));
+
     const elDiff = document.getElementById("rep-com-kpi-diff");
-    elDiff.textContent = (totDif >= 0 ? "+" : "") + window.formatearMoneda(totDif, "COP");
-    elDiff.className = "reporte-comisiones__kpi-valor " + (totDif > 0 ? "diff-neg" : totDif < 0 ? "diff-pos" : "");
+    if (elDiff) {
+      elDiff.textContent = (totDif >= 0 ? "+" : "") + fmt(totDif);
+      elDiff.className   = "reporte-comisiones__kpi-valor " + (totDif > 0 ? "diff-neg" : totDif < 0 ? "diff-pos" : "");
+    }
   }
 
   function initModalReporteComisiones() {
     const modal = document.getElementById("modal-reporte-comisiones");
     if (!modal) return;
 
-    // Cuando se abre: prefijar filtros, poblar select de asesores y renderizar
     const observer = new MutationObserver(() => {
       if (!modal.hasAttribute("hidden")) {
         prefijarFiltros();
@@ -374,10 +817,9 @@
     observer.observe(modal, { attributes: true, attributeFilter: ["hidden"] });
 
     document.getElementById("btn-rep-com-aplicar")?.addEventListener("click", renderReporte);
-
     document.getElementById("btn-exportar-comisiones")?.addEventListener("click", () => {
-      if (!ultimoReporte || ultimoReporte.filas.length === 0) {
-        window.mostrarToast("⚠ No hay datos para exportar");
+      if (!ultimoReporte?.filas?.length) {
+        window.mostrarToast?.("⚠ No hay datos para exportar");
         return;
       }
       exportarReporteCSV(ultimoReporte);
@@ -385,23 +827,27 @@
   }
 
   function prefijarFiltros() {
-    const inDesde = document.getElementById("rep-com-desde");
-    const inHasta = document.getElementById("rep-com-hasta");
-    const select  = document.getElementById("rep-com-asesor");
+    const inDesde  = document.getElementById("rep-com-desde");
+    const inHasta  = document.getElementById("rep-com-hasta");
+    const select   = document.getElementById("rep-com-asesor");
 
     if (inDesde && !inDesde.value) {
-      const hoy = new Date("2026-05-20");
-      const ini = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-      inDesde.value = fechaIso(ini);
+      const hoy = new Date();
+      inDesde.value = fechaIso(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
     }
     if (inHasta && !inHasta.value) {
-      inHasta.value = fechaIso(new Date("2026-05-20"));
+      inHasta.value = fechaIso(new Date());
     }
 
     if (select && window.estadoApp) {
       const previo = select.value;
+      const cfg    = cargarConfig();
       const unicos = [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable))].sort();
-      select.innerHTML = `<option value="">Todos</option>` + unicos.map(n => `<option value="${n}">${n}</option>`).join("");
+      select.innerHTML = `<option value="">Todos</option>` +
+        unicos.map(n => {
+          const inactivo = cfg.porAsesor.find(a => a.responsable === n && a.activo === false);
+          return `<option value="${escHtml(n)}">${escHtml(n)}${inactivo ? " (inactivo)" : ""}</option>`;
+        }).join("");
       select.value = previo;
     }
   }
@@ -410,25 +856,19 @@
     const utils = window.utilsExport;
     if (!utils) return;
 
-    const header = ["Asesor", "Ingresos del período", "% Comisión", "Comisión teórica", "Comisión registrada", "# Pagos", "Diferencia"];
-    const filas = reporte.filas.map(f => [
+    const header = ["Asesor","Estado","Ingresos","% Comisión","Comisión teórica","Comisión registrada","# Pagos","Diferencia"];
+    const filas  = reporte.filas.map(f => [
       f.responsable,
-      f.ingresos,
-      f.porcentaje,
-      f.teorico,
-      f.registrado,
-      f.pagos,
-      f.diferencia
+      f.activo ? "Activo" : "Inactivo",
+      f.ingresos, f.porcentaje, f.teorico, f.registrado, f.pagos, f.diferencia
     ]);
 
-    // Totales
     const totIng = reporte.filas.reduce((s, f) => s + f.ingresos, 0);
     const totTeo = reporte.filas.reduce((s, f) => s + f.teorico, 0);
     const totReg = reporte.filas.reduce((s, f) => s + f.registrado, 0);
     const totPag = reporte.filas.reduce((s, f) => s + f.pagos, 0);
-    filas.push(["TOTAL", totIng, "", totTeo, totReg, totPag, totReg - totTeo]);
+    filas.push(["TOTAL","",totIng,"",totTeo,totReg,totPag,totReg-totTeo]);
 
-    // Metadata
     const meta = [
       `# Reporte de comisiones`,
       `# Período: ${reporte.desde || "—"} a ${reporte.hasta || "—"}`,
@@ -437,13 +877,11 @@
       ``
     ].join("\r\n");
 
-    const lineas = [header, ...filas].map(row =>
-      row.map(v => utils.escaparCSV(v)).join(",")
-    ).join("\r\n");
+    const csv = "﻿" + meta +
+      [header, ...filas].map(r => r.map(v => utils.escaparCSV(v)).join(",")).join("\r\n");
 
-    const csv = "\uFEFF" + meta + lineas;
     utils.descargarTexto(csv, utils.nombreArchivo("reporte-comisiones"));
-    window.mostrarToast(`✓ Reporte exportado (${reporte.filas.length} asesores)`);
+    window.mostrarToast?.(`✓ Reporte exportado (${reporte.filas.length} asesores)`);
   }
 
   // -----------------------------------------------------------------
@@ -453,6 +891,16 @@
     asegurarConfigInicial();
     initModalConfigComisiones();
     initModalReporteComisiones();
-    window.configComisionesAPI = { cargarConfig, guardarConfig };
+
+    window.configComisionesAPI = {
+      cargarConfig,
+      guardarConfig,
+      calcularComisionesAutomaticas,
+      cargarCatalogoProductos,
+      initAutocompletoProd
+    };
+
+    console.info("[Comisiones] Módulo listo. Motor: window.configComisionesAPI.calcularComisionesAutomaticas(facturas)");
   });
+
 })();

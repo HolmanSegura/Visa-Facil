@@ -353,3 +353,346 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   MÓDULOS HUBSPOT: PRODUCTOS, DESCUENTOS Y CORREO
+   (cotizaciones-productos.js / cotizaciones-descuentos.js /
+    cotizaciones-email.js)
+   ============================================================ */
+
+/* ----- Sección colapsable del modal de cotización ----- */
+.cot-seccion {
+  border-top: 1px solid var(--color-borde);
+  padding-top: 16px;
+}
+
+.cot-seccion__titulo {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 10px;
+}
+
+/* ----- Layout buscador | tabla de líneas ----- */
+.cot-productos-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Panel catálogo (izquierda) */
+.cot-catalogo {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  overflow: hidden;
+  max-height: 260px;
+}
+
+.cot-catalogo__buscar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-fondo-suave);
+}
+
+.cot-catalogo__buscar .campo-busqueda__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto);
+  padding: 0;
+  height: 22px;
+}
+
+/* Lista de productos del catálogo */
+.productos-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.productos-lista__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-borde);
+  transition: background var(--trans-rapida);
+  font-size: var(--font-tam-sm);
+}
+
+.productos-lista__item:last-child {
+  border-bottom: none;
+}
+
+.productos-lista__item:hover,
+.productos-lista__item:focus {
+  background: var(--color-fondo-hover);
+  outline: none;
+}
+
+.productos-lista__vacio {
+  padding: 16px 10px;
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-debil);
+  text-align: center;
+  list-style: none;
+}
+
+.prod-item__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  margin-right: 6px;
+}
+
+.prod-item__nombre {
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prod-item__sku {
+  font-size: 10px;
+  color: var(--color-texto-debil);
+  margin-top: 1px;
+}
+
+.prod-item__precio {
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--color-texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Panel tabla de líneas (derecha) */
+.cot-lineas {
+  min-width: 0;
+}
+
+.tabla-lineas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-tam-sm);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  overflow: hidden;
+}
+
+.tabla-lineas th {
+  padding: 6px 8px;
+  background: var(--color-fondo-suave);
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tabla-lineas td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--color-borde);
+  vertical-align: middle;
+}
+
+.tabla-lineas tr:last-child td {
+  border-bottom: none;
+}
+
+.th--num,
+.linea-td--num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.linea-td--nombre {
+  min-width: 140px;
+}
+
+.linea-nombre {
+  display: flex;
+  flex-direction: column;
+}
+
+.linea-nombre__texto {
+  font-weight: var(--font-peso-medio);
+}
+
+.linea-nombre__desc {
+  font-size: 11px;
+  color: var(--color-texto-debil);
+  margin-top: 1px;
+}
+
+.linea-td--desc .linea-desc-wrap {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.linea-td--num input.form-input--sm {
+  text-align: right;
+}
+
+.tabla-lineas__vacio {
+  text-align: center;
+  padding: 20px 12px;
+  color: var(--color-texto-debil);
+  font-style: italic;
+}
+
+/* ----- Descuento global ----- */
+.cot-descuentos {
+  margin: 8px 0;
+  padding: 10px 12px;
+  background: var(--color-fondo-suave);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+}
+
+.cot-descuentos__titulo {
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+
+.cot-descuentos__fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ----- Resumen de totales ----- */
+.cot-resumen {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.cot-resumen__tabla {
+  border-collapse: collapse;
+  font-size: var(--font-tam-sm);
+  min-width: 240px;
+}
+
+.cot-resumen__label {
+  padding: 4px 12px 4px 0;
+  color: var(--color-texto-suave);
+  white-space: nowrap;
+}
+
+.cot-resumen__valor {
+  padding: 4px 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-peso-medio);
+  white-space: nowrap;
+}
+
+.cot-resumen__fila--total .cot-resumen__label,
+.cot-resumen__fila--total .cot-resumen__valor {
+  font-size: 15px;
+  font-weight: var(--font-peso-bold);
+  border-top: 2px solid var(--color-texto);
+  padding-top: 8px;
+  color: var(--color-texto);
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .cot-productos-layout {
+    grid-template-columns: 1fr;
+  }
+  .cot-catalogo {
+    max-height: 180px;
+  }
+}
+
+/* ============================================================
+   AUTOCOMPLETE DE CONTACTOS
+   (#contacto-autocomplete-wrap / #contacto-sugerencias)
+   ============================================================ */
+
+.contacto-autocomplete {
+  position: relative;
+}
+
+.contacto-sugerencias {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background: var(--color-fondo-panel, #fff);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.contacto-sugerencias__item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background var(--trans-rapida);
+  outline: none;
+}
+
+.contacto-sugerencias__item:hover,
+.contacto-sugerencias__item:focus {
+  background: var(--color-fondo-hover);
+}
+
+.contacto-sug__nombre {
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contacto-sug__empresa {
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contacto-sug__email {
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-debil);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

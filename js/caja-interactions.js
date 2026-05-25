@@ -319,23 +319,79 @@
 
   /* ---------- REGISTRAR GASTO / INGRESO ---------- */
   function initFormGasto() {
-    const btnG = document.getElementById("btn-registrar-gasto");
-    const btnI = document.getElementById("btn-registrar-ingreso");
-    const modal = document.getElementById("modal-registrar-gasto");
+    const btnG        = document.getElementById("btn-registrar-gasto");
+    const btnI        = document.getElementById("btn-registrar-ingreso");
+    const modal       = document.getElementById("modal-registrar-gasto");
     const tituloModal = modal?.querySelector(".modal__titulo");
-    const tipoInput = document.getElementById("form-tipo-mov");
+    const tipoInput   = document.getElementById("form-tipo-mov");
+    const selectCat   = document.getElementById("g-categoria");
+    const inputValor  = document.getElementById("g-valor");
+    const wrapProd    = document.getElementById("g-producto-comision-wrap");
+    const inputProd   = document.getElementById("g-producto-comision");
+    const selectResp  = document.getElementById("g-responsable");
+    const inputDesc   = document.getElementById("g-descripcion");
+
+    // Activar / desactivar el bloque de comisión
+    function modoComision(activo) {
+      if (wrapProd) wrapProd.hidden = !activo;
+      if (inputValor) {
+        inputValor.readOnly = activo;
+        inputValor.classList.toggle("form-input--readonly", activo);
+        if (!activo) inputValor.value = "";
+      }
+      if (!activo && inputProd) {
+        inputProd.value = "";
+        delete inputProd.dataset.prodId;
+        delete inputProd.dataset.prodPrecio;
+      }
+    }
+
+    // Calcular comisión cuando hay producto + responsable
+    function calcularComisionGasto() {
+      if (selectCat?.value !== "comisiones") return;
+      const precio      = parseFloat(inputProd?.dataset?.prodPrecio) || 0;
+      const responsable = selectResp?.value?.trim() || "";
+      const producto    = inputProd?.value?.trim()  || "";
+      const prodId      = inputProd?.dataset?.prodId || "";
+      if (!precio || !responsable || !producto) return;
+
+      let cfg = { porAsesor: [], porProducto: [] };
+      try { cfg = JSON.parse(localStorage.getItem("caja:configComisiones")) || cfg; } catch (_) {}
+
+      // Prioridad 1: regla por producto
+      const reglaProd = (cfg.porProducto || []).find(p =>
+        (p.productoId && p.productoId === prodId) ||
+        (p.producto || "").toLowerCase() === producto.toLowerCase()
+      );
+      // Prioridad 2: regla del asesor activo
+      const reglaAsesor = (cfg.porAsesor || [])
+        .filter(a => a.activo !== false)
+        .find(a => (a.responsable || "").toLowerCase() === responsable.toLowerCase());
+
+      const regla = reglaProd || reglaAsesor;
+      if (!regla) {
+        window.mostrarToast?.("⚠ Sin regla de comisión para ese producto/asesor");
+        return;
+      }
+
+      const comision = Math.round(precio * regla.porcentaje / 100);
+      if (inputValor) inputValor.value = comision;
+      if (inputDesc)  inputDesc.value  = `Pago de comisión a ${responsable} por venta de ${producto}`;
+    }
 
     function abrirComo(tipo) {
       tipoInput.value = tipo;
+      modoComision(false);  // siempre resetear al abrir
+
       if (tipo === "ingreso") {
         tituloModal.textContent = "Registrar ingreso";
-        document.getElementById("g-categoria").innerHTML = `
+        selectCat.innerHTML = `
           <option value="servicios">Cobro por servicios</option>
           <option value="otros">Reembolso</option>
           <option value="otros">Otros ingresos</option>`;
       } else {
         tituloModal.textContent = "Registrar gasto";
-        document.getElementById("g-categoria").innerHTML = `
+        selectCat.innerHTML = `
           <option value="alimentacion">Alimentación</option>
           <option value="transporte">Transporte</option>
           <option value="papeleria">Papelería</option>
@@ -352,19 +408,37 @@
     if (btnG) btnG.addEventListener("click", () => abrirComo("gasto"));
     if (btnI) btnI.addEventListener("click", () => abrirComo("ingreso"));
 
+    // Cambio de categoría → toggle modo comisión
+    if (selectCat) {
+      selectCat.addEventListener("change", () => {
+        modoComision(selectCat.value === "comisiones");
+        calcularComisionGasto();
+      });
+    }
+
+    // Responsable cambia mientras la categoría es "comisiones" → recalcular
+    if (selectResp) {
+      selectResp.addEventListener("change", calcularComisionGasto);
+    }
+
+    // Autocomplete seleccionó un producto → recalcular
+    if (modal) {
+      modal.addEventListener("autocomplete:seleccionado", calcularComisionGasto);
+    }
+
     const btnGuardar = document.getElementById("guardar-movimiento");
     if (btnGuardar) {
       btnGuardar.addEventListener("click", () => {
-        const tipo = tipoInput.value;
-        const categoria = document.getElementById("g-categoria").value;
-        const valor = parseFloat(document.getElementById("g-valor").value) || 0;
-        const moneda = document.getElementById("g-moneda").value;
-        const fecha = document.getElementById("g-fecha").value;
-        const responsable = document.getElementById("g-responsable").value;
-        const metodoPago = document.getElementById("g-metodo").value;
-        const descripcion = document.getElementById("g-descripcion").value.trim();
-        const estado = document.getElementById("g-estado").value;
-        const cliente = document.getElementById("g-cliente").value.trim();
+        const tipo          = tipoInput.value;
+        const categoria     = selectCat.value;
+        const valor         = parseFloat(inputValor.value) || 0;
+        const moneda        = document.getElementById("g-moneda").value;
+        const fecha         = document.getElementById("g-fecha").value;
+        const responsable   = selectResp.value;
+        const metodoPago    = document.getElementById("g-metodo").value;
+        const descripcion   = inputDesc.value.trim();
+        const estado        = document.getElementById("g-estado").value;
+        const cliente       = document.getElementById("g-cliente").value.trim();
         const observaciones = document.getElementById("g-observaciones").value.trim();
 
         if (!descripcion) { window.mostrarToast("⚠ La descripción es obligatoria"); return; }
@@ -372,8 +446,8 @@
         if (!fecha) { window.mostrarToast("⚠ La fecha es obligatoria"); return; }
 
         const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(m => m.id)) + 1;
-        const ref = "REF-" + new Date(fecha).getFullYear() + "-" + String(nuevoId).padStart(4, "0");
-        const nuevo = {
+        const ref     = "REF-" + new Date(fecha).getFullYear() + "-" + String(nuevoId).padStart(4, "0");
+        const nuevo   = {
           id: nuevoId, fecha, tipo, categoria, descripcion, responsable,
           valor, moneda, estado, metodoPago, observaciones,
           cliente, referencia: ref, adjunto: null
@@ -382,6 +456,7 @@
         window.estadoApp.datosOriginales.unshift(nuevo);
 
         document.getElementById("form-gasto").reset();
+        modoComision(false);  // limpiar modo comisión tras guardar
         Modales.cerrar(modal);
 
         if (window.vistasInstance) window.vistasInstance.renderizar();
@@ -391,6 +466,11 @@
         const etiq = tipo === "ingreso" ? "Ingreso" : "Gasto";
         window.mostrarToast(`✓ ${etiq} de ${window.formatearMoneda(valor, moneda)} registrado`);
       });
+    }
+
+    // Inicializar autocomplete para el modal de gasto (carga diferida via API)
+    if (modal) {
+      window.configComisionesAPI?.initAutocompletoProd?.(modal);
     }
   }
 

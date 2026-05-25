@@ -700,7 +700,18 @@
           </div>
           <div class="form-grupo">
             <label class="form-label" for="cot-cliente">Empresa o cliente</label>
-            <input type="text" id="cot-cliente" class="form-input" placeholder="Nombre de la empresa" />
+            <div class="contacto-autocomplete" id="contacto-autocomplete-wrap">
+              <input type="text" id="cot-cliente" class="form-input"
+                placeholder="Buscar contacto o empresa…"
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-owns="contacto-sugerencias"
+                aria-autocomplete="list" />
+              <ul id="contacto-sugerencias" class="contacto-sugerencias" hidden
+                role="listbox" aria-label="Sugerencias de contacto"></ul>
+            </div>
+            <input type="hidden" id="cot-contacto-id" />
           </div>
           <div class="form-grupo form-grupo--fila">
             <div>
@@ -766,7 +777,141 @@
               placeholder="Términos de pago, comentarios al cliente, etc."></textarea>
           </div>
         </form>
-      </div>
+
+        <!-- ── TAB: PRODUCTOS Y DESCUENTOS ─────────────────────── -->
+        <div class="cot-seccion" id="cot-seccion-productos" style="margin-top:20px;">
+          <div class="cot-seccion__titulo">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="margin-right:6px;vertical-align:-2px;">
+              <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 2h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h7v2H7v-2Z"/>
+            </svg>
+            Productos / Líneas de artículo
+            <button class="btn btn--ghost btn--sm" id="btn-recargar-productos"
+              style="margin-left:auto;font-size:11px;" title="Recargar catálogo desde HubSpot">
+              Actualizar catálogo
+            </button>
+          </div>
+
+          <!-- Layout: buscador izquierda | líneas derecha -->
+          <div class="cot-productos-layout">
+
+            <!-- Panel: Buscador de catálogo -->
+            <div class="cot-catalogo">
+              <div class="cot-catalogo__buscar">
+                <svg viewBox="0 0 24 24" width="13" height="13" style="color:#7c98b6;flex-shrink:0;">
+                  <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/>
+                </svg>
+                <input type="search" id="input-buscar-producto" class="campo-busqueda__input"
+                  placeholder="Buscar producto..." aria-label="Buscar en el catálogo" />
+              </div>
+              <ul id="productos-lista" class="productos-lista" role="listbox" aria-label="Catálogo de productos">
+                <li class="productos-lista__vacio">Cargando catálogo…</li>
+              </ul>
+            </div>
+
+            <!-- Panel: Tabla de líneas de la cotización -->
+            <div class="cot-lineas">
+              <table class="tabla-lineas">
+                <thead>
+                  <tr>
+                    <th>Producto / Servicio</th>
+                    <th class="th--num" style="width:110px;">Precio unit.</th>
+                    <th class="th--num" style="width:70px;">Cant.</th>
+                    <th style="width:140px;">Descuento</th>
+                    <th class="th--num" style="width:110px;">Subtotal</th>
+                    <th style="width:36px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="cotizacion-lineas-tbody"></tbody>
+              </table>
+              <button class="btn btn--ghost btn--sm" id="btn-agregar-linea-custom"
+                style="margin-top:8px;">
+                + Línea personalizada
+              </button>
+            </div>
+          </div>
+
+          <!-- ── DESCUENTOS ──────────────────────────────────────── -->
+          <div class="cot-descuentos" id="cot-descuento-global">
+            <div class="cot-descuentos__titulo">Descuento global</div>
+            <div class="cot-descuentos__fila">
+              <label class="form-label" for="cot-desc-valor" style="min-width:56px;">Valor</label>
+              <input type="number" id="cot-desc-valor" class="form-input form-input--sm"
+                min="0" step="0.01" placeholder="0"
+                data-desc-campo="valor" style="width:90px;" />
+              <select class="form-select form-select--sm" data-desc-campo="tipo" aria-label="Tipo de descuento global" style="width:68px;">
+                <option value="porcentaje">%</option>
+                <option value="fijo">$</option>
+              </select>
+              <input type="text" class="form-input form-input--sm" data-desc-campo="motivo"
+                placeholder="Motivo (opcional)" style="flex:1;max-width:220px;" />
+              <span id="cot-desc-pct-label" class="form-help" hidden></span>
+            </div>
+          </div>
+
+          <!-- ── RESUMEN DE TOTALES ──────────────────────────────── -->
+          <div class="cot-resumen">
+            <table class="cot-resumen__tabla">
+              <tbody>
+                <tr>
+                  <td class="cot-resumen__label">Subtotal</td>
+                  <td class="cot-resumen__valor" id="cot-resumen-subtotal">—</td>
+                </tr>
+                <tr id="cot-resumen-fila-descuento" hidden>
+                  <td class="cot-resumen__label" style="color:var(--color-error, #e53e3e);">Descuento</td>
+                  <td class="cot-resumen__valor" id="cot-resumen-descuento" style="color:var(--color-error, #e53e3e);">—</td>
+                </tr>
+                <tr>
+                  <td class="cot-resumen__label">
+                    IVA
+                    <span style="font-weight:400;color:var(--color-texto-suave);">
+                      (<input type="number" id="cot-tasa-iva" class="form-input form-input--sm"
+                        min="0" max="100" step="1" value="19"
+                        style="width:40px;display:inline-block;padding:1px 4px;"
+                        aria-label="Tasa de IVA en %"> %)
+                    </span>
+                  </td>
+                  <td class="cot-resumen__valor" id="cot-resumen-iva">—</td>
+                </tr>
+                <tr class="cot-resumen__fila--total">
+                  <td class="cot-resumen__label">Total</td>
+                  <td class="cot-resumen__valor" id="cot-resumen-total">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── TAB: ENVÍO POR CORREO ───────────────────────────── -->
+        <div class="cot-seccion" id="cot-seccion-email" style="margin-top:20px;">
+          <div class="cot-seccion__titulo">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="margin-right:6px;vertical-align:-2px;">
+              <path fill="currentColor" d="M2 4h20v16H2V4Zm2 2v1.4l8 5.1 8-5.1V6H4Zm16 2.6-8 5.1-8-5.1V18h16V8.6Z"/>
+            </svg>
+            Enviar por correo
+          </div>
+          <div class="form-grupo form-grupo--fila" style="align-items:flex-end;gap:8px;">
+            <div style="flex:1;">
+              <label class="form-label" for="cot-email-destinatario">
+                Destinatario
+              </label>
+              <input type="email" id="cot-email-destinatario" class="form-input"
+                placeholder="email@cliente.com" />
+            </div>
+            <button class="btn btn--naranja" data-accion-email="enviar" style="white-space:nowrap;">
+              <svg viewBox="0 0 24 24" width="13" height="13" style="margin-right:4px;vertical-align:-1px;">
+                <path fill="currentColor" d="M3 3l18 9-18 9V13l13-4-13-4V3Z"/>
+              </svg>
+              Enviar cotización
+            </button>
+          </div>
+          <p class="form-help" style="margin-top:6px;">
+            Remitente: <strong>soporte@oblicua.co</strong>.
+            Si la integración con HubSpot no está configurada, se abrirá tu cliente de correo.
+          </p>
+
+        </div>
+
+      </div><!-- /.modal__body -->
       <div class="modal__footer">
         <button class="btn btn--naranja" id="guardar-cotizacion">Guardar</button>
         <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
@@ -1094,7 +1239,10 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- SheetJS (Excel) — necesario para exportarHistorico().xlsx en cotizaciones-email.js -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+  <!-- Scripts principales -->
   <script src="js/main.js"></script>
   <script src="js/sidebar.js"></script>
   <script src="js/views.js"></script>
@@ -1102,6 +1250,14 @@
   <script src="js/filters.js"></script>
   <script src="js/cotizaciones-export.js"></script>
   <script src="js/cotizaciones-comisiones.js"></script>
+
+  <!-- Módulos HubSpot API (deben cargarse antes que los módulos que los consumen) -->
+  <script src="js/hubspot-api.js"></script>
+  <script src="js/cotizaciones-contactos.js"></script>
+  <script src="js/cotizaciones-productos.js"></script>
+  <script src="js/cotizaciones-descuentos.js"></script>
+  <script src="js/cotizaciones-email.js"></script>
+
   <script src="js/ui-interactions.js"></script>
 </body>
 

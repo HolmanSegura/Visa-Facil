@@ -744,3 +744,126 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   AUTOCOMPLETADO DE PRODUCTOS (dropdown flotante, position:fixed)
+   ============================================================ */
+.prod-autocomplete__lista {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background: var(--color-fondo-panel, #fff);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.prod-autocomplete__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background var(--trans-rapida);
+}
+
+.prod-autocomplete__item:hover,
+.prod-autocomplete__item:focus {
+  background: var(--color-fondo-hover);
+  outline: none;
+}
+
+.prod-ac__nombre {
+  flex: 1;
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prod-ac__sku {
+  font-size: 11px;
+  color: var(--color-texto-debil);
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.prod-ac__precio {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-acento);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Input readonly (valor de comisión calculado automáticamente) */
+.form-input--readonly {
+  background: var(--color-fondo-suave);
+  color: var(--color-texto-suave);
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   ASESORES — SOFT-DELETE (activo / inactivo)
+   ============================================================ */
+
+/* Fila inactiva: atenuada y sin interacción visual */
+.asesor-row--inactivo {
+  opacity: 0.45;
+}
+
+.asesor-row--inactivo input,
+.asesor-row--inactivo select {
+  background: var(--color-fondo-suave);
+  color: var(--color-texto-debil);
+}
+
+/* Nombre tachado cuando el asesor está inactivo */
+.asesor-row--inactivo .asesor-nombre {
+  text-decoration: line-through;
+  color: var(--color-texto-debil);
+}
+
+/* Badge "Inactivo" inline junto al nombre */
+.badge-inactivo {
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 6px;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: var(--font-peso-semibold);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: var(--radio-pill);
+  vertical-align: middle;
+}
+
+/* Botón de toggle estado asesor */
+.btn-activo--on {
+  color: #059669;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.btn-activo--on:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.btn-activo--off {
+  color: #92400e;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.btn-activo--off:hover {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
