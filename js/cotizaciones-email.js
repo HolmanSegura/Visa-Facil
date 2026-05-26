@@ -29,9 +29,17 @@
    ============================================================ */
 (function () {
   const REMITENTE = "soporte@oblicua.co";
-  const DAPTA_WEBHOOK_URL =
+  // Valores por defecto — se sobreescriben desde .env vía window.AppConfig
+  const DAPTA_WEBHOOK_URL_DEFAULT =
     "https://api.dapta.ai/api/9c9ae2b4d48889fa/envio-cotizaciones";
-  const DAPTA_API_KEY = "TU_API_KEY_DAPTA_AQUI"; // Reemplaza con tu API Key de Dapta
+  const DAPTA_API_KEY_DEFAULT = ""; // Se configura desde .env vía window.AppConfig.dapta_api_key
+
+  function getDaptaUrl() {
+    return window.AppConfig?.dapta_webhook_url || DAPTA_WEBHOOK_URL_DEFAULT;
+  }
+  function getDaptaKey() {
+    return window.AppConfig?.dapta_api_key || DAPTA_API_KEY_DEFAULT;
+  }
 
   // -----------------------------------------------------------------
   // CONSTRUCCIÓN DEL CONTENIDO DEL CORREO
@@ -292,11 +300,11 @@
    * Lanza Error si el servidor responde con status !== 2xx.
    */
   async function enviarPorDapta(payload) {
-    const res = await fetch(DAPTA_WEBHOOK_URL, {
+    const res = await fetch(getDaptaUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": DAPTA_API_KEY,
+        "x-api-key": getDaptaKey(),
       },
       body: JSON.stringify(payload),
     });
@@ -694,7 +702,9 @@
 
     window.CotizacionEmail = {
       REMITENTE,
-      DAPTA_WEBHOOK_URL,
+      get DAPTA_WEBHOOK_URL() {
+        return getDaptaUrl();
+      },
       enviarCotizacion,
       construirPayloadDapta,
       exportarHistorico,
@@ -706,7 +716,7 @@
       "[CotizacionEmail] Módulo listo. Remitente:",
       REMITENTE,
       "| Webhook Dapta:",
-      DAPTA_WEBHOOK_URL,
+      getDaptaUrl(),
     );
   });
 })();

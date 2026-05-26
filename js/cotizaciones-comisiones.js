@@ -49,6 +49,24 @@
     } catch (e) {
       console.warn("[Comisiones-Cot] No se pudo persistir config", e);
     }
+    if (window.Api) {
+      window.Api.comisiones.guardarConfig(cfg).catch(e =>
+        console.warn("[Comisiones-Cot] API guardarConfig falló:", e.message)
+      );
+    }
+  }
+
+  async function sincronizarConfigConAPI() {
+    if (!window.Api) return;
+    try {
+      const resp = await window.Api.comisiones.obtenerConfig();
+      if (resp && Array.isArray(resp.porAsesor)) {
+        const cfg = Object.assign(clonarDefault(), resp);
+        localStorage.setItem(KEY_LS, JSON.stringify(cfg));
+      }
+    } catch (e) {
+      console.warn("[Comisiones-Cot] No se pudo cargar config desde API:", e.message);
+    }
   }
 
   function clonarDefault() {
@@ -451,6 +469,7 @@
   // -----------------------------------------------------------------
   document.addEventListener("DOMContentLoaded", () => {
     asegurarConfigInicial();
+    sincronizarConfigConAPI();
     initModalConfigComisiones();
     initModalReporteComisiones();
     window.configComisionesAPI = { cargarConfig, guardarConfig };

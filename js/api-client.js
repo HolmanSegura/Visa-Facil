@@ -82,9 +82,33 @@
     return data;
   }
 
+  async function cargarEnvConfig() {
+    try {
+      const res  = await fetch(BASE + "/env.php");
+      const data = await res.json();
+      if (!data?.ok) return;
+
+      window.AppConfig = {
+        hubspot_token:     data.hubspot_token     || "",
+        dapta_webhook_url: data.dapta_webhook_url || "",
+        dapta_api_key:     data.dapta_api_key     || "",
+      };
+
+      // Auto-configurar HubSpot si tiene token
+      if (window.AppConfig.hubspot_token && window.HubSpotAPI) {
+        window.HubSpotAPI.configurar({ token: window.AppConfig.hubspot_token });
+      }
+
+      console.info("[API Client] Config de entorno cargada.");
+    } catch (e) {
+      console.warn("[API Client] No se pudo cargar config de entorno:", e.message);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     window.Api = { cotizaciones, caja, productos, comisiones, subirAdjunto };
     console.info("[API Client] Listo. Endpoints base:", BASE);
+    cargarEnvConfig();
   });
 
 })();

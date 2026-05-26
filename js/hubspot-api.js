@@ -13,7 +13,7 @@
   const API_BASE = "https://api.hubapi.com";
 
   const cfg = {
-    token: "", // Reemplaza con tu token de acceso personal (PAT) de HubSpot
+    token: "", // Se configura desde .env vía window.AppConfig.hubspot_token
     portalId: "50772182",
   };
 
@@ -26,9 +26,10 @@
   }
 
   function headers() {
+    const token = cfg.token || window.AppConfig?.hubspot_token || "";
     return {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${cfg.token}`,
+      Authorization: `Bearer ${token}`,
     };
   }
 
