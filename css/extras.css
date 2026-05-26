@@ -289,8 +289,13 @@
   line-height: 1.1;
 }
 
-.reporte-comisiones__kpi-valor.diff-pos { color: #059669; }
-.reporte-comisiones__kpi-valor.diff-neg { color: #dc2626; }
+.reporte-comisiones__kpi-valor.diff-pos {
+  color: #059669;
+}
+
+.reporte-comisiones__kpi-valor.diff-neg {
+  color: #dc2626;
+}
 
 .reporte-comisiones__kpi-sub {
   margin-top: var(--esp-1);
@@ -341,14 +346,20 @@
   font-style: italic;
 }
 
-.diff-pos { color: #059669; }
-.diff-neg { color: #dc2626; }
+.diff-pos {
+  color: #059669;
+}
+
+.diff-neg {
+  color: #dc2626;
+}
 
 /* Responsive — filtros del reporte */
 @media (max-width: 768px) {
   .reporte-comisiones__filtros {
     grid-template-columns: 1fr;
   }
+
   .reporte-comisiones__resumen {
     grid-template-columns: 1fr;
   }
@@ -505,16 +516,24 @@
 
 /* Panel tabla de líneas (derecha) */
 .cot-lineas {
-  min-width: 0;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .tabla-lineas {
+  table-layout: fixed;
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-tam-sm);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-lg);
   overflow: hidden;
+}
+
+.tabla-lineas th:first-child,
+.tabla-lineas td:first-child {
+  width: 35%;
+  min-width: 0;
 }
 
 .tabla-lineas th {
@@ -556,22 +575,40 @@
 
 .linea-nombre__texto {
   font-weight: var(--font-peso-medio);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .linea-nombre__desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 11px;
   color: var(--color-texto-debil);
   margin-top: 1px;
 }
 
 .linea-td--desc .linea-desc-wrap {
+  width: 100%;
   display: flex;
   gap: 4px;
   align-items: center;
 }
 
 .linea-td--num input.form-input--sm {
+  width: 100%;
   text-align: right;
+}
+
+.linea-td--desc .linea-desc-wrap input {
+  flex: 1;
+  min-width: 0;
+}
+
+.linea-td--desc .linea-desc-wrap select {
+  flex-shrink: 0;
+  width: 60px;
 }
 
 .tabla-lineas__vacio {
@@ -647,6 +684,7 @@
   .cot-productos-layout {
     grid-template-columns: 1fr;
   }
+
   .cot-catalogo {
     max-height: 180px;
   }
@@ -941,7 +979,9 @@
 
 /* Responsive */
 @media (max-width: 1100px) {
-  .panel-detalle { width: 380px; }
+  .panel-detalle {
+    width: 380px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1192,6 +1232,12 @@
 }
 
 @media (max-width: 720px) {
-  .vista-previa { padding: 32px 20px; }
-  .vista-previa__partes { grid-template-columns: 1fr; gap: var(--esp-5); }
+  .vista-previa {
+    padding: 32px 20px;
+  }
+
+  .vista-previa__partes {
+    grid-template-columns: 1fr;
+    gap: var(--esp-5);
+  }
 }

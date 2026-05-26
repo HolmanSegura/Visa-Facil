@@ -128,7 +128,7 @@
   opacity: 0.6;
 }
 
-/* --- Botón de toggle (colapsar/expandir) --- */
+/* Estado por defecto (colapsado): centrado */
 .sidebar__toggle {
   display: flex;
   align-items: center;
@@ -140,6 +140,12 @@
   border-radius: var(--radio-md);
   transition: background-color var(--trans-rapida), transform var(--trans-media);
   flex-shrink: 0;
+}
+
+/* Cuando el sidebar está expandido: botón a la derecha */
+.sidebar:not(.sidebar--colapsado) .sidebar__toggle {
+  margin-left: auto;
+  margin-right: var(--esp-2);
 }
 
 .sidebar__toggle:hover {

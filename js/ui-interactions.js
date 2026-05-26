@@ -649,8 +649,8 @@
           Popovers.cerrar();
           return;
         }
-        if (accion === "cab-config-comisiones")   Modales.abrir("modal-config-comisiones");
-        if (accion === "cab-reporte-comisiones")  Modales.abrir("modal-reporte-comisiones");
+        if (accion === "cab-config-comisiones") Modales.abrir("modal-config-comisiones");
+        if (accion === "cab-reporte-comisiones") Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
       });
     }
@@ -758,15 +758,19 @@
     const btn = document.getElementById("btn-crear-cotizacion");
     if (btn) {
       btn.addEventListener("click", () => {
-        // Pre-poblar fechas
-        const hoy = new Date("2026-05-20");
-        const dentro30 = new Date("2026-05-20");
+        // Pre-poblar fechas con la fecha actual
+        const hoy = new Date();
+        const dentro30 = new Date();
         dentro30.setDate(dentro30.getDate() + 30);
-        const iso = (d) => d.toISOString().slice(0, 10);
+
+        const iso = d => d.toISOString().slice(0, 10);
+
         const fc = document.getElementById("cot-fecha-creacion");
         const fv = document.getElementById("cot-fecha-vencimiento");
+
         if (fc) fc.value = iso(hoy);
         if (fv) fv.value = iso(dentro30);
+
         Modales.abrir("modal-crear-cotizacion");
       });
     }
@@ -836,7 +840,7 @@
     const modal = document.getElementById("modal-editar-columnas");
     if (!modal) return;
 
-    const colDisponibles  = modal.querySelector("#cols-disponibles");
+    const colDisponibles = modal.querySelector("#cols-disponibles");
     const colSeleccionadas = modal.querySelector("#cols-seleccionadas");
 
     function actualizarContador() {
