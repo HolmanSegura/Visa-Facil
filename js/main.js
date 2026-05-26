@@ -137,7 +137,7 @@ function mostrarToast(mensaje, duracion = 2800) {
   toast._timer = setTimeout(() => toast.classList.remove("visible"), duracion);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("[App] Iniciando módulo de cotizaciones...");
   window.estadoApp        = estadoApp;
   window.formatearMoneda  = formatearMoneda;
@@ -146,4 +146,35 @@ document.addEventListener("DOMContentLoaded", () => {
   window.etiquetaEstado   = etiquetaEstado;
   window.etiquetaFirma    = etiquetaFirma;
   window.mostrarToast     = mostrarToast;
+
+  // ── Carga desde API cuando está disponible ─────────────────
+  // Si window.Api existe (api-client.js cargado y servidor PHP activo),
+  // reemplaza los datos de ejemplo con los reales de la base de datos.
+  // Si no, el módulo sigue funcionando con los datos hardcodeados de arriba.
+  if (window.Api) {
+    try {
+      const res = await window.Api.cotizaciones.listar({ por_pagina: 200 });
+      if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+        // Normalizar campos de la API al mismo contrato que usan los módulos JS
+        const normalizados = res.data.map(c => ({
+          id:               c.id,
+          titulo:           c.titulo,
+          estado:           c.estado,
+          estadoFirma:      c.estado_firma,
+          moneda:           c.moneda,
+          cantidad:         parseFloat(c.cantidad) || 0,
+          fechaCreacion:    c.fecha_creacion,
+          fechaVencimiento: c.fecha_vencimiento,
+          responsable:      c.responsable  || "",
+          cliente:          c.cliente       || "",
+          negocio:          c.negocio       || "",
+        }));
+        estadoApp.datosOriginales = normalizados;
+        estadoApp.datosVisibles   = [...normalizados];
+        console.info(`[App] ${normalizados.length} cotizaciones cargadas desde la API.`);
+      }
+    } catch (e) {
+      console.warn("[App] API no disponible, usando datos de ejemplo:", e.message);
+    }
+  }
 });

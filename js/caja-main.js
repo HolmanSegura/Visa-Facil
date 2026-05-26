@@ -289,7 +289,7 @@ function pintarCambio(idEl, actual, anterior) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("[Caja] Iniciando módulo de Caja...");
   window.estadoApp           = estadoApp;
   window.movimientosCaja     = movimientosCaja;
@@ -305,6 +305,37 @@ document.addEventListener("DOMContentLoaded", () => {
   window.etiquetaMetodoPago  = etiquetaMetodoPago;
   window.mostrarToast        = mostrarToast;
   window.actualizarDashboard = actualizarDashboard;
+
+  // ── Carga desde API cuando está disponible ─────────────────
+  if (window.Api) {
+    try {
+      const res = await window.Api.caja.listar({ por_pagina: 200 });
+      if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+        const normalizados = res.data.map(m => ({
+          id:           m.id,
+          fecha:        m.fecha,
+          tipo:         m.tipo,
+          categoria:    m.categoria       || "otros",
+          descripcion:  m.descripcion,
+          responsable:  m.responsable     || "",
+          valor:        parseFloat(m.valor) || 0,
+          moneda:       m.moneda          || "COP",
+          estado:       m.estado,
+          metodoPago:   m.metodo_pago     || "",
+          observaciones:m.observaciones   || "",
+          cliente:      m.cliente         || "",
+          referencia:   m.referencia      || "",
+          adjunto:      m.adjunto         || null,
+        }));
+        estadoApp.datosOriginales = normalizados;
+        estadoApp.datosVisibles   = [...normalizados];
+        window.movimientosCaja    = normalizados;
+        console.info(`[Caja] ${normalizados.length} movimientos cargados desde la API.`);
+      }
+    } catch (e) {
+      console.warn("[Caja] API no disponible, usando datos de ejemplo:", e.message);
+    }
+  }
 
   actualizarDashboard();
 });

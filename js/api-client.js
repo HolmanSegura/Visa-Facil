@@ -1,0 +1,90 @@
+/* ============================================================
+   JS/API-CLIENT.JS
+   Cliente HTTP liviano para los endpoints PHP de la API local.
+   Reemplaza el acceso a datos hardcodeados en main.js y caja-main.js.
+
+   Uso:
+     const cots = await window.Api.cotizaciones.listar({ estado: "aprobado" })
+     const mov  = await window.Api.caja.crear({ tipo: "ingreso", ... })
+   ============================================================ */
+(function () {
+
+  const BASE = (document.querySelector('base')?.getAttribute('href') || '/').replace(/\/$/, '') + '/api';
+
+  // Convierte un objeto de parámetros a query string
+  function toQS(params = {}) {
+    const p = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+    return p.length ? "?" + p.join("&") : "";
+  }
+
+  async function request(method, path, body, params) {
+    const url  = BASE + path + (params ? toQS(params) : "");
+    const opts = {
+      method,
+      headers: { "Content-Type": "application/json" },
+    };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+
+    const res = await fetch(url, opts);
+    let data;
+    try { data = await res.json(); } catch { data = {}; }
+
+    if (!res.ok) {
+      const msg = data?.error || `HTTP ${res.status}`;
+      throw new Error(`[API] ${method} ${path} → ${msg}`);
+    }
+    return data;
+  }
+
+  // ── Cotizaciones ──────────────────────────────────────────
+  const cotizaciones = {
+    listar:  (filtros)  => request("GET",    "/cotizaciones.php", undefined, filtros),
+    obtener: (id)       => request("GET",    `/cotizaciones.php`, undefined, { id }),
+    crear:   (datos)    => request("POST",   "/cotizaciones.php", datos),
+    actualizar: (id, d) => request("PATCH",  `/cotizaciones.php`, d, { id }),
+    eliminar:   (id)    => request("DELETE", `/cotizaciones.php`, undefined, { id }),
+  };
+
+  // ── Caja ─────────────────────────────────────────────────
+  const caja = {
+    listar:     (filtros)  => request("GET",    "/caja.php", undefined, filtros),
+    obtener:    (id)       => request("GET",    "/caja.php", undefined, { id }),
+    crear:      (datos)    => request("POST",   "/caja.php", datos),
+    actualizar: (id, d)    => request("PATCH",  "/caja.php", d, { id }),
+    eliminar:   (id)       => request("DELETE", "/caja.php", undefined, { id }),
+  };
+
+  // ── Productos ─────────────────────────────────────────────
+  const productos = {
+    listar:   (filtros)  => request("GET",  "/productos.php", undefined, filtros),
+    sincronizar: (items) => request("POST", "/productos.php", items),
+  };
+
+  // ── Comisiones ────────────────────────────────────────────
+  const comisiones = {
+    obtenerConfig: ()      => request("GET", "/comisiones.php"),
+    guardarConfig: (datos) => request("PUT", "/comisiones.php", datos),
+    reporte: (filtros)     => request("GET", "/comisiones.php", undefined, { reporte: 1, ...filtros }),
+  };
+
+  // ── Upload ────────────────────────────────────────────────
+  async function subirAdjunto(file, { movimiento_caja_id, cotizacion_id } = {}) {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (movimiento_caja_id) fd.append("movimiento_caja_id", movimiento_caja_id);
+    if (cotizacion_id)      fd.append("cotizacion_id",      cotizacion_id);
+
+    const res  = await fetch(BASE + "/upload.php", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error subiendo archivo");
+    return data;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    window.Api = { cotizaciones, caja, productos, comisiones, subirAdjunto };
+    console.info("[API Client] Listo. Endpoints base:", BASE);
+  });
+
+})();
