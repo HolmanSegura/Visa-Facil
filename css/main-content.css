@@ -222,10 +222,13 @@
   padding: 2px 20px 2px 8px;  /* 20px a la derecha para el dot indicador */
   margin: -2px 4px -2px -2px;
   min-width: 60px;
+  max-width: 100%;
   outline: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
+  display: inline-block;
+  width: max-content;
 }
 .tab__titulo--editando:focus { outline: none; }
 
@@ -247,6 +250,25 @@
 .tab.tab--editando .tab__menu,
 .tab.tab--editando .tab__cerrar {
   display: none !important;
+}
+
+/* En modo edición: el tab se expande para que el título completo sea visible
+   y editable, sobrescribiendo el ancho fijo del 20% / 235px */
+.tab.tab--editando {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 200px !important;
+  max-width: 480px !important;
+  overflow: visible;
+  z-index: 4;
+}
+
+.tab.tab--editando .tab__titulo {
+  max-width: none;
+  flex: 1 1 auto;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 /* Botón "aceptar" (✓) que solo aparece durante la edición — reemplaza visualmente la X */
@@ -430,24 +452,6 @@
 
 .metodo-pago--ach {
   background: #1a73e8;
-}
-
-/* ============================================================
-   FAB Beta
-   ============================================================ */
-.beta-fab {
-  position: fixed;
-  bottom: var(--esp-4);
-  left: calc(var(--ancho-sidebar) + var(--esp-2));
-  background: var(--color-acento);
-  color: #fff;
-  font-size: var(--font-tam-sm);
-  font-weight: var(--font-peso-semibold);
-  padding: 6px var(--esp-3);
-  border-radius: var(--radio-pill);
-  box-shadow: var(--sombra-md);
-  z-index: var(--z-sidebar);
-  pointer-events: none;
 }
 
 /* ============================================================

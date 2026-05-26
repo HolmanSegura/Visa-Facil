@@ -299,7 +299,7 @@
   }
 
   /* ---------- CABECERA MENU ----------
-     El botón "Exportar" ahora abre un popover (data-popover) gestionado
+     El botón "Exportar" del toolbar abre un popover (data-popover) gestionado
      por `caja-export.js`. Aquí solo manejamos las opciones secundarias
      del menú de 3 puntos. */
   function initCabeceraMenu() {
@@ -308,13 +308,73 @@
       popover.addEventListener("click", (e) => {
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
         if (!accion) return;
-        if (accion === "cab-informes")            window.mostrarToast("📊 Abriendo informes de caja...");
+        if (accion === "cab-informes") {
+          mostrarInformesCaja();
+          Popovers.cerrar();
+          return;
+        }
         if (accion === "cab-cierre")              window.mostrarToast("🔒 Iniciando cierre diario de caja...");
         if (accion === "cab-config-comisiones")   Modales.abrir("modal-config-comisiones");
         if (accion === "cab-reporte-comisiones")  Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
       });
     }
+  }
+
+  /**
+   * Modal de Informes de caja: agrupa por categoría con conteos y total.
+   */
+  function mostrarInformesCaja() {
+    const est = window.estadoApp;
+    if (!est) return;
+
+    const ingresos = est.datosOriginales.filter(m => m.tipo === "ingreso");
+    const gastos   = est.datosOriginales.filter(m => m.tipo === "gasto");
+    const totalIng = ingresos.reduce((s, m) => s + (m.valor || 0), 0);
+    const totalGas = gastos.reduce((s, m) => s + (m.valor || 0), 0);
+
+    const kpis = document.getElementById("informes-kpis");
+    if (kpis) {
+      kpis.innerHTML = `
+        <div class="reporte-comisiones__kpi">
+          <div class="reporte-comisiones__kpi-titulo">Total ingresos</div>
+          <div class="reporte-comisiones__kpi-valor">${window.formatearMoneda(totalIng, "COP")}</div>
+          <div class="reporte-comisiones__kpi-sub">${ingresos.length} movimientos</div>
+        </div>
+        <div class="reporte-comisiones__kpi">
+          <div class="reporte-comisiones__kpi-titulo">Total gastos</div>
+          <div class="reporte-comisiones__kpi-valor">${window.formatearMoneda(totalGas, "COP")}</div>
+          <div class="reporte-comisiones__kpi-sub">${gastos.length} movimientos</div>
+        </div>
+        <div class="reporte-comisiones__kpi">
+          <div class="reporte-comisiones__kpi-titulo">Balance</div>
+          <div class="reporte-comisiones__kpi-valor">${window.formatearMoneda(totalIng - totalGas, "COP")}</div>
+          <div class="reporte-comisiones__kpi-sub">Ingresos − Gastos</div>
+        </div>
+      `;
+    }
+
+    // Agrupar por categoría
+    const grupos = {};
+    est.datosOriginales.forEach(m => {
+      const k = m.categoria || "—";
+      if (!grupos[k]) grupos[k] = { count: 0, total: 0 };
+      grupos[k].count++;
+      grupos[k].total += (m.tipo === "gasto" ? -1 : 1) * (m.valor || 0);
+    });
+
+    const tbody = document.getElementById("informes-tbody");
+    if (tbody) {
+      tbody.innerHTML = Object.keys(grupos).sort().map(k => `
+        <tr>
+          <td>${window.etiquetaCategoria ? window.etiquetaCategoria(k) : k}</td>
+          <td class="num">${grupos[k].count}</td>
+          <td class="num">${window.formatearMoneda(grupos[k].total, "COP")}</td>
+        </tr>
+      `).join("");
+    }
+
+    Modales.abrir("modal-informes");
   }
 
   /* ---------- REGISTRAR GASTO / INGRESO ---------- */
@@ -481,15 +541,92 @@
 
     const modal = document.getElementById("modal-editar-columnas");
     if (!modal) return;
-    modal.querySelectorAll(".editar-columnas__remover").forEach(b => {
-      b.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const row = b.closest(".editar-columnas__seleccionada");
-        if (row) row.remove();
-        const cont = document.getElementById("contador-cols");
-        if (cont) cont.textContent = modal.querySelectorAll(".editar-columnas__seleccionada").length;
+
+    const colDisponibles  = modal.querySelector(".editar-columnas__col:first-child .editar-columnas__lista");
+    const colSeleccionadas = modal.querySelector(".editar-columnas__col:last-child .editar-columnas__lista");
+
+    function actualizarContador() {
+      const cont = document.getElementById("contador-cols");
+      if (cont && colSeleccionadas) {
+        cont.textContent = colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada").length;
+      }
+    }
+
+    function crearSeleccionada(texto) {
+      const div = document.createElement("div");
+      div.className = "editar-columnas__seleccionada";
+      div.innerHTML = `<span class="editar-columnas__drag">⋮⋮</span>${texto}<button class="editar-columnas__remover">×</button>`;
+      return div;
+    }
+
+    // Buscar
+    const inputBuscar = modal.querySelector('input[type="search"]');
+    if (inputBuscar) {
+      inputBuscar.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        modal.querySelectorAll(".editar-columnas__opt").forEach(opt => {
+          opt.style.display = opt.textContent.toLowerCase().includes(q) ? "" : "none";
+        });
       });
-    });
+    }
+
+    // Check izquierda → agrega/quita derecha
+    if (colDisponibles) {
+      colDisponibles.addEventListener("change", (e) => {
+        const cb = e.target.closest('input[type="checkbox"]');
+        if (!cb) return;
+        const label = cb.closest(".editar-columnas__opt");
+        const texto = label ? label.textContent.trim() : "";
+        if (!texto) return;
+        if (cb.checked) {
+          const yaExiste = [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
+            .some(d => d.textContent.replace("⋮⋮", "").replace("×", "").trim() === texto);
+          if (!yaExiste) {
+            colSeleccionadas.appendChild(crearSeleccionada(texto));
+            actualizarContador();
+          }
+        } else {
+          [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
+            .forEach(d => {
+              if (d.textContent.replace("⋮⋮", "").replace("×", "").trim() === texto) {
+                d.remove(); actualizarContador();
+              }
+            });
+        }
+      });
+    }
+
+    // Remover desde derecha
+    if (colSeleccionadas) {
+      colSeleccionadas.addEventListener("click", (e) => {
+        const x = e.target.closest(".editar-columnas__remover");
+        if (!x) return;
+        e.stopPropagation();
+        const row = x.closest(".editar-columnas__seleccionada");
+        if (row) {
+          const texto = row.textContent.replace("⋮⋮", "").replace("×", "").trim();
+          row.remove();
+          actualizarContador();
+          [...modal.querySelectorAll(".editar-columnas__opt")]
+            .forEach(lbl => {
+              if (lbl.textContent.trim() === texto) {
+                const cb = lbl.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = false;
+              }
+            });
+        }
+      });
+    }
+
+    // Aplicar
+    const btnAplicar = modal.querySelector(".modal__footer .btn--naranja");
+    if (btnAplicar) {
+      btnAplicar.addEventListener("click", () => {
+        const total = colSeleccionadas?.querySelectorAll(".editar-columnas__seleccionada").length || 0;
+        Modales.cerrar(modal);
+        window.mostrarToast(`✓ Configuración de columnas aplicada (${total} columnas)`);
+      });
+    }
   }
 
   function initOrdenar() {
@@ -512,6 +649,80 @@
         window.estadoApp.ordenDireccion = btn.dataset.dir;
         if (window.tablaInstance) window.tablaInstance.renderizar();
       });
+    });
+
+    // Buscador interno (si existe)
+    const inputBuscar = popover.querySelector(".popover__buscar-input");
+    if (inputBuscar) {
+      inputBuscar.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        popover.querySelectorAll(".popover__lista .popover__item").forEach(item => {
+          item.style.display = item.textContent.toLowerCase().includes(q) ? "" : "none";
+        });
+      });
+    }
+
+    popover.querySelectorAll(".popover__lista .popover__item").forEach(it => {
+      it.addEventListener("click", () => {
+        popover.querySelectorAll(".popover__lista .popover__item")
+          .forEach(i => i.classList.remove("popover__item--seleccionado"));
+        it.classList.add("popover__item--seleccionado");
+        window.mostrarToast(`Ordenando por: ${it.textContent.trim()}`);
+      });
+    });
+  }
+
+  /* ---------- TOGGLE FILTROS RÁPIDOS ---------- */
+  function initToggleFiltros() {
+    const btn = document.getElementById("btn-toggle-filtros");
+    const fila = document.getElementById("filtros-rapidos");
+    if (!btn || !fila) return;
+    btn.addEventListener("click", () => {
+      const visible = !fila.hasAttribute("hidden");
+      if (visible) {
+        fila.setAttribute("hidden", "");
+        btn.classList.remove("btn--activo");
+        btn.setAttribute("aria-pressed", "false");
+      } else {
+        fila.removeAttribute("hidden");
+        btn.classList.add("btn--activo");
+        btn.setAttribute("aria-pressed", "true");
+      }
+    });
+  }
+
+  /* ---------- VISTA DE TABLA ---------- */
+  function initVistaTabla() {
+    const popover = document.getElementById("popover-vista-tabla");
+    if (!popover) return;
+    popover.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-vista-tipo]");
+      if (!item) return;
+      popover.querySelectorAll("[data-vista-tipo]")
+        .forEach(i => i.classList.remove("popover__item--seleccionado"));
+      item.classList.add("popover__item--seleccionado");
+      const tipo = item.dataset.vistaTipo;
+      const label = document.getElementById("lbl-vista-tabla");
+      const nombres = { tabla: "Vista de tabla", tablero: "Vista de tablero", lista: "Vista de lista" };
+      if (label) label.textContent = nombres[tipo] || "Vista de tabla";
+      if (tipo === "tabla") {
+        window.mostrarToast("✓ Mostrando vista de tabla");
+      } else {
+        window.mostrarToast(`📋 La vista "${nombres[tipo]}" estará disponible próximamente`);
+      }
+      Popovers.cerrar();
+    });
+  }
+
+  /* ---------- DUPLICAR VISTA ACTIVA ---------- */
+  function initDuplicarVista() {
+    const btn = document.getElementById("btn-duplicar-vista");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const id = window.estadoApp?.vistaActivaId;
+      if (id && window.vistasInstance) {
+        window.vistasInstance.clonarVista(id);
+      }
     });
   }
 
@@ -734,6 +945,10 @@
     initConfigTabla();
     initTarjetasResumen();
     initTamanoPagina();
+
+    initToggleFiltros();
+    initVistaTabla();
+    initDuplicarVista();
 
     window.Popovers = Popovers;
     window.Modales = Modales;

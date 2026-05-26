@@ -118,6 +118,11 @@
     set("cot-resumen-iva",       fmt(totales.iva));
     set("cot-resumen-total",     fmt(totales.total));
 
+    // Sincronizar el total calculado al input oculto #cot-cantidad
+    // (hs_quote_amount) — usado por email-send y por el handler "Guardar".
+    const inputCant = document.getElementById("cot-cantidad");
+    if (inputCant) inputCant.value = Math.round(totales.total || 0);
+
     // Fila de descuento: solo visible cuando hay descuento aplicado
     const filaDesc = document.getElementById("cot-resumen-fila-descuento");
     const elDesc   = document.getElementById("cot-resumen-descuento");

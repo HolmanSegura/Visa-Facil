@@ -91,6 +91,17 @@
   overflow: hidden;
 }
 
+/* Cuando está colapsado: centrar el icono en el botón */
+.sidebar--colapsado .sidebar__btn {
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+
+.sidebar--colapsado .sidebar__item {
+  padding: 0 var(--esp-1);
+}
+
 /* Item activo: fondo destacado teal y barra lateral acento */
 .sidebar__item--activo .sidebar__btn {
   background-color: var(--color-sidebar-activo-bg);

@@ -155,7 +155,11 @@
   const PanelLateral = {
     abrir() {
       const panel = document.getElementById("panel-config-tabla");
-      if (panel) panel.classList.add("abierto");
+      if (panel) {
+        // Cerrar panel de detalle si está abierto (no superponer)
+        PanelDetalleCotizacion.cerrar();
+        panel.classList.add("abierto");
+      }
     },
     cerrar() {
       const panel = document.getElementById("panel-config-tabla");
@@ -170,6 +174,296 @@
       });
     }
   };
+
+  /* ----------------------------------------------------------
+     3.b PANEL LATERAL: Detalle de cotización
+     ---------------------------------------------------------- */
+  const PanelDetalleCotizacion = {
+    cotActual: null,
+
+    abrir(cot) {
+      if (!cot) return;
+      const panel = document.getElementById("panel-detalle-cotizacion");
+      if (!panel) return;
+      // Cerrar el panel de config si estaba abierto
+      PanelLateral.cerrar();
+      this.cotActual = cot;
+      this.renderizar(cot);
+      panel.classList.add("abierto");
+      // Marcar la fila como activa
+      document.querySelectorAll(".tabla-cotizaciones tbody tr.fila-activa")
+        .forEach(tr => tr.classList.remove("fila-activa"));
+      const fila = document.querySelector(`.tabla-cotizaciones tbody tr[data-id="${cot.id}"]`);
+      if (fila) fila.classList.add("fila-activa");
+    },
+
+    cerrar() {
+      const panel = document.getElementById("panel-detalle-cotizacion");
+      if (panel) panel.classList.remove("abierto");
+      document.querySelectorAll(".tabla-cotizaciones tbody tr.fila-activa")
+        .forEach(tr => tr.classList.remove("fila-activa"));
+      this.cotActual = null;
+    },
+
+    renderizar(c) {
+      const $ = (id) => document.getElementById(id);
+      const ref = "N.º " + new Date(c.fechaCreacion || Date.now())
+        .toISOString().slice(0, 10).replace(/-/g, "") + "-" + String(c.id).padStart(9, "0");
+
+      $("detalle-cot-titulo").textContent = c.titulo;
+      $("detalle-cot-monto").textContent = window.formatearMoneda(c.cantidad, c.moneda);
+      $("detalle-cot-numero").textContent = ref;
+      $("detalle-cot-estado").innerHTML = `
+        <span class="estado-badge">
+          <span class="estado-dot estado-dot--${c.estado}"></span>
+          ${window.etiquetaEstado(c.estado)}
+        </span>`;
+      $("detalle-cot-propietario").innerHTML = `
+        <span class="celda-avatar__circulo">${window.obtenerIniciales(c.responsable)}</span>
+        <span class="celda-avatar__nombre">${c.responsable}</span>`;
+      $("detalle-cot-cliente").textContent = c.cliente || "—";
+      $("detalle-cot-negocio").textContent = c.negocio || "—";
+      $("detalle-cot-fcreacion").textContent = window.formatearFecha(c.fechaCreacion);
+      $("detalle-cot-fvencimiento").textContent = window.formatearFecha(c.fechaVencimiento);
+      $("detalle-cot-firma").textContent = window.etiquetaFirma(c.estadoFirma);
+
+      // Guardar el número de referencia para la vista previa
+      c._refNumber = ref;
+    },
+
+    init() {
+      // Cerrar
+      document.addEventListener("click", (e) => {
+        if (e.target.closest("[data-cerrar-detalle]")) this.cerrar();
+      });
+
+      // Toggle de secciones colapsables (chevron)
+      document.addEventListener("click", (e) => {
+        const titulo = e.target.closest("[data-toggle-seccion]");
+        if (!titulo) return;
+        const seccion = titulo.closest(".panel-detalle__seccion--colapsable");
+        if (seccion) seccion.classList.toggle("colapsado");
+      });
+
+      // Acciones rápidas (Retirar, Clonar, Descargar, Copiar)
+      const acciones = document.querySelectorAll("[data-accion-cot]");
+      acciones.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const accion = btn.dataset.accionCot;
+          this.ejecutarAccion(accion);
+        });
+      });
+
+      // Popover de acciones del header
+      document.addEventListener("click", (e) => {
+        const item = e.target.closest("[data-accion-cot-menu]");
+        if (!item) return;
+        const accion = item.dataset.accionCotMenu;
+        if (accion === "vista-previa") {
+          VistaPreviaCotizacion.abrir(this.cotActual);
+        } else {
+          window.mostrarToast(`Acción "${accion}" — próximamente`);
+        }
+        Popovers.cerrar();
+      });
+    },
+
+    ejecutarAccion(accion) {
+      const c = this.cotActual;
+      if (!c) return;
+      switch (accion) {
+        case "retirar":
+          if (confirm(`¿Retirar la cotización "${c.titulo}"?`)) {
+            c.estado = "borrador";
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            if (window.vistasInstance) window.vistasInstance.renderizar();
+            window.mostrarToast("✓ Cotización retirada");
+            this.cerrar();
+          }
+          break;
+
+        case "clonar":
+          const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(x => x.id)) + 1;
+          const clon = { ...c, id: nuevoId, titulo: c.titulo + " (copia)", estado: "borrador", estadoFirma: "no_aplica" };
+          window.estadoApp.datosOriginales.unshift(clon);
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+          if (window.vistasInstance) window.vistasInstance.renderizar();
+          window.mostrarToast(`✓ Cotización clonada: "${clon.titulo}"`);
+          break;
+
+        case "descargar":
+          if (window.utilsExport) {
+            const csv = window.utilsExport.aCSV([c]);
+            const nombre = window.utilsExport.nombreArchivo(`cotizacion-${c.id}`);
+            window.utilsExport.descargarTexto(csv, nombre);
+            window.mostrarToast(`✓ Cotización descargada`);
+          }
+          break;
+
+        case "copiar":
+          const url = `${window.location.origin}/quote/${c.id}`;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+              window.mostrarToast("✓ Enlace copiado al portapapeles");
+            }).catch(() => {
+              window.mostrarToast(`🔗 ${url}`);
+            });
+          } else {
+            window.mostrarToast(`🔗 ${url}`);
+          }
+          break;
+      }
+    }
+  };
+
+  /* ----------------------------------------------------------
+     3.c VISTA PREVIA PÚBLICA (overlay full-screen)
+     ---------------------------------------------------------- */
+  const VistaPreviaCotizacion = {
+    cotActual: null,
+
+    abrir(cot) {
+      if (!cot) {
+        cot = PanelDetalleCotizacion.cotActual;
+      }
+      if (!cot) return;
+      this.cotActual = cot;
+      this.renderizar(cot);
+      const overlay = document.getElementById("vista-previa-cotizacion");
+      if (overlay) {
+        overlay.removeAttribute("hidden");
+        document.body.style.overflow = "hidden";
+      }
+    },
+
+    cerrar() {
+      const overlay = document.getElementById("vista-previa-cotizacion");
+      if (overlay) {
+        overlay.setAttribute("hidden", "");
+        document.body.style.overflow = "";
+      }
+      this.cotActual = null;
+    },
+
+    renderizar(c) {
+      const $ = (id) => document.getElementById(id);
+      const ref = c._refNumber || ("N.º " + new Date(c.fechaCreacion || Date.now())
+        .toISOString().slice(0, 10).replace(/-/g, "") + "-" + String(c.id).padStart(9, "0"));
+      const moneda = c.moneda || "COP";
+
+      $("vp-titulo").textContent = c.titulo;
+
+      // Lado izquierdo (cliente)
+      $("vp-cliente-nombre").textContent = c.cliente || "—";
+      $("vp-cliente-dir").textContent = c.cliente ? "Bogotá, Colombia" : "";
+      $("vp-cliente-contacto-nombre").textContent = c.cliente ? c.cliente : "";
+      $("vp-cliente-contacto-email").textContent = c.cliente ? "contacto@cliente.com" : "";
+      $("vp-cliente-contacto-tel").textContent = "";
+
+      $("vp-referencia").textContent = "Referencia: " + ref.replace("N.º ", "");
+      $("vp-fcreacion").textContent = "Cotización creada: " + window.formatearFecha(c.fechaCreacion);
+      $("vp-fvencimiento").textContent = "La cotización se vence: " + window.formatearFecha(c.fechaVencimiento);
+
+      // Lado derecho (preparado por)
+      $("vp-preparado-por").textContent = c.responsable;
+
+      // Total grande arriba
+      const totalStr = window.formatearMoneda(c.cantidad, moneda);
+      $("vp-total-grande").textContent = totalStr;
+      $("vp-total-final").textContent = totalStr;
+
+      // Producto único (simulado a partir del título + cantidad)
+      const subtotal = c.cantidad;
+      $("vp-productos-tbody").innerHTML = `
+        <tr>
+          <td>${c.titulo.replace(/^[^a-zA-Z]+/, "")}</td>
+          <td class="num">1</td>
+          <td class="num">${window.formatearMoneda(subtotal, moneda)}</td>
+        </tr>
+      `;
+      $("vp-subtotal").textContent = window.formatearMoneda(subtotal, moneda);
+
+      // Descuento: oculto por defecto (no hay info en el modelo)
+      $("vp-fila-desc").hidden = true;
+
+      // Comentarios y términos: defaults amables
+      $("vp-comentarios").textContent =
+        "Estamos emocionados por iniciar tu proyecto. Si tienes preguntas, contáctanos.";
+      $("vp-terminos").textContent =
+        "Forma de pago: a definir con el cliente al aceptar la cotización.";
+    },
+
+    init() {
+      document.addEventListener("click", (e) => {
+        if (e.target.closest("[data-cerrar-vista-previa]")) this.cerrar();
+        // Click sobre el overlay (fuera del contenido) cierra
+        const overlay = document.getElementById("vista-previa-cotizacion");
+        if (e.target === overlay) this.cerrar();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const overlay = document.getElementById("vista-previa-cotizacion");
+          if (overlay && !overlay.hasAttribute("hidden")) this.cerrar();
+        }
+      });
+
+      const btnDescargar = document.getElementById("btn-vp-descargar");
+      if (btnDescargar) {
+        btnDescargar.addEventListener("click", () => {
+          PanelDetalleCotizacion.cotActual = this.cotActual;
+          PanelDetalleCotizacion.ejecutarAccion("descargar");
+        });
+      }
+    }
+  };
+
+  /* ----------------------------------------------------------
+     3.d CLICKS EN FILAS DE LA TABLA (abrir panel de detalle)
+     ---------------------------------------------------------- */
+  function initClickFilas() {
+    const tbody = document.getElementById("tbody-cotizaciones");
+    if (!tbody) return;
+
+    // Delegación: clicks sobre filas
+    tbody.addEventListener("click", (e) => {
+      // Botón "Vista previa" sobre la fila: abre overlay full-screen directo
+      const btnVP = e.target.closest(".btn-vista-previa-fila");
+      if (btnVP) {
+        e.stopPropagation();
+        const id = parseInt(btnVP.dataset.cotId, 10);
+        const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
+        if (cot) VistaPreviaCotizacion.abrir(cot);
+        return;
+      }
+
+      // Click en el enlace del título: prevenir navegación, abrir panel
+      const linkTitulo = e.target.closest(".celda-titulo__link");
+      if (linkTitulo) e.preventDefault();
+
+      const tr = e.target.closest("tr[data-id]");
+      if (!tr) return;
+      const id = parseInt(tr.dataset.id, 10);
+      const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
+      if (cot) PanelDetalleCotizacion.abrir(cot);
+    });
+
+    // Hover: inyectar el botón "Vista previa" si no existe
+    tbody.addEventListener("mouseenter", (e) => {
+      const tr = e.target.closest && e.target.closest("tr[data-id]");
+      if (!tr) return;
+      if (tr.querySelector(".btn-vista-previa-fila")) return;
+      const id = tr.dataset.id;
+      const td = tr.querySelector("td:first-child");
+      if (!td) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-vista-previa-fila";
+      btn.dataset.cotId = id;
+      btn.textContent = "Vista previa";
+      td.appendChild(btn);
+    }, true);
+  }
 
   /* ----------------------------------------------------------
      4. HANDLERS ESPECÍFICOS DEL POPOVER OBJETOS (Cotizaciones)
@@ -344,19 +638,116 @@
       popover.addEventListener("click", (e) => {
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
         if (!accion) return;
-        if (accion === "cab-informes")            window.mostrarToast("🔗 Abriendo informes de cotizaciones...");
-        if (accion === "cab-descargar")           window.mostrarToast("⬇ Descargando cotizaciones publicadas...");
+
+        if (accion === "cab-informes") {
+          mostrarInformesCotizaciones();
+          Popovers.cerrar();
+          return;
+        }
+        if (accion === "cab-descargar") {
+          descargarPublicadas();
+          Popovers.cerrar();
+          return;
+        }
         if (accion === "cab-config-comisiones")   Modales.abrir("modal-config-comisiones");
         if (accion === "cab-reporte-comisiones")  Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
       });
     }
 
+    // Botón "Configurar pagos online": abre modal real
     const btnPagos = document.getElementById("btn-config-pagos");
     if (btnPagos) {
       btnPagos.addEventListener("click", () => {
-        window.mostrarToast("💳 Abriendo configuración de pagos online...");
+        Modales.abrir("modal-config-pagos");
       });
+    }
+
+    // Guardar config de pagos
+    const btnGuardarPagos = document.getElementById("btn-guardar-config-pagos");
+    if (btnGuardarPagos) {
+      btnGuardarPagos.addEventListener("click", () => {
+        Modales.cerrar(document.getElementById("modal-config-pagos"));
+        window.mostrarToast("✓ Configuración de pagos guardada");
+      });
+    }
+  }
+
+  /**
+   * Modal de Informes de cotizaciones: agrupa por estado y muestra totales.
+   */
+  function mostrarInformesCotizaciones() {
+    const est = window.estadoApp;
+    if (!est) return;
+
+    // Agrupar por estado
+    const grupos = {};
+    est.datosOriginales.forEach(c => {
+      const k = c.estado || "—";
+      if (!grupos[k]) grupos[k] = { count: 0, total: 0 };
+      grupos[k].count++;
+      grupos[k].total += (c.cantidad || 0);
+    });
+
+    // KPIs
+    const total = est.datosOriginales.length;
+    const aprobadas = (grupos["aprobado"]?.count || 0) + (grupos["publicado"]?.count || 0);
+    const montoTotal = est.datosOriginales.reduce((s, c) => s + (c.cantidad || 0), 0);
+
+    const kpis = document.getElementById("informes-kpis");
+    if (kpis) {
+      kpis.innerHTML = `
+        <div class="reporte-comisiones__kpi">
+          <div class="reporte-comisiones__kpi-titulo">Total cotizaciones</div>
+          <div class="reporte-comisiones__kpi-valor">${total}</div>
+        </div>
+        <div class="reporte-comisiones__kpi">
+          <div class="reporte-comisiones__kpi-titulo">Aprobadas / Publicadas</div>
+          <div class="reporte-comisiones__kpi-valor">${aprobadas}</div>
+        </div>
+        <div class="reporte-comisiones__kpi">
+          <div class="reporte-comisiones__kpi-titulo">Monto total (COP)</div>
+          <div class="reporte-comisiones__kpi-valor">${window.formatearMoneda(montoTotal, "COP")}</div>
+        </div>
+      `;
+    }
+
+    const tbody = document.getElementById("informes-tbody");
+    if (tbody) {
+      tbody.innerHTML = Object.keys(grupos).sort().map(k => `
+        <tr>
+          <td>${window.etiquetaEstado(k)}</td>
+          <td class="num">${grupos[k].count}</td>
+          <td class="num">${window.formatearMoneda(grupos[k].total, "COP")}</td>
+        </tr>
+      `).join("");
+    }
+
+    Modales.abrir("modal-informes");
+  }
+
+  /**
+   * Descarga directa de las cotizaciones publicadas (CSV).
+   */
+  function descargarPublicadas() {
+    const est = window.estadoApp;
+    if (!est) return;
+    const publicadas = est.datosOriginales.filter(c => c.estado === "publicado");
+    if (publicadas.length === 0) {
+      window.mostrarToast("⚠ No hay cotizaciones publicadas para descargar");
+      return;
+    }
+    if (window.utilsExport) {
+      const csv = window.utilsExport.aCSV(publicadas);
+      const nombre = window.utilsExport.nombreArchivo("cotizaciones-publicadas");
+      window.utilsExport.descargarTexto(csv, nombre);
+      window.mostrarToast(`✓ ${publicadas.length} cotizaciones publicadas descargadas`);
+    } else if (window.exportarCotizacionesCSV) {
+      // Fallback: usar exportador estándar con un swap temporal de datosVisibles
+      const original = est.datosVisibles;
+      est.datosVisibles = publicadas;
+      window.exportarCotizacionesCSV("visibles");
+      est.datosVisibles = original;
     }
   }
 
@@ -397,6 +788,10 @@
           window.mostrarToast("⚠ El título es obligatorio");
           return;
         }
+        if (cantidad <= 0 && estado !== "borrador") {
+          window.mostrarToast("⚠ Agrega al menos un producto/línea antes de guardar");
+          return;
+        }
 
         const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(c => c.id)) + 1;
         const nueva = {
@@ -417,6 +812,7 @@
 
         // Reset form
         document.getElementById("form-cotizacion").reset();
+        document.getElementById("cot-cantidad").value = "0";
 
         // Cerrar modal
         Modales.cerrar(document.getElementById("modal-crear-cotizacion"));
@@ -440,7 +836,27 @@
     const modal = document.getElementById("modal-editar-columnas");
     if (!modal) return;
 
-    // Filtro de búsqueda de columnas
+    const colDisponibles  = modal.querySelector("#cols-disponibles");
+    const colSeleccionadas = modal.querySelector("#cols-seleccionadas");
+
+    function actualizarContador() {
+      const cont = document.getElementById("contador-cols");
+      if (cont) {
+        const total = colSeleccionadas?.querySelectorAll(".editar-columnas__seleccionada").length || 0;
+        cont.textContent = total;
+      }
+    }
+
+    function crearSeleccionada(texto) {
+      const div = document.createElement("div");
+      div.className = "editar-columnas__seleccionada";
+      div.innerHTML = `
+        <span class="editar-columnas__drag">⋮⋮</span>${texto}<button class="editar-columnas__remover">×</button>
+      `;
+      return div;
+    }
+
+    // Buscar columnas
     const inputBuscar = document.getElementById("input-buscar-columnas");
     if (inputBuscar) {
       inputBuscar.addEventListener("input", (e) => {
@@ -451,24 +867,86 @@
       });
     }
 
-    // Remover columna desde la lista derecha
-    modal.querySelectorAll(".editar-columnas__remover").forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const row = btn.closest(".editar-columnas__seleccionada");
-        if (row) {
-          row.remove();
-          actualizarContador();
+    // Click en checkbox del panel izquierdo: agrega/quita de la lista derecha
+    if (colDisponibles) {
+      colDisponibles.addEventListener("change", (e) => {
+        const cb = e.target.closest('input[type="checkbox"]');
+        if (!cb) return;
+        const label = cb.closest(".editar-columnas__opt");
+        const texto = label ? label.textContent.trim() : "";
+        if (!texto) return;
+
+        if (cb.checked) {
+          // Evitar duplicado
+          const yaExiste = [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
+            .some(d => d.textContent.replace("⋮⋮", "").replace("×", "").trim() === texto);
+          if (!yaExiste) {
+            colSeleccionadas.appendChild(crearSeleccionada(texto));
+            actualizarContador();
+          }
+        } else {
+          // Quitar de la derecha si existe
+          [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
+            .forEach(d => {
+              if (d.textContent.replace("⋮⋮", "").replace("×", "").trim() === texto) {
+                d.remove();
+                actualizarContador();
+              }
+            });
         }
       });
-    });
+    }
 
-    function actualizarContador() {
-      const cont = document.getElementById("contador-cols");
-      if (cont) {
-        const total = modal.querySelectorAll(".editar-columnas__seleccionada").length;
-        cont.textContent = total;
-      }
+    // Remover desde la derecha (delegación para items dinámicos)
+    if (colSeleccionadas) {
+      colSeleccionadas.addEventListener("click", (e) => {
+        const x = e.target.closest(".editar-columnas__remover");
+        if (!x) return;
+        e.stopPropagation();
+        const row = x.closest(".editar-columnas__seleccionada");
+        if (row) {
+          const texto = row.textContent.replace("⋮⋮", "").replace("×", "").trim();
+          row.remove();
+          actualizarContador();
+          // Desmarcar el checkbox correspondiente en el panel izquierdo
+          [...modal.querySelectorAll(".editar-columnas__opt")]
+            .forEach(lbl => {
+              if (lbl.textContent.trim() === texto) {
+                const cb = lbl.querySelector('input[type="checkbox"]');
+                if (cb) cb.checked = false;
+              }
+            });
+        }
+      });
+    }
+
+    // Botón Aplicar
+    const btnAplicar = modal.querySelector(".modal__footer .btn--naranja");
+    if (btnAplicar) {
+      btnAplicar.addEventListener("click", () => {
+        const total = colSeleccionadas?.querySelectorAll(".editar-columnas__seleccionada").length || 0;
+        Modales.cerrar(modal);
+        window.mostrarToast(`✓ Configuración de columnas aplicada (${total} columnas)`);
+      });
+    }
+
+    // Enlace "Eliminar todas las columnas"
+    const linkEliminar = modal.querySelector(".modal__footer a.btn--link");
+    if (linkEliminar) {
+      linkEliminar.addEventListener("click", (e) => {
+        e.preventDefault();
+        // Mantener solo las columnas fijas
+        [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
+          .forEach(d => {
+            if (!d.classList.contains("editar-columnas__seleccionada--fija")) {
+              d.remove();
+            }
+          });
+        // Desmarcar todos los checkboxes
+        modal.querySelectorAll('.editar-columnas__opt input[type="checkbox"]').forEach(cb => cb.checked = false);
+        actualizarContador();
+        window.mostrarToast("Columnas eliminadas (conservando las fijas)");
+      });
     }
   }
 
@@ -493,6 +971,27 @@
         btn.classList.add("activo");
         window.estadoApp.ordenDireccion = btn.dataset.dir;
         if (window.tablaInstance) window.tablaInstance.renderizar();
+      });
+    });
+
+    // Buscador dentro del popover: filtra los items de la lista (propiedades)
+    const inputBuscar = popover.querySelector(".popover__buscar-input");
+    if (inputBuscar) {
+      inputBuscar.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        popover.querySelectorAll(".popover__lista .popover__item").forEach(item => {
+          item.style.display = item.textContent.toLowerCase().includes(q) ? "" : "none";
+        });
+      });
+    }
+
+    // Click en un item de la lista: marca como seleccionado y aplica ese campo
+    popover.querySelectorAll(".popover__lista .popover__item").forEach(it => {
+      it.addEventListener("click", () => {
+        popover.querySelectorAll(".popover__lista .popover__item")
+          .forEach(i => i.classList.remove("popover__item--seleccionado"));
+        it.classList.add("popover__item--seleccionado");
+        window.mostrarToast(`Ordenando por: ${it.textContent.trim()}`);
       });
     });
   }
@@ -701,12 +1200,110 @@
   }
 
   /* ----------------------------------------------------------
-     INIT GENERAL
+     14. TOGGLE FILTROS RÁPIDOS (mostrar/ocultar la fila)
      ---------------------------------------------------------- */
+  function initToggleFiltros() {
+    const btn = document.getElementById("btn-toggle-filtros");
+    const fila = document.getElementById("filtros-rapidos");
+    if (!btn || !fila) return;
+
+    btn.addEventListener("click", () => {
+      const visible = !fila.hasAttribute("hidden");
+      if (visible) {
+        fila.setAttribute("hidden", "");
+        btn.classList.remove("btn--activo");
+        btn.setAttribute("aria-pressed", "false");
+      } else {
+        fila.removeAttribute("hidden");
+        btn.classList.add("btn--activo");
+        btn.setAttribute("aria-pressed", "true");
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     15. VISTA DE TABLA (selector de tipo de vista)
+     ---------------------------------------------------------- */
+  function initVistaTabla() {
+    const popover = document.getElementById("popover-vista-tabla");
+    if (!popover) return;
+
+    popover.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-vista-tipo]");
+      if (!item) return;
+
+      popover.querySelectorAll("[data-vista-tipo]")
+        .forEach(i => i.classList.remove("popover__item--seleccionado"));
+      item.classList.add("popover__item--seleccionado");
+
+      const tipo = item.dataset.vistaTipo;
+      const label = document.getElementById("lbl-vista-tabla");
+      const nombres = { tabla: "Vista de tabla", tablero: "Vista de tablero", lista: "Vista de lista" };
+      if (label) label.textContent = nombres[tipo] || "Vista de tabla";
+
+      if (tipo === "tabla") {
+        window.mostrarToast("✓ Mostrando vista de tabla");
+      } else {
+        window.mostrarToast(`📋 La vista "${nombres[tipo]}" estará disponible próximamente`);
+      }
+      Popovers.cerrar();
+    });
+  }
+
+  /* ----------------------------------------------------------
+     16. DUPLICAR VISTA ACTIVA (botón del toolbar)
+     ---------------------------------------------------------- */
+  function initDuplicarVista() {
+    const btn = document.getElementById("btn-duplicar-vista");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const id = window.estadoApp?.vistaActivaId;
+      if (id && window.vistasInstance) {
+        window.vistasInstance.clonarVista(id);
+      }
+    });
+  }
+
+  /* ----------------------------------------------------------
+     17. MODAL AGREGAR VISTA: búsqueda + categoría
+     ---------------------------------------------------------- */
+  function initModalVistasExtras() {
+    const modal = document.getElementById("modal-agregar-vista");
+    if (!modal) return;
+
+    const inputBuscar = modal.querySelector('input[type="search"]');
+    if (inputBuscar) {
+      inputBuscar.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        modal.querySelectorAll(".modal-vistas__item").forEach(it => {
+          it.style.display = it.textContent.toLowerCase().includes(q) ? "" : "none";
+        });
+      });
+    }
+
+    const selectCat = modal.querySelector("select.form-select");
+    if (selectCat) {
+      selectCat.addEventListener("change", (e) => {
+        const cat = e.target.value;
+        modal.querySelectorAll(".modal-vistas__grupo").forEach(g => {
+          const titulo = g.textContent.toLowerCase();
+          if (cat === "Categoría" || !cat) {
+            g.style.display = "";
+          } else if (cat === "Mis vistas") {
+            g.style.display = titulo.includes("hubspot") ? "none" : "";
+          } else if (cat === "Compartidas") {
+            g.style.display = titulo.includes("administrador") ? "" : "none";
+          }
+        });
+      });
+    }
+  }
   document.addEventListener("DOMContentLoaded", () => {
     Popovers.init();
     Modales.init();
     PanelLateral.init();
+    PanelDetalleCotizacion.init();
+    VistaPreviaCotizacion.init();
 
     initSelectorObjetos();
     initTabMenu();
@@ -721,10 +1318,18 @@
     initConfigTabla();
     initTamanoPagina();
 
+    initToggleFiltros();
+    initVistaTabla();
+    initDuplicarVista();
+    initModalVistasExtras();
+    initClickFilas();
+
     // Exponer para debug
     window.Popovers = Popovers;
     window.Modales = Modales;
     window.PanelLateral = PanelLateral;
+    window.PanelDetalleCotizacion = PanelDetalleCotizacion;
+    window.VistaPreviaCotizacion = VistaPreviaCotizacion;
 
     console.log("[UI] Interactions inicializadas correctamente");
   });
