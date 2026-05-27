@@ -1132,34 +1132,68 @@
   }
 
   /* ---------- AGREGAR FILTRO RÁPIDO (botón +) ---------- */
+  const _PILLS_META_CAJA = {
+    tipo:       { icono: "📊", nombre: "Tipo" },
+    categoria:  { icono: "🏷",  nombre: "Categoría" },
+    fecha:      { icono: "📅", nombre: "Fecha" },
+    asesor:     { icono: "👤", nombre: "Responsable" },
+    estado:     { icono: "𝑓𝑥", nombre: "Estado" },
+    metodoPago: { icono: "💳", nombre: "Método de pago" },
+  };
+
+  function _pillEsVisibleCaja(filtroId) {
+    const p = document.querySelector(`.filtro-pill[data-filtro="${filtroId}"]`);
+    return p ? p.style.display !== "none" : false;
+  }
+
+  function _mostrarPillCaja(filtroId, visible) {
+    const p = document.querySelector(`.filtro-pill[data-filtro="${filtroId}"]`);
+    if (p) p.style.display = visible ? "" : "none";
+  }
+
+  function _limpiarValorFiltroCaja(filtroId) {
+    const est = window.estadoApp;
+    if (filtroId === "tipo")       est.filtros.tipo = [];
+    if (filtroId === "categoria")  est.filtros.categoria = [];
+    if (filtroId === "fecha")      est.filtros.fecha = null;
+    if (filtroId === "asesor")     est.filtros.asesor = [];
+    if (filtroId === "estado")     est.filtros.estado = [];
+    if (filtroId === "metodoPago") est.filtros.metodoPago = [];
+  }
+
   function initFiltroAdd() {
     const pop = document.getElementById("popover-filtro-add");
     if (!pop) return;
-    pop.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
-      item.addEventListener("click", () => {
-        const pillId = item.dataset.pillId;
-        const pill = document.querySelector(`.filtro-pill[data-filtro="${pillId}"]`);
-        if (!pill) return;
-        const oculta = pill.style.display === "none";
-        if (oculta) {
-          pill.style.display = "";
-          item.classList.add("popover__item--seleccionado");
-        } else {
-          pill.style.display = "none";
-          item.classList.remove("popover__item--seleccionado");
-          const est = window.estadoApp;
-          if (pillId === "metodoPago") est.filtros.metodoPago = [];
-          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
-        }
-        Popovers.cerrar();
-      });
+
+    const buscarInput = pop.querySelector("#filtro-add-buscar");
+    const lista = pop.querySelector("#filtro-add-lista");
+
+    pop.addEventListener("click", (e) => {
+      const item = e.target.closest(".popover__item[data-pill-id]");
+      if (!item) return;
+      const pillId = item.dataset.pillId;
+      _mostrarPillCaja(pillId, true);
+      if (buscarInput) buscarInput.value = "";
+      Popovers.cerrar();
+      _poblarModalEditarFiltrosCaja();
     });
+
+    if (buscarInput && lista) {
+      buscarInput.addEventListener("input", () => {
+        const q = buscarInput.value.trim().toLowerCase();
+        lista.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
+          const texto = item.textContent.trim().toLowerCase();
+          item.style.display = q === "" || texto.includes(q) ? "" : "none";
+        });
+      });
+    }
+
     new MutationObserver(() => {
       if (!pop.hasAttribute("hidden")) {
-        pop.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
-          const pillId = item.dataset.pillId;
-          const pill = document.querySelector(`.filtro-pill[data-filtro="${pillId}"]`);
-          const visible = pill && pill.style.display !== "none";
+        if (buscarInput) buscarInput.value = "";
+        lista && lista.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
+          item.style.display = "";
+          const visible = _pillEsVisibleCaja(item.dataset.pillId);
           item.classList.toggle("popover__item--seleccionado", visible);
         });
       }
@@ -1178,24 +1212,32 @@
     const modal = document.getElementById("modal-editar-filtros");
     if (!modal) return;
     modal.addEventListener("click", (e) => {
-      const remover = e.target.closest("[data-limpiar-filtro]");
+      // Quitar pill de la barra
+      const remover = e.target.closest("[data-quitar-pill]");
       if (remover) {
         e.stopPropagation();
-        const clave = remover.dataset.limpiarFiltro;
-        const est = window.estadoApp;
-        if (clave === "tipo")       est.filtros.tipo = [];
-        if (clave === "categoria")  est.filtros.categoria = [];
-        if (clave === "fecha")      est.filtros.fecha = null;
-        if (clave === "asesor")     est.filtros.asesor = [];
-        if (clave === "estado")     est.filtros.estado = [];
-        if (clave === "metodoPago") est.filtros.metodoPago = [];
+        const filtroId = remover.dataset.quitarPill;
+        _mostrarPillCaja(filtroId, false);
+        _limpiarValorFiltroCaja(filtroId);
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
         _poblarModalEditarFiltrosCaja();
+        return;
       }
-      const limpiarTodo = e.target.closest("[data-limpiar-todos]");
-      if (limpiarTodo) {
+
+      // Limpiar solo los valores (no ocultar pills)
+      const limpiarVal = e.target.closest("[data-limpiar-valores]");
+      if (limpiarVal) {
         if (window.filtrosInstance) window.filtrosInstance.limpiarFiltros();
         _poblarModalEditarFiltrosCaja();
+        return;
+      }
+
+      // Agregar filtro rápido → abrir popover +
+      const agregar = e.target.closest("#btn-agregar-filtro-rapido");
+      if (agregar) {
+        Modales.cerrar(modal);
+        const btnAdd = document.getElementById("btn-add-filtro");
+        if (btnAdd) Popovers.abrir("popover-filtro-add", btnAdd);
       }
     });
   }
@@ -1203,43 +1245,45 @@
   function _poblarModalEditarFiltrosCaja() {
     const modal = document.getElementById("modal-editar-filtros");
     if (!modal) return;
-    const lista = modal.querySelector(".filtros-activos-lista");
+    const lista = modal.querySelector("#lista-filtros-edit");
+    const contador = modal.querySelector("#contador-filtros");
     if (!lista) return;
-    const est = window.estadoApp;
 
-    const ETIQUETAS = {
-      tipo:       { nombre: "Tipo",            val: (v) => v.join(", ") },
-      categoria:  { nombre: "Categoría",       val: (v) => v.join(", ") },
-      fecha:      { nombre: "Fecha",           val: (v) => window.etiquetaFecha ? window.etiquetaFecha(v) : String(v) },
-      asesor:     { nombre: "Responsable",     val: (v) => v.join(", ") },
-      estado:     { nombre: "Estado",          val: (v) => v.join(", ") },
-      metodoPago: { nombre: "Método de pago",  val: (v) => v.join(", ") },
-    };
+    const pillsVisibles = Object.entries(_PILLS_META_CAJA)
+      .filter(([id]) => _pillEsVisibleCaja(id));
 
-    const activos = Object.entries(ETIQUETAS).filter(([clave]) => {
-      const v = est.filtros[clave];
-      return Array.isArray(v) ? v.length > 0 : !!v;
-    });
+    if (contador) contador.textContent = pillsVisibles.length;
 
-    if (activos.length === 0) {
-      lista.innerHTML = '<p class="filtros-activos-vacios">No hay filtros activos.</p>';
+    const ICONO_TRASH = `<svg viewBox="0 0 24 24" width="14" height="14">
+      <path fill="currentColor" d="M7 21q-.825 0-1.413-.588T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21H7Zm0-15v13h10V6H7Zm2 11h2V8H9v9Zm4 0h2V8h-2v9Z"/>
+    </svg>`;
+
+    if (pillsVisibles.length === 0) {
+      lista.innerHTML = `<p style="color:var(--color-texto-suave);font-size:var(--font-tam-sm);padding:var(--esp-3) 0">
+        No hay filtros en la barra. Usa el botón + para agregar.
+      </p>`;
     } else {
-      lista.innerHTML = activos.map(([clave, def]) => {
-        const v = est.filtros[clave];
-        return `
-          <div class="filtro-activo-fila">
-            <span class="filtro-activo-fila__nombre">${def.nombre}</span>
-            <span class="filtro-activo-fila__valor">${def.val(v)}</span>
-            <button class="filtro-activo-fila__remover" data-limpiar-filtro="${clave}" aria-label="Eliminar filtro">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-            </button>
-          </div>`;
-      }).join("");
+      lista.innerHTML = pillsVisibles.map(([id, meta]) => `
+        <div class="popover-fila-editor__item">
+          <div class="popover-fila-editor__icono">${meta.icono}</div>
+          <select class="popover-fila-editor__select" disabled>
+            <option>${meta.nombre}</option>
+          </select>
+          <button class="popover-fila-editor__remover" data-quitar-pill="${id}" aria-label="Quitar filtro">
+            ${ICONO_TRASH}
+          </button>
+        </div>`).join("");
     }
 
-    const sinFiltros = activos.length === 0;
-    const btnLimpiar = modal.querySelector("[data-limpiar-todos]");
-    if (btnLimpiar) btnLimpiar.disabled = sinFiltros;
+    const btnLimpiar = modal.querySelector("[data-limpiar-valores]");
+    if (btnLimpiar) {
+      const est = window.estadoApp;
+      const hayValores = est && Object.entries(_PILLS_META_CAJA).some(([id]) => {
+        const v = est.filtros[id];
+        return Array.isArray(v) ? v.length > 0 : !!v;
+      });
+      btnLimpiar.disabled = !hayValores;
+    }
   }
 
   /* ---------- FILTROS AVANZADOS ---------- */
@@ -1259,7 +1303,7 @@
       btnAplicar.addEventListener("click", () => {
         _leerFiltrosAvanzadosCaja();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
-        Modales.cerrar();
+        Modales.cerrar(modal);
       });
     }
 
@@ -1268,11 +1312,8 @@
       btnLimpiar.addEventListener("click", () => {
         modal.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
         modal.querySelectorAll('input[type="date"]').forEach(inp => { inp.value = ""; });
-        const est = window.estadoApp;
-        est.filtros.tipo = []; est.filtros.categoria = []; est.filtros.fecha = null;
-        est.filtros.asesor = []; est.filtros.estado = []; est.filtros.metodoPago = [];
-        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
-        Modales.cerrar();
+        if (window.filtrosInstance) window.filtrosInstance.limpiarFiltros();
+        Modales.cerrar(modal);
       });
     }
   }
