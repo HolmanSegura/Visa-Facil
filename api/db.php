@@ -11,7 +11,7 @@ define('ROOT_DIR', dirname(__DIR__));
 $envFile = ROOT_DIR . '/.env';
 if (file_exists($envFile)) {
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (str_starts_with(trim($line), '#') || !str_contains($line, '=')) continue;
+        if (strpos(trim($line), '#') === 0 || strpos($line, '=') === false) continue;
         [$key, $value] = explode('=', $line, 2);
         $_ENV[trim($key)] = trim($value);
     }
@@ -46,7 +46,7 @@ function getDB(): PDO {
 }
 
 // Helper: respuesta JSON con CORS para desarrollo local
-function jsonResponse(mixed $data, int $status = 200): never {
+function jsonResponse($data, int $status = 200) {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: *');
@@ -56,7 +56,7 @@ function jsonResponse(mixed $data, int $status = 200): never {
     exit;
 }
 
-function errorResponse(string $mensaje, int $status = 400): never {
+function errorResponse(string $mensaje, int $status = 400) {
     jsonResponse(['ok' => false, 'error' => $mensaje], $status);
 }
 

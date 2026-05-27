@@ -120,7 +120,7 @@ try {
             ];
         }
 
-        usort($filas, fn($a, $b) => $b['registrado'] <=> $a['registrado']);
+        usort($filas, function($a, $b) { return $b['registrado'] <=> $a['registrado']; });
 
         jsonResponse([
             'ok'    => true,
