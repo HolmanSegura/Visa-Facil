@@ -1,38 +1,7 @@
 /* ============================================================
    CAJA-MAIN.JS
-   Datos de movimientos de caja, estado y utilidades.
+   Estado y utilidades. Datos cargados desde API.
    ============================================================ */
-
-const movimientosCaja = [
-  // ===== Mayo 2026 (mes en curso) =====
-  { id: 1,  fecha: "2026-05-19", tipo: "gasto",   categoria: "alimentacion", descripcion: "Jugo natural para reunión cliente Acme", responsable: "Néstor Goyes",     valor: 8500,     moneda: "COP", estado: "pagado",    metodoPago: "efectivo",       observaciones: "Reunión presencial para revisión del proyecto. Cliente solicita seguimiento mensual.", cliente: "Acme Corp",            referencia: "REF-2026-0019", adjunto: "recibo_jugo.jpg" },
-  { id: 2,  fecha: "2026-05-19", tipo: "gasto",   categoria: "transporte",   descripcion: "Taxi Bogotá Centro - visita comercial",   responsable: "Maria González",    valor: 22000,    moneda: "COP", estado: "pagado",    metodoPago: "efectivo",       observaciones: "Trayecto ida y vuelta desde oficina hasta cliente Acme Corp.",                          cliente: "Acme Corp",            referencia: "REF-2026-0020", adjunto: "factura_taxi.pdf" },
-  { id: 3,  fecha: "2026-05-18", tipo: "ingreso", categoria: "servicios",    descripcion: "Pago parcial proyecto JMF Sistematización", responsable: "Néstor Goyes",   valor: 1500000,  moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "Primer abono del 50% del proyecto JMF según cotización aceptada.",                       cliente: "JMF Construcciones",   referencia: "REF-2026-0018", adjunto: "comprobante_jmf.pdf" },
-  { id: 4,  fecha: "2026-05-17", tipo: "gasto",   categoria: "papeleria",    descripcion: "Resma de papel + cartuchos impresora",    responsable: "Jennifer Acosta",  valor: 145000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Compra de suministros de oficina mensuales.",                                            cliente: "",                     referencia: "REF-2026-0017", adjunto: "factura_papelimundo.pdf" },
-  { id: 5,  fecha: "2026-05-17", tipo: "gasto",   categoria: "publicidad",   descripcion: "Pauta Facebook Ads campaña Q2",            responsable: "Lizeth Carrillo",  valor: 580000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Campaña de remarketing dirigida a leads del Q1 que no convirtieron.",                    cliente: "",                     referencia: "REF-2026-0016", adjunto: "fb_invoice.pdf" },
-  { id: 6,  fecha: "2026-05-16", tipo: "gasto",   categoria: "comisiones",   descripcion: "Comisión venta cierre cliente VTEX",       responsable: "Carlos Ramírez",   valor: 750000,   moneda: "COP", estado: "pendiente", metodoPago: "transferencia",  observaciones: "Pendiente validación con dirección comercial antes de transferir.",                      cliente: "VTEX Latam",           referencia: "REF-2026-0015", adjunto: null },
-  { id: 7,  fecha: "2026-05-15", tipo: "ingreso", categoria: "servicios",    descripcion: "Cobro mantenimiento web - Mayo",           responsable: "Maria González",    valor: 1200000,  moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "Cobro mensual por servicio de mantenimiento Premium.",                                   cliente: "Constructora Pacífico",referencia: "REF-2026-0014", adjunto: "factura_001234.pdf" },
-  { id: 8,  fecha: "2026-05-14", tipo: "gasto",   categoria: "servicios",    descripcion: "Pago servicio internet oficina",           responsable: "Jennifer Acosta",  valor: 280000,   moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "Factura mensual ETB plan empresarial 200 megas.",                                        cliente: "",                     referencia: "REF-2026-0013", adjunto: "etb_mayo.pdf" },
-  { id: 9,  fecha: "2026-05-13", tipo: "gasto",   categoria: "alimentacion", descripcion: "Almuerzo equipo cierre proyecto",          responsable: "Néstor Goyes",     valor: 185000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Celebración del cierre del proyecto Migración CRM con todo el equipo.",                  cliente: "",                     referencia: "REF-2026-0012", adjunto: "recibo_restaurante.jpg" },
-  { id: 10, fecha: "2026-05-12", tipo: "gasto",   categoria: "transporte",   descripcion: "Combustible camioneta empresa",            responsable: "Carlos Ramírez",   valor: 240000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Tanqueo Terpel.",                                                                        cliente: "",                     referencia: "REF-2026-0011", adjunto: "factura_terpel.pdf" },
-  { id: 11, fecha: "2026-05-11", tipo: "ingreso", categoria: "servicios",    descripcion: "Anticipo Migración Vertex AI - Flordex",   responsable: "Carlos Ramírez",   valor: 14250000, moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "50% inicial del proyecto de migración a Google Cloud Vertex AI.",                        cliente: "Flordex",              referencia: "REF-2026-0010", adjunto: "compr_flordex.pdf" },
-  { id: 12, fecha: "2026-05-10", tipo: "gasto",   categoria: "tramites",     descripcion: "Renovación firma digital RUT",             responsable: "Maria González",    valor: 95000,    moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "Renovación anual firma digital Certicámara.",                                            cliente: "",                     referencia: "REF-2026-0009", adjunto: "certicamara.pdf" },
-  { id: 13, fecha: "2026-05-09", tipo: "gasto",   categoria: "publicidad",   descripcion: "Diseño piezas redes sociales (freelance)", responsable: "Lizeth Carrillo",  valor: 450000,   moneda: "COP", estado: "pendiente", metodoPago: "transferencia",  observaciones: "Diseñador freelance Juan Pérez. Pendiente envío comprobante para pago.",                 cliente: "",                     referencia: "REF-2026-0008", adjunto: null },
-  { id: 14, fecha: "2026-05-08", tipo: "gasto",   categoria: "alimentacion", descripcion: "Café y tinto reunión cliente Innova",      responsable: "Néstor Goyes",     valor: 12000,    moneda: "COP", estado: "pagado",    metodoPago: "efectivo",       observaciones: "Café para reunión presencial en oficinas del cliente.",                                  cliente: "Innova Studio",        referencia: "REF-2026-0007", adjunto: null },
-  { id: 15, fecha: "2026-05-07", tipo: "gasto",   categoria: "otros",        descripcion: "Suscripción mensual Figma y Notion",       responsable: "Jennifer Acosta",  valor: 165000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Pago mensual suscripciones SaaS del equipo de diseño y operaciones.",                    cliente: "",                     referencia: "REF-2026-0006", adjunto: "factura_saas.pdf" },
-  { id: 16, fecha: "2026-05-06", tipo: "ingreso", categoria: "servicios",    descripcion: "Pago final landing pages MarketingPro",    responsable: "Néstor Goyes",     valor: 4200000,  moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "Saldo final del proyecto de landing pages campaña Q1.",                                  cliente: "MarketingPro",         referencia: "REF-2026-0005", adjunto: "compr_marketingpro.pdf" },
-  { id: 17, fecha: "2026-05-05", tipo: "gasto",   categoria: "transporte",   descripcion: "Domicilio mensajero - entrega contrato",   responsable: "Maria González",    valor: 18000,    moneda: "COP", estado: "pagado",    metodoPago: "efectivo",       observaciones: "Envío de contrato físico firmado a cliente.",                                            cliente: "Acme Corp",            referencia: "REF-2026-0004", adjunto: null },
-  { id: 18, fecha: "2026-05-04", tipo: "gasto",   categoria: "comisiones",   descripcion: "Comisión asesor venta - cliente Tech",     responsable: "Carlos Ramírez",   valor: 1790000,  moneda: "COP", estado: "pendiente", metodoPago: "transferencia",  observaciones: "Comisión del 5% sobre venta de implementación e-commerce Shopify Plus.",                 cliente: "Tech Solutions SAS",   referencia: "REF-2026-0003", adjunto: null },
-  { id: 19, fecha: "2026-05-03", tipo: "gasto",   categoria: "publicidad",   descripcion: "Google Ads campaña mensual",                responsable: "Lizeth Carrillo",  valor: 920000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Inversión mensual en SEM Google Ads.",                                                   cliente: "",                     referencia: "REF-2026-0002", adjunto: "google_invoice.pdf" },
-  { id: 20, fecha: "2026-05-02", tipo: "gasto",   categoria: "papeleria",    descripcion: "Notarización documentos legales",           responsable: "Jennifer Acosta",  valor: 78000,    moneda: "COP", estado: "anulado",   metodoPago: "efectivo",       observaciones: "Documentos rechazados por errores formales. Se reprocesará.",                            cliente: "",                     referencia: "REF-2026-0001", adjunto: null },
-
-  // ===== Abril 2026 (mes anterior) =====
-  { id: 21, fecha: "2026-04-28", tipo: "ingreso", categoria: "servicios",    descripcion: "Pago Migración CRM HubSpot Acme",          responsable: "Maria González",    valor: 12250000, moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "50% del proyecto Migración CRM.",                                                        cliente: "Acme Corp",            referencia: "REF-2026-0028", adjunto: "compr_acme.pdf" },
-  { id: 22, fecha: "2026-04-25", tipo: "gasto",   categoria: "alimentacion", descripcion: "Cena equipo aniversario empresa",          responsable: "Néstor Goyes",     valor: 850000,   moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Celebración 5 años Oblicua con todo el equipo.",                                         cliente: "",                     referencia: "REF-2026-0027", adjunto: "factura_cena.pdf" },
-  { id: 23, fecha: "2026-04-20", tipo: "gasto",   categoria: "servicios",    descripcion: "Hosting AWS abril",                         responsable: "Carlos Ramírez",   valor: 1450000,  moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Servidores AWS de producción y staging.",                                                cliente: "",                     referencia: "REF-2026-0026", adjunto: "aws_april.pdf" },
-  { id: 24, fecha: "2026-04-15", tipo: "ingreso", categoria: "servicios",    descripcion: "Mantenimiento web abril - Premium",        responsable: "Maria González",    valor: 1200000,  moneda: "COP", estado: "pagado",    metodoPago: "transferencia",  observaciones: "",                                                                                       cliente: "Constructora Pacífico",referencia: "REF-2026-0025", adjunto: "factura_abril.pdf" },
-  { id: 25, fecha: "2026-04-10", tipo: "gasto",   categoria: "publicidad",   descripcion: "LinkedIn Ads campaña B2B",                  responsable: "Lizeth Carrillo",  valor: 1100000,  moneda: "COP", estado: "pagado",    metodoPago: "tarjeta",        observaciones: "Campaña dirigida a directores de marketing en empresas medianas.",                       cliente: "",                     referencia: "REF-2026-0024", adjunto: "linkedin_inv.pdf" }
-];
 
 // Vistas predefinidas del módulo
 const vistasIniciales = [
@@ -40,7 +9,6 @@ const vistasIniciales = [
     id: "todos",
     nombre: "Todos los movimientos",
     filtro: () => true,
-    // Sin filtros pill: la vista muestra TODO, ninguna pill queda marcada
     filtrosPill: {},
     activa: true
   },
@@ -48,8 +16,9 @@ const vistasIniciales = [
     id: "gastos_mes",
     nombre: "Gastos del mes",
     filtro: (m) => {
-      const f = new Date(m.fecha);
-      return m.tipo === "gasto" && f.getFullYear() === 2026 && f.getMonth() === 4; // mayo
+      const hoy = new Date();
+      const f   = new Date(m.fecha);
+      return m.tipo === "gasto" && f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
     },
     filtrosPill: { tipo: ["gasto"], fecha: "mes" },
     activa: false
@@ -65,8 +34,9 @@ const vistasIniciales = [
     id: "ingresos_mes",
     nombre: "Ingresos del mes",
     filtro: (m) => {
-      const f = new Date(m.fecha);
-      return m.tipo === "ingreso" && f.getFullYear() === 2026 && f.getMonth() === 4;
+      const hoy = new Date();
+      const f   = new Date(m.fecha);
+      return m.tipo === "ingreso" && f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
     },
     filtrosPill: { tipo: ["ingreso"], fecha: "mes" },
     activa: false
@@ -103,8 +73,8 @@ const categoriasCatalogo = [
 ];
 
 const estadoApp = {
-  datosOriginales: movimientosCaja,
-  datosVisibles:   [...movimientosCaja],
+  datosOriginales: [],
+  datosVisibles:   [],
   paginaActual:    1,
   registrosPorPagina: 25,
   ordenColumna:    "fecha",
@@ -199,7 +169,7 @@ function mostrarToast(mensaje, duracion = 2800) {
  */
 function actualizarDashboard() {
   const datos = estadoApp.datosVisibles;
-  const hoy = new Date("2026-05-20");
+  const hoy = new Date();
 
   // Claves "YYYY-M" para clasificar movimientos por mes
   const claveDe = (f) => `${f.getFullYear()}-${f.getMonth()}`;
@@ -289,10 +259,9 @@ function pintarCambio(idEl, actual, anterior) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("[Caja] Iniciando módulo de Caja...");
   window.estadoApp           = estadoApp;
-  window.movimientosCaja     = movimientosCaja;
   window.categoriasCatalogo  = categoriasCatalogo;
   window.formatearMoneda     = formatearMoneda;
   window.formatearFecha      = formatearFecha;
@@ -305,6 +274,53 @@ document.addEventListener("DOMContentLoaded", () => {
   window.etiquetaMetodoPago  = etiquetaMetodoPago;
   window.mostrarToast        = mostrarToast;
   window.actualizarDashboard = actualizarDashboard;
+
+  // Carga usuarios desde BD y puebla todos los selects de responsable
+  try {
+    const resU = await window.Api.usuarios.listar();
+    if (resU.ok && Array.isArray(resU.data)) {
+      window.usuariosCatalogo = resU.data;
+      const opciones = resU.data
+        .map(u => `<option value="${u.nombre}">${u.nombre}</option>`)
+        .join("");
+      ["g-responsable", "editar-responsable"].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) sel.innerHTML = opciones;
+      });
+    }
+  } catch (e) {
+    console.warn("[Caja] No se pudieron cargar usuarios desde la API:", e.message);
+  }
+
+  try {
+    const res = await window.Api.caja.listar({ por_pagina: 200 });
+    if (res.ok && Array.isArray(res.data)) {
+      const normalizados = res.data.map(m => ({
+        id:            m.id,
+        fecha:         m.fecha,
+        tipo:          m.tipo,
+        categoria:     m.categoria || "otros",
+        descripcion:   m.descripcion,
+        responsable:   m.responsable      || "",
+        valor:         parseFloat(m.valor) || 0,
+        moneda:        m.moneda           || "COP",
+        estado:        m.estado,
+        metodoPago:    m.metodo_pago      || "",
+        observaciones: m.observaciones    || "",
+        cliente:       m.cliente_nombre   || m.cliente || "",
+        referencia:    m.referencia       || "",
+        adjunto:       m.adjunto          || null,
+      }));
+      estadoApp.datosOriginales = normalizados;
+      estadoApp.datosVisibles   = [...normalizados];
+      console.info(`[Caja] ${normalizados.length} movimientos cargados.`);
+      if (window.vistasInstance)  window.vistasInstance.renderizar();
+      if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+    }
+  } catch (e) {
+    console.error("[Caja] Error al cargar movimientos desde la API:", e.message);
+    mostrarToast("⚠ No se pudo conectar con la base de datos");
+  }
 
   actualizarDashboard();
 });

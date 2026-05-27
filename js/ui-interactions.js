@@ -363,6 +363,11 @@
         case "retirar":
           if (confirm(`¿Retirar la cotización "${c.titulo}"?`)) {
             c.estado = "borrador";
+            if (window.Api) {
+              window.Api.cotizaciones.actualizar(c.id, { estado: "borrador" }).catch(e =>
+                console.warn("[UI] API retirar cotización falló:", e.message)
+              );
+            }
             if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
             if (window.vistasInstance) window.vistasInstance.renderizar();
             window.mostrarToast("✓ Cotización retirada");
@@ -370,14 +375,22 @@
           }
           break;
 
-        case "clonar":
+        case "clonar": {
           const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(x => x.id)) + 1;
           const clon = { ...c, id: nuevoId, titulo: c.titulo + " (copia)", estado: "borrador", estadoFirma: "no_aplica" };
           window.estadoApp.datosOriginales.unshift(clon);
+          if (window.Api) {
+            const datosApi = { ...clon };
+            delete datosApi.id;
+            window.Api.cotizaciones.crear(datosApi)
+              .then(resp => { if (resp.id) clon.id = resp.id; })
+              .catch(e => console.warn("[UI] API clonar cotización falló:", e.message));
+          }
           if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
           if (window.vistasInstance) window.vistasInstance.renderizar();
           window.mostrarToast(`✓ Cotización clonada: "${clon.titulo}"`);
           break;
+        }
 
         case "descargar":
           VistaPreviaCotizacion.renderizar(c);
@@ -1030,7 +1043,7 @@
 
     const btnGuardar = document.getElementById("guardar-cotizacion");
     if (btnGuardar) {
-      btnGuardar.addEventListener("click", () => {
+      btnGuardar.addEventListener("click", async () => {
         const titulo = document.getElementById("cot-titulo").value.trim();
         const cantidad = parseFloat(document.getElementById("cot-cantidad").value) || 0;
         const moneda = document.getElementById("cot-moneda").value;
@@ -1049,9 +1062,7 @@
           return;
         }
 
-        const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(c => c.id)) + 1;
         const nueva = {
-          id: nuevoId,
           titulo,
           estado: estado || "borrador",
           cantidad,
@@ -1062,6 +1073,23 @@
           responsable: propietario || "Néstor Goyes",
           cliente: cliente || "—"
         };
+
+        if (window.Api) {
+          try {
+            btnGuardar.disabled = true;
+            const resp = await window.Api.cotizaciones.crear(nueva);
+            nueva.id = resp.id;
+          } catch (e) {
+            console.warn("[UI] API crear cotización falló, usando ID local:", e.message);
+          } finally {
+            btnGuardar.disabled = false;
+          }
+        }
+        if (!nueva.id) {
+          nueva.id = window.estadoApp.datosOriginales.length
+            ? Math.max(...window.estadoApp.datosOriginales.map(c => c.id)) + 1
+            : 1;
+        }
 
         window.estadoApp.datosOriginales.unshift(nueva);
 

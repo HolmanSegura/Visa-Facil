@@ -269,6 +269,11 @@
         case "anular":
           if (confirm(`¿Anular el movimiento "${m.descripcion}"?`)) {
             m.estado = "anulado";
+              if (window.Api) {
+                window.Api.caja.actualizar(this.movimientoActual.id, { estado: "anulado" }).catch(e =>
+                  console.warn("[Caja] API anular movimiento falló:", e.message)
+                );
+              }
             if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
             if (window.actualizarDashboard) window.actualizarDashboard();
             if (window.vistasInstance) window.vistasInstance.renderizar();
@@ -624,7 +629,7 @@
           <option value="tramites">Trámites</option>
           <option value="otros">Otros</option>`;
       }
-      document.getElementById("g-fecha").value = "2026-05-20";
+      document.getElementById("g-fecha").value = new Date().toISOString().split("T")[0];
       Modales.abrir("modal-registrar-gasto");
     }
 
@@ -651,7 +656,7 @@
 
     const btnGuardar = document.getElementById("guardar-movimiento");
     if (btnGuardar) {
-      btnGuardar.addEventListener("click", () => {
+      btnGuardar.addEventListener("click", async () => {
         const tipo          = tipoInput.value;
         const categoria     = selectCat.value;
         const valor         = parseFloat(inputValor.value) || 0;
@@ -668,13 +673,30 @@
         if (!valor || valor <= 0) { window.mostrarToast("⚠ Ingresa un valor válido"); return; }
         if (!fecha) { window.mostrarToast("⚠ La fecha es obligatoria"); return; }
 
-        const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(m => m.id)) + 1;
-        const ref     = "REF-" + new Date(fecha).getFullYear() + "-" + String(nuevoId).padStart(4, "0");
-        const nuevo   = {
-          id: nuevoId, fecha, tipo, categoria, descripcion, responsable,
+        const nuevo = {
+          fecha, tipo, categoria, descripcion, responsable,
           valor, moneda, estado, metodoPago, observaciones,
-          cliente, referencia: ref, adjunto: null
+          cliente, adjunto: null
         };
+
+        if (window.Api) {
+          try {
+            btnGuardar.disabled = true;
+            const resp = await window.Api.caja.crear(nuevo);
+            nuevo.id        = resp.id;
+            nuevo.referencia = resp.referencia ?? ("REF-" + new Date(fecha).getFullYear() + "-" + String(resp.id).padStart(4, "0"));
+          } catch (e) {
+            console.warn("[Caja] API crear movimiento falló, usando ID local:", e.message);
+          } finally {
+            btnGuardar.disabled = false;
+          }
+        }
+        if (!nuevo.id) {
+          nuevo.id = window.estadoApp.datosOriginales.length
+            ? Math.max(...window.estadoApp.datosOriginales.map(m => m.id)) + 1
+            : 1;
+          nuevo.referencia = "REF-" + new Date(fecha).getFullYear() + "-" + String(nuevo.id).padStart(4, "0");
+        }
 
         window.estadoApp.datosOriginales.unshift(nuevo);
 

@@ -28,10 +28,18 @@
    Expone: window.CotizacionEmail
    ============================================================ */
 (function () {
+  const REMITENTE = "soporte@oblicua.co";
+  // Valores por defecto — se sobreescriben desde .env vía window.AppConfig
+  const DAPTA_WEBHOOK_URL_DEFAULT =
+    "https://api.dapta.ai/api/9c9ae2b4d48889fa/envio-cotizaciones";
+  const DAPTA_API_KEY_DEFAULT = ""; // Se configura desde .env vía window.AppConfig.dapta_api_key
 
-  const REMITENTE          = "soporte@oblicua.co";
-  const DAPTA_WEBHOOK_URL  = "https://api.dapta.ai/api/9c9ae2b4d48889fa/envio-cotizaciones";
-  const DAPTA_API_KEY      = DAPTA_API_KEY;
+  function getDaptaUrl() {
+    return window.AppConfig?.dapta_webhook_url || DAPTA_WEBHOOK_URL_DEFAULT;
+  }
+  function getDaptaKey() {
+    return window.AppConfig?.dapta_api_key || DAPTA_API_KEY_DEFAULT;
+  }
 
   // -----------------------------------------------------------------
   // CONSTRUCCIÓN DEL CONTENIDO DEL CORREO
@@ -42,11 +50,21 @@
   }
 
   function construirCuerpoTexto(cot, lineas, totales) {
-    const fmt   = v => new Intl.NumberFormat("es-CO").format(v);
-    const fmtF  = f => f ? new Date(f + "T12:00:00").toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" }) : "—";
+    const fmt = (v) => new Intl.NumberFormat("es-CO").format(v);
+    const fmtF = (f) =>
+      f
+        ? new Date(f + "T12:00:00").toLocaleDateString("es-CO", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "—";
 
     const itemsLineas = (lineas || [])
-      .map(l => `  • ${l.nombre}  |  Precio: ${fmt(l.precioUnitario)}  |  Cant: ${l.cantidad}${l.descuento > 0 ? `  |  Dcto: ${l.descuento}${l.tipoDescuento === "porcentaje" ? "%" : " $"}` : ""}`)
+      .map(
+        (l) =>
+          `  • ${l.nombre}  |  Precio: ${fmt(l.precioUnitario)}  |  Cant: ${l.cantidad}${l.descuento > 0 ? `  |  Dcto: ${l.descuento}${l.tipoDescuento === "porcentaje" ? "%" : " $"}` : ""}`,
+      )
       .join("\n");
 
     return [
@@ -59,8 +77,10 @@
       itemsLineas || "  (sin líneas de artículo)",
       "",
       `Subtotal:   ${fmt(totales?.subtotalBruto ?? cot.cantidad ?? 0)} COP`,
-      totales?.descGlobalValor > 0 ? `Descuento:  - ${fmt(totales.descGlobalValor)} COP` : "",
-      `IVA (${((totales ? window.DescuentosEngine?.getTasaIva?.() ?? 0.19 : 0.19) * 100).toFixed(0)}%):  ${fmt(totales?.iva ?? 0)} COP`,
+      totales?.descGlobalValor > 0
+        ? `Descuento:  - ${fmt(totales.descGlobalValor)} COP`
+        : "",
+      `IVA (${((totales ? (window.DescuentosEngine?.getTasaIva?.() ?? 0.19) : 0.19) * 100).toFixed(0)}%):  ${fmt(totales?.iva ?? 0)} COP`,
       `TOTAL:      ${fmt(totales?.total ?? cot.cantidad ?? 0)} COP`,
       "",
       `Propietario: ${cot.responsable || "—"}`,
@@ -68,28 +88,46 @@
       "Para aceptar esta cotización o solicitar cambios, responde a este correo.",
       "",
       `—————`,
-      `Enviado por soporte@oblicua.co · Oblicua Digital`
-    ].filter(l => l !== null && l !== undefined).join("\n");
+      `Enviado por soporte@oblicua.co · Oblicua Digital`,
+    ]
+      .filter((l) => l !== null && l !== undefined)
+      .join("\n");
   }
 
   function construirCuerpoHTML(cot, lineas, totales) {
-    const fmt  = v => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(v);
-    const fmtF = f => f ? new Date(f + "T12:00:00").toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" }) : "—";
-    const iva  = window.DescuentosEngine?.getTasaIva?.() ?? 0.19;
+    const fmt = (v) =>
+      new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        minimumFractionDigits: 0,
+      }).format(v);
+    const fmtF = (f) =>
+      f
+        ? new Date(f + "T12:00:00").toLocaleDateString("es-CO", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "—";
+    const iva = window.DescuentosEngine?.getTasaIva?.() ?? 0.19;
 
-    const filasLineas = (lineas || []).map(l => `
+    const filasLineas = (lineas || [])
+      .map(
+        (l) => `
       <tr>
         <td style="padding:7px 10px;border-bottom:1px solid #edf2f7;">${l.nombre}${l.descripcion ? `<br><small style="color:#718096;">${l.descripcion}</small>` : ""}</td>
         <td style="padding:7px 10px;border-bottom:1px solid #edf2f7;text-align:right;white-space:nowrap;">${fmt(l.precioUnitario)}</td>
         <td style="padding:7px 10px;border-bottom:1px solid #edf2f7;text-align:center;">${l.cantidad}</td>
         <td style="padding:7px 10px;border-bottom:1px solid #edf2f7;text-align:center;">${l.descuento > 0 ? (l.tipoDescuento === "porcentaje" ? l.descuento + "%" : fmt(l.descuento)) : "—"}</td>
         <td style="padding:7px 10px;border-bottom:1px solid #edf2f7;text-align:right;white-space:nowrap;font-weight:500;">${fmt(window.ProductosCotizacion?.calcularSubtotalLinea?.(l) ?? l.precioUnitario * l.cantidad)}</td>
-      </tr>`).join("");
+      </tr>`,
+      )
+      .join("");
 
-    const totalFinal  = totales?.total        ?? cot.cantidad ?? 0;
-    const subtotalB   = totales?.subtotalBruto ?? cot.cantidad ?? 0;
-    const descValor   = totales?.descGlobalValor ?? 0;
-    const montoIva    = totales?.iva ?? 0;
+    const totalFinal = totales?.total ?? cot.cantidad ?? 0;
+    const subtotalB = totales?.subtotalBruto ?? cot.cantidad ?? 0;
+    const descValor = totales?.descGlobalValor ?? 0;
+    const montoIva = totales?.iva ?? 0;
 
     return `<!DOCTYPE html>
 <html lang="es">
@@ -114,7 +152,9 @@
       <p style="margin:0 0 16px;">Estimado/a <strong>${escHtml(cot.cliente || "cliente")}</strong>,</p>
       <p style="margin:0 0 20px;color:#4a5568;">Compartimos la cotización <strong>${escHtml(cot.titulo)}</strong> para su revisión y aprobación.</p>
 
-      ${lineas && lineas.length > 0 ? `
+      ${
+        lineas && lineas.length > 0
+          ? `
       <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
         <thead>
           <tr style="background:#f7fafc;">
@@ -126,7 +166,9 @@
           </tr>
         </thead>
         <tbody>${filasLineas}</tbody>
-      </table>` : ""}
+      </table>`
+          : ""
+      }
 
       <!-- Resumen de totales -->
       <table style="width:260px;margin-left:auto;font-size:13px;border-collapse:collapse;">
@@ -134,11 +176,15 @@
           <td style="padding:5px 0;color:#718096;">Subtotal</td>
           <td style="padding:5px 0;text-align:right;">${fmt(subtotalB)}</td>
         </tr>
-        ${descValor > 0 ? `
+        ${
+          descValor > 0
+            ? `
         <tr>
           <td style="padding:5px 0;color:#718096;">Descuento</td>
           <td style="padding:5px 0;text-align:right;color:#e53e3e;">- ${fmt(descValor)}</td>
-        </tr>` : ""}
+        </tr>`
+            : ""
+        }
         <tr>
           <td style="padding:5px 0;color:#718096;">IVA (${(iva * 100).toFixed(0)}%)</td>
           <td style="padding:5px 0;text-align:right;">${fmt(montoIva)}</td>
@@ -197,54 +243,55 @@
 
     return {
       // Metadatos del envío
-      remitente:    REMITENTE,
+      remitente: REMITENTE,
       destinatario,
-      asunto:       construirAsunto(cot),
-      fechaEnvio:   new Date().toISOString(),
+      asunto: construirAsunto(cot),
+      fechaEnvio: new Date().toISOString(),
 
       // Datos del cliente / negocio
       cliente: {
-        nombre:      cot.cliente      || "",
-        empresa:     cot.cliente      || "",
-        negocio:     cot.negocio      || "",
-        responsable: cot.responsable  || ""
+        nombre: cot.cliente || "",
+        empresa: cot.cliente || "",
+        negocio: cot.negocio || "",
+        responsable: cot.responsable || "",
       },
 
       // Cabecera de la cotización
       cotizacion: {
-        id:               cot.id               ?? null,
-        titulo:           cot.titulo            || "",
-        estado:           cot.estado            || "borrador",
-        moneda:           cot.moneda            || "COP",
-        fechaCreacion:    cot.fechaCreacion     || "",
-        fechaVencimiento: cot.fechaVencimiento  || ""
+        id: cot.id ?? null,
+        titulo: cot.titulo || "",
+        estado: cot.estado || "borrador",
+        moneda: cot.moneda || "COP",
+        fechaCreacion: cot.fechaCreacion || "",
+        fechaVencimiento: cot.fechaVencimiento || "",
       },
 
       // Líneas de artículo con subtotal calculado por línea
-      lineas: (lineas || []).map(l => ({
-        nombre:         l.nombre          || "",
-        descripcion:    l.descripcion     || "",
-        sku:            l.sku             || "",
-        precioUnitario: l.precioUnitario  ?? 0,
-        cantidad:       l.cantidad        ?? 1,
-        descuento:      l.descuento       ?? 0,
-        tipoDescuento:  l.tipoDescuento   || "porcentaje",
-        subtotal:       window.DescuentosEngine?.calcularSubtotalLinea?.(l)
-                          ?? (l.precioUnitario * l.cantidad)
+      lineas: (lineas || []).map((l) => ({
+        nombre: l.nombre || "",
+        descripcion: l.descripcion || "",
+        sku: l.sku || "",
+        precioUnitario: l.precioUnitario ?? 0,
+        cantidad: l.cantidad ?? 1,
+        descuento: l.descuento ?? 0,
+        tipoDescuento: l.tipoDescuento || "porcentaje",
+        subtotal:
+          window.DescuentosEngine?.calcularSubtotalLinea?.(l) ??
+          l.precioUnitario * l.cantidad,
       })),
 
       // Resumen financiero
       totales: {
-        subtotal:       totales?.subtotalBruto  ?? cot.cantidad ?? 0,
-        descuento:      totales?.descGlobalValor ?? 0,
+        subtotal: totales?.subtotalBruto ?? cot.cantidad ?? 0,
+        descuento: totales?.descGlobalValor ?? 0,
         tasaIva,
-        iva:            totales?.iva             ?? 0,
-        total:          totales?.total           ?? cot.cantidad ?? 0
+        iva: totales?.iva ?? 0,
+        total: totales?.total ?? cot.cantidad ?? 0,
       },
 
       // Cuerpo HTML preconstruido para que Dapta lo use directamente
       // o lo procese a través de su propio template.
-      cuerpoHtml: construirCuerpoHTML(cot, lineas, totales)
+      cuerpoHtml: construirCuerpoHTML(cot, lineas, totales),
     };
   }
 
@@ -253,19 +300,25 @@
    * Lanza Error si el servidor responde con status !== 2xx.
    */
   async function enviarPorDapta(payload) {
-    const res = await fetch(DAPTA_WEBHOOK_URL, {
-      method:  "POST",
+    const res = await fetch(getDaptaUrl(), {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key":    DAPTA_API_KEY
+        "x-api-key": getDaptaKey(),
       },
-      body:    JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
       let detalle = "";
-      try { detalle = await res.text(); } catch (_) { /* noop */ }
-      throw new Error(`Dapta respondió ${res.status}: ${detalle.slice(0, 200)}`);
+      try {
+        detalle = await res.text();
+      } catch (_) {
+        /* noop */
+      }
+      throw new Error(
+        `Dapta respondió ${res.status}: ${detalle.slice(0, 200)}`,
+      );
     }
 
     return res.json().catch(() => ({}));
@@ -291,7 +344,7 @@
       return false;
     }
 
-    const lineas  = window.ProductosCotizacion?.getLineas?.() || [];
+    const lineas = window.ProductosCotizacion?.getLineas?.() || [];
     const totales = window.DescuentosEngine?.recalcular?.(lineas) || null;
     const payload = construirPayloadDapta(cot, destinatario, lineas, totales);
 
@@ -321,8 +374,8 @@
    */
   function exportarHistorico(datos, opts = {}) {
     const {
-      nombre        = `historico-cotizaciones-${timestamp()}`,
-      incluirLineas = false
+      nombre = `historico-cotizaciones-${timestamp()}`,
+      incluirLineas = false,
     } = opts;
 
     if (!datos || datos.length === 0) {
@@ -343,29 +396,47 @@
 
     // ---- Hoja 1: Resumen de cotizaciones ----
     const encHead = [
-      "ID", "Título", "Cliente", "Negocio", "Estado",
-      "Monto", "Moneda", "Propietario", "Estado firma",
-      "Fecha creación", "Fecha vencimiento"
+      "ID",
+      "Título",
+      "Cliente",
+      "Negocio",
+      "Estado",
+      "Monto",
+      "Moneda",
+      "Propietario",
+      "Estado firma",
+      "Fecha creación",
+      "Fecha vencimiento",
     ];
-    const filas = datos.map(c => [
+    const filas = datos.map((c) => [
       c.id,
       c.titulo,
-      c.cliente          || "",
-      c.negocio          || "",
+      c.cliente || "",
+      c.negocio || "",
       window.etiquetaEstado ? window.etiquetaEstado(c.estado) : c.estado,
       c.cantidad,
       c.moneda,
-      c.responsable      || "",
-      window.etiquetaFirma  ? window.etiquetaFirma(c.estadoFirma)  : (c.estadoFirma || ""),
+      c.responsable || "",
+      window.etiquetaFirma
+        ? window.etiquetaFirma(c.estadoFirma)
+        : c.estadoFirma || "",
       c.fechaCreacion,
-      c.fechaVencimiento
+      c.fechaVencimiento,
     ]);
 
     const wsRes = XLSX.utils.aoa_to_sheet([encHead, ...filas]);
     wsRes["!cols"] = [
-      { wch: 6 }, { wch: 52 }, { wch: 26 }, { wch: 32 },
-      { wch: 14 }, { wch: 18 }, { wch: 7 }, { wch: 22 },
-      { wch: 16 }, { wch: 14 }, { wch: 16 }
+      { wch: 6 },
+      { wch: 52 },
+      { wch: 26 },
+      { wch: 32 },
+      { wch: 14 },
+      { wch: 18 },
+      { wch: 7 },
+      { wch: 22 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 16 },
     ];
 
     // Estilo de encabezado (solo disponible en XLSX Pro — en la versión libre aplica como text)
@@ -376,17 +447,28 @@
       const lineas = window.ProductosCotizacion?.getLineas?.() || [];
       if (lineas.length > 0) {
         const encLineas = [
-          "ID Línea", "Producto", "Descripción",
-          "Precio unitario", "Cantidad",
-          "Descuento", "Tipo descuento", "Subtotal línea"
+          "ID Línea",
+          "Producto",
+          "Descripción",
+          "Precio unitario",
+          "Cantidad",
+          "Descuento",
+          "Tipo descuento",
+          "Subtotal línea",
         ];
-        const filasL = lineas.map(l => {
-          const sub = window.DescuentosEngine?.calcularSubtotalLinea?.(l)
-            ?? (l.precioUnitario * l.cantidad);
+        const filasL = lineas.map((l) => {
+          const sub =
+            window.DescuentosEngine?.calcularSubtotalLinea?.(l) ??
+            l.precioUnitario * l.cantidad;
           return [
-            l._id, l.nombre, l.descripcion || "",
-            l.precioUnitario, l.cantidad,
-            l.descuento, l.tipoDescuento, Math.max(0, sub)
+            l._id,
+            l.nombre,
+            l.descripcion || "",
+            l.precioUnitario,
+            l.cantidad,
+            l.descuento,
+            l.tipoDescuento,
+            Math.max(0, sub),
           ];
         });
 
@@ -394,18 +476,51 @@
         const totales = window.DescuentosEngine?.recalcular?.(lineas);
         if (totales) {
           filasL.push([]);
-          filasL.push(["", "", "Subtotal bruto", "", "", "", "", totales.subtotalBruto]);
+          filasL.push([
+            "",
+            "",
+            "Subtotal bruto",
+            "",
+            "",
+            "",
+            "",
+            totales.subtotalBruto,
+          ]);
           if (totales.descGlobalValor > 0) {
-            filasL.push(["", "", "Descuento global", "", "", "", "", -totales.descGlobalValor]);
+            filasL.push([
+              "",
+              "",
+              "Descuento global",
+              "",
+              "",
+              "",
+              "",
+              -totales.descGlobalValor,
+            ]);
           }
-          filasL.push(["", "", `IVA (${(window.DescuentosEngine.getTasaIva() * 100).toFixed(0)}%)`, "", "", "", "", totales.iva]);
+          filasL.push([
+            "",
+            "",
+            `IVA (${(window.DescuentosEngine.getTasaIva() * 100).toFixed(0)}%)`,
+            "",
+            "",
+            "",
+            "",
+            totales.iva,
+          ]);
           filasL.push(["", "", "TOTAL", "", "", "", "", totales.total]);
         }
 
         const wsLineas = XLSX.utils.aoa_to_sheet([encLineas, ...filasL]);
         wsLineas["!cols"] = [
-          { wch: 18 }, { wch: 34 }, { wch: 38 },
-          { wch: 16 }, { wch: 8 }, { wch: 10 }, { wch: 14 }, { wch: 18 }
+          { wch: 18 },
+          { wch: 34 },
+          { wch: 38 },
+          { wch: 16 },
+          { wch: 8 },
+          { wch: 10 },
+          { wch: 14 },
+          { wch: 18 },
         ];
         XLSX.utils.book_append_sheet(wb, wsLineas, "Líneas");
       }
@@ -418,23 +533,45 @@
   function exportarCSVFallback(datos, nombre) {
     const utils = window.utilsExport;
     if (!utils) {
-      console.error("[Email] SheetJS no disponible y utilsExport no encontrado. Agrega el CDN de SheetJS en index.html.");
+      console.error(
+        "[Email] SheetJS no disponible y utilsExport no encontrado. Agrega el CDN de SheetJS en index.html.",
+      );
       window.mostrarToast?.("⚠ No se pudo exportar: SheetJS no está cargado");
       return;
     }
 
-    const encHead = ["ID","Título","Cliente","Estado","Monto","Moneda","Propietario","Fecha creación","Fecha vencimiento"];
-    const filas   = datos.map(c => [
-      c.id, c.titulo, c.cliente || "", c.estado,
-      c.cantidad, c.moneda, c.responsable || "",
-      c.fechaCreacion, c.fechaVencimiento
+    const encHead = [
+      "ID",
+      "Título",
+      "Cliente",
+      "Estado",
+      "Monto",
+      "Moneda",
+      "Propietario",
+      "Fecha creación",
+      "Fecha vencimiento",
+    ];
+    const filas = datos.map((c) => [
+      c.id,
+      c.titulo,
+      c.cliente || "",
+      c.estado,
+      c.cantidad,
+      c.moneda,
+      c.responsable || "",
+      c.fechaCreacion,
+      c.fechaVencimiento,
     ]);
-    const csv = "﻿" + [encHead, ...filas]
-      .map(r => r.map(v => utils.escaparCSV(v)).join(","))
-      .join("\r\n");
+    const csv =
+      "﻿" +
+      [encHead, ...filas]
+        .map((r) => r.map((v) => utils.escaparCSV(v)).join(","))
+        .join("\r\n");
 
     utils.descargarTexto(csv, `${nombre}.csv`);
-    window.mostrarToast?.(`✓ CSV exportado (${datos.length} cotizaciones) — Instala SheetJS para .xlsx`);
+    window.mostrarToast?.(
+      `✓ CSV exportado (${datos.length} cotizaciones) — Instala SheetJS para .xlsx`,
+    );
   }
 
   // -----------------------------------------------------------------
@@ -446,16 +583,25 @@
     const modal = document.getElementById("modal-crear-cotizacion");
     if (modal && !modal.hasAttribute("hidden")) {
       const id = parseInt(modal.dataset.cotizacionId, 10);
-      if (id) return window.estadoApp?.datosOriginales?.find(c => c.id === id) || null;
+      if (id)
+        return (
+          window.estadoApp?.datosOriginales?.find((c) => c.id === id) || null
+        );
 
       // Si es una cotización nueva (no guardada aún), construirla desde el formulario
       return construirCotizacionDesdeForm();
     }
 
     // 2. Fila seleccionada en la tabla
-    const fila = document.querySelector("tr[data-id][aria-selected='true'], tr[data-id].seleccionado");
+    const fila = document.querySelector(
+      "tr[data-id][aria-selected='true'], tr[data-id].seleccionado",
+    );
     if (fila?.dataset.id) {
-      return window.estadoApp?.datosOriginales?.find(c => c.id === parseInt(fila.dataset.id, 10)) || null;
+      return (
+        window.estadoApp?.datosOriginales?.find(
+          (c) => c.id === parseInt(fila.dataset.id, 10),
+        ) || null
+      );
     }
 
     return null;
@@ -463,17 +609,19 @@
 
   function construirCotizacionDesdeForm() {
     return {
-      id:                null,
-      titulo:            document.getElementById("cot-titulo")?.value?.trim()             || "Sin título",
-      cliente:           document.getElementById("cot-cliente")?.value?.trim()            || "",
-      negocio:           document.getElementById("cot-negocio")?.value?.trim()            || "",
-      estado:            document.getElementById("cot-estado")?.value                     || "borrador",
-      cantidad:          parseFloat(document.getElementById("cot-cantidad")?.value)       || 0,
-      moneda:            document.getElementById("cot-moneda")?.value                     || "COP",
-      responsable:       document.getElementById("cot-propietario")?.value                || "",
-      fechaCreacion:     document.getElementById("cot-fecha-creacion")?.value             || "",
-      fechaVencimiento:  document.getElementById("cot-fecha-vencimiento")?.value          || "",
-      estadoFirma:       "no_aplica"
+      id: null,
+      titulo:
+        document.getElementById("cot-titulo")?.value?.trim() || "Sin título",
+      cliente: document.getElementById("cot-cliente")?.value?.trim() || "",
+      negocio: document.getElementById("cot-negocio")?.value?.trim() || "",
+      estado: document.getElementById("cot-estado")?.value || "borrador",
+      cantidad: parseFloat(document.getElementById("cot-cantidad")?.value) || 0,
+      moneda: document.getElementById("cot-moneda")?.value || "COP",
+      responsable: document.getElementById("cot-propietario")?.value || "",
+      fechaCreacion: document.getElementById("cot-fecha-creacion")?.value || "",
+      fechaVencimiento:
+        document.getElementById("cot-fecha-vencimiento")?.value || "",
+      estadoFirma: "no_aplica",
     };
   }
 
@@ -482,15 +630,14 @@
   // -----------------------------------------------------------------
 
   function initEventos() {
-
     // Botón "Enviar cotización por correo"
     document.addEventListener("click", async (e) => {
       const btn = e.target.closest("[data-accion-email='enviar']");
       if (!btn) return;
 
-      const inputEmail   = document.getElementById("cot-email-destinatario");
+      const inputEmail = document.getElementById("cot-email-destinatario");
       const destinatario = inputEmail?.value?.trim();
-      const cot          = obtenerCotizacionActiva();
+      const cot = obtenerCotizacionActiva();
 
       if (!cot) {
         window.mostrarToast?.("⚠ No hay cotización activa para enviar");
@@ -499,18 +646,21 @@
 
       // Estado: cargando
       const textoOriginal = btn.textContent;
-      btn.disabled    = true;
+      btn.disabled = true;
       btn.textContent = "Enviando…";
 
       try {
         await enviarCotizacion(cot, destinatario);
         // El toast de éxito lo emite enviarCotizacion()
       } catch (err) {
-        console.error("[CotizacionEmail] Error al enviar vía Dapta:", err.message);
+        console.error(
+          "[CotizacionEmail] Error al enviar vía Dapta:",
+          err.message,
+        );
         window.mostrarToast?.(`Error al enviar: ${err.message}`);
       } finally {
         // Restaurar botón independientemente del resultado
-        btn.disabled    = false;
+        btn.disabled = false;
         btn.textContent = textoOriginal;
       }
     });
@@ -521,11 +671,15 @@
       if (!btn) return;
 
       const est = window.estadoApp;
-      if (!est) { window.mostrarToast?.("⚠ Sin datos"); return; }
+      if (!est) {
+        window.mostrarToast?.("⚠ Sin datos");
+        return;
+      }
 
-      const alcance      = btn.dataset.alcance       || "visibles";
+      const alcance = btn.dataset.alcance || "visibles";
       const incluirLineas = btn.dataset.incluirLineas === "true";
-      const datos         = alcance === "todos" ? est.datosOriginales : est.datosVisibles;
+      const datos =
+        alcance === "todos" ? est.datosOriginales : est.datosVisibles;
 
       exportarHistorico(datos, { incluirLineas });
     });
@@ -548,15 +702,21 @@
 
     window.CotizacionEmail = {
       REMITENTE,
-      DAPTA_WEBHOOK_URL,
+      get DAPTA_WEBHOOK_URL() {
+        return getDaptaUrl();
+      },
       enviarCotizacion,
       construirPayloadDapta,
       exportarHistorico,
       construirCuerpoHTML,
-      obtenerCotizacionActiva
+      obtenerCotizacionActiva,
     };
 
-    console.info("[CotizacionEmail] Módulo listo. Remitente:", REMITENTE, "| Webhook Dapta:", DAPTA_WEBHOOK_URL);
+    console.info(
+      "[CotizacionEmail] Módulo listo. Remitente:",
+      REMITENTE,
+      "| Webhook Dapta:",
+      getDaptaUrl(),
+    );
   });
-
 })();
