@@ -757,48 +757,104 @@
 }
 
 /* ============================================================
-   PANEL LATERAL: Detalle de cotización
-   (Se carga en index.html — reusa el patrón visual del panel-detalle
-    del módulo Caja, pero con campos propios.)
+   PANEL LATERAL: Detalle de cotización / movimiento
+   El panel vive dentro de .contenido__body como hermano flex
+   de .bloque-tabla — no usa position:fixed ni estilos inline.
    ============================================================ */
+
+/* Fila flex que contiene la tabla y el panel lado a lado */
+.contenido__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Contenedor deslizable del panel: arranca en width:0 */
 .panel-detalle {
-  position: fixed;
-  top: calc(var(--alto-toolbar) + 24px);
-  right: 24px;
-  bottom: 24px;
-  width: 420px;
-  background: var(--color-fondo-panel);
-  border-radius: var(--radio-xl);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  z-index: 210;
+  flex-shrink: 0;
+  width: 0;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
-  transform: translateX(calc(100% + 32px));
-  transition: transform 240ms ease-out;
+  align-items: stretch;
+  transition: width 240ms ease-out;
+  margin: 0 0 var(--esp-6) 0;
 }
 
 .panel-detalle.abierto {
-  transform: translateX(0);
+  width: calc(420px + var(--esp-6));
 }
 
+/* Tarjeta visual: borde, radio, fondo */
+.panel-detalle__card {
+  flex-shrink: 0;
+  width: 420px;
+  min-height: 0;
+  background: var(--color-fondo-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header mínimo: "Vista previa" + botón cerrar */
 .panel-detalle__header {
-  padding: var(--esp-4) var(--esp-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--esp-3) var(--esp-5);
   border-bottom: 1px solid var(--color-borde);
   flex-shrink: 0;
 }
 
-.panel-detalle__top {
+.panel-detalle__vp-label {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto-suave);
+}
+
+/* Bloque highlight (título, valores, botones de acción) */
+.panel-detalle__highlight {
+  padding: var(--esp-5);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.panel-detalle__highlight-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: var(--esp-3);
 }
 
-.panel-detalle__top-acciones {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
+/* Description list para valor / número / estado */
+.panel-detalle__dl {
+  margin: var(--esp-3) 0 var(--esp-4);
+}
+
+.panel-detalle__dl dt {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  font-weight: var(--font-peso-medio);
+  margin-bottom: 2px;
+}
+
+.panel-detalle__dl dd {
+  font-size: var(--font-tam-md);
+  color: var(--color-texto);
+  margin: 0 0 var(--esp-3);
+}
+
+.panel-detalle__dl dd:last-child {
+  margin-bottom: 0;
+}
+
+/* Texto vacío en secciones sin contenido */
+.panel-detalle__vacio {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-debil);
+  text-align: center;
+  padding: var(--esp-4) var(--esp-5);
+  margin: 0;
 }
 
 .panel-detalle__cerrar {
@@ -937,9 +993,26 @@
   display: none;
 }
 
-/* Vista previa: botón flotante sobre la fila activa */
-.tabla-cotizaciones tbody tr {
+/* Solo el link y el botón "Vista previa" son accionables.
+   Todas las celdas son pointer-events:none; se reactiva solo en esos dos. */
+.tabla-cotizaciones tbody td {
+  pointer-events: none;
+  user-select: none;
+}
+.tabla-cotizaciones tbody td .celda-titulo__link,
+.tabla-cotizaciones tbody td .btn-vista-previa-fila {
+  pointer-events: auto;
+}
+
+/* Vista previa: botón flotante sobre la celda de título/descripción */
+.tabla-cotizaciones tbody tr td.td-vista-previa {
   position: relative;
+}
+
+.vista-previa__logo-img {
+  display: block;
+  max-width: 180px;
+  height: auto;
 }
 
 .btn-vista-previa-fila {
@@ -979,18 +1052,25 @@
 
 /* Responsive */
 @media (max-width: 1100px) {
-  .panel-detalle {
+  .panel-detalle__card {
     width: 380px;
+  }
+  .panel-detalle.abierto {
+    width: calc(380px + var(--esp-6));
   }
 }
 
 @media (max-width: 768px) {
-  .panel-detalle {
-    width: calc(100% - 32px);
-    right: 16px;
-    left: 16px;
-    bottom: 16px;
-    top: calc(var(--alto-toolbar) + 16px);
+  .contenido__body {
+    flex-direction: column;
+  }
+  .panel-detalle.abierto {
+    width: 100%;
+    height: 280px;
+  }
+  .panel-detalle__card {
+    width: 100%;
+    margin: 0 var(--esp-4) var(--esp-4);
   }
 }
 
@@ -1240,4 +1320,243 @@
     grid-template-columns: 1fr;
     gap: var(--esp-5);
   }
+}
+
+/* ============================================================
+   MODAL AGREGAR VISTA — dos columnas: lista + panel de detalle
+   ============================================================ */
+
+.modal__body--sin-padding {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.modal-vistas {
+  display: flex;
+  height: 440px;
+}
+
+.modal-vistas__col--lista {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-borde);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-vistas__col--detalle {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Barra de búsqueda + filtro de categoría */
+.modal-vistas__head {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-3);
+  border-bottom: 1px solid var(--color-borde);
+  flex-shrink: 0;
+}
+
+.modal-vistas__buscar-wrap {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.modal-vistas__buscar-ico {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-texto-debil);
+  pointer-events: none;
+}
+
+.modal-vistas__buscar-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px 0 30px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto);
+  background: var(--color-fondo);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.modal-vistas__buscar-input:focus {
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 2px var(--color-acento-claro);
+}
+
+/* Lista desplazable */
+.modal-vistas__lista {
+  overflow-y: auto;
+  flex: 1;
+  padding: var(--esp-1) 0;
+}
+
+/* Encabezado de grupo */
+.modal-vistas__grupo {
+  padding: var(--esp-2) var(--esp-3) var(--esp-1);
+  font-size: 11px;
+  font-weight: var(--font-peso-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-texto-debil);
+  user-select: none;
+}
+
+/* Ítem de vista */
+.modal-vistas__item {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: 8px var(--esp-3);
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--trans-rapida);
+}
+
+.modal-vistas__item:hover {
+  background: var(--color-fondo-suave);
+}
+
+.modal-vistas__item--seleccionado {
+  background: var(--color-acento-claro);
+  color: var(--color-acento);
+  font-weight: var(--font-peso-medio);
+}
+
+.modal-vistas__item--seleccionado .modal-vistas__item-icono {
+  color: var(--color-acento);
+}
+
+.modal-vistas__item--agregada {
+  cursor: default;
+}
+
+.modal-vistas__item--agregada .modal-vistas__item-nombre {
+  color: var(--color-texto-suave);
+}
+
+.modal-vistas__item-icono {
+  flex-shrink: 0;
+  color: var(--color-texto-debil);
+}
+
+.modal-vistas__item-nombre {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-vistas__item-check {
+  flex-shrink: 0;
+  display: none;
+  color: #00bda5;
+}
+
+.modal-vistas__item--agregada .modal-vistas__item-check {
+  display: block;
+}
+
+/* Panel de detalle (columna derecha) */
+.modal-vistas__detalle {
+  padding: var(--esp-5);
+}
+
+.modal-vistas__detalle-cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  margin-bottom: var(--esp-2);
+}
+
+.modal-vistas__detalle-cabecera svg {
+  color: var(--color-texto-suave);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.modal-vistas__detalle-cabecera span {
+  font-size: 15px;
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto);
+  line-height: 1.3;
+}
+
+.modal-vistas__detalle-desc {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  margin: 0 0 var(--esp-4);
+  line-height: 1.5;
+}
+
+.modal-vistas__ya-agregada {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #00bda5;
+  font-weight: var(--font-peso-medio);
+  margin-bottom: var(--esp-3);
+}
+
+.modal-vistas__campo {
+  margin-bottom: var(--esp-3);
+}
+
+.modal-vistas__campo-label {
+  display: block;
+  font-size: 11px;
+  font-weight: var(--font-peso-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-texto-debil);
+  margin-bottom: 4px;
+}
+
+.modal-vistas__campo-valor {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto);
+}
+
+.modal-vistas__vacio {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  font-style: italic;
+}
+
+.modal-vistas__filtros-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modal-vistas__filtros-lista li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto);
+}
+
+.modal-vistas__filtro-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-acento);
+  flex-shrink: 0;
 }

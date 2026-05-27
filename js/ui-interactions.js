@@ -176,6 +176,78 @@
   };
 
   /* ----------------------------------------------------------
+     3.a.2 EDITAR / ENVIAR COTIZACIÓN (desde el panel)
+     ---------------------------------------------------------- */
+  const EditarCotizacion = {
+    _cot: null,
+
+    abrir(cot) {
+      if (!cot) return;
+      this._cot = cot;
+      document.getElementById("editar-cot-id").value = cot.id;
+      document.getElementById("editar-cot-nombre").value = cot.titulo || "";
+      document.getElementById("editar-cot-estado").value = cot.estado || "borrador";
+      document.getElementById("editar-cot-moneda").value = cot.moneda || "COP";
+      document.getElementById("editar-cot-propietario").value = cot.responsable || "";
+      document.getElementById("editar-cot-fvencimiento").value = cot.fechaVencimiento || "";
+      document.getElementById("editar-cot-cliente").value = cot.cliente || "";
+      Modales.abrir("modal-editar-cotizacion");
+    },
+
+    guardar() {
+      const id = parseInt(document.getElementById("editar-cot-id").value, 10);
+      const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
+      if (!cot) return;
+
+      cot.titulo           = document.getElementById("editar-cot-nombre").value.trim();
+      cot.estado           = document.getElementById("editar-cot-estado").value;
+      cot.moneda           = document.getElementById("editar-cot-moneda").value;
+      cot.responsable      = document.getElementById("editar-cot-propietario").value;
+      cot.fechaVencimiento = document.getElementById("editar-cot-fvencimiento").value;
+      cot.cliente          = document.getElementById("editar-cot-cliente").value.trim();
+
+      if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+      if (window.vistasInstance) window.vistasInstance.renderizar();
+      if (PanelDetalleCotizacion.cotActual?.id === id) PanelDetalleCotizacion.renderizar(cot);
+
+      Modales.cerrar(document.getElementById("modal-editar-cotizacion"));
+      window.mostrarToast("✓ Cotización actualizada");
+    },
+
+    init() {
+      const btn = document.getElementById("guardar-editar-cotizacion");
+      if (btn) btn.addEventListener("click", () => this.guardar());
+    }
+  };
+
+  const EnviarCotizacion = {
+    abrir(cot) {
+      if (!cot) return;
+      document.getElementById("enviar-cot-id").value = cot.id;
+      document.getElementById("enviar-cot-asunto").value = `Cotización: ${cot.titulo}`;
+      document.getElementById("enviar-cot-destinatario").value = "";
+      document.getElementById("enviar-cot-mensaje").value =
+        `Hola,\n\nAdjunto encontrarás la cotización "${cot.titulo}" para su revisión.\n\nQuedamos atentos a sus comentarios.`;
+      Modales.abrir("modal-enviar-cotizacion");
+    },
+
+    enviar() {
+      const destinatario = document.getElementById("enviar-cot-destinatario").value.trim();
+      if (!destinatario) {
+        document.getElementById("enviar-cot-destinatario").focus();
+        return;
+      }
+      Modales.cerrar(document.getElementById("modal-enviar-cotizacion"));
+      window.mostrarToast(`✓ Cotización enviada a ${destinatario}`);
+    },
+
+    init() {
+      const btn = document.getElementById("confirmar-enviar-cotizacion");
+      if (btn) btn.addEventListener("click", () => this.enviar());
+    }
+  };
+
+  /* ----------------------------------------------------------
      3.b PANEL LATERAL: Detalle de cotización
      ---------------------------------------------------------- */
   const PanelDetalleCotizacion = {
@@ -185,12 +257,11 @@
       if (!cot) return;
       const panel = document.getElementById("panel-detalle-cotizacion");
       if (!panel) return;
-      // Cerrar el panel de config si estaba abierto
       PanelLateral.cerrar();
       this.cotActual = cot;
       this.renderizar(cot);
+
       panel.classList.add("abierto");
-      // Marcar la fila como activa
       document.querySelectorAll(".tabla-cotizaciones tbody tr.fila-activa")
         .forEach(tr => tr.classList.remove("fila-activa"));
       const fila = document.querySelector(`.tabla-cotizaciones tbody tr[data-id="${cot.id}"]`);
@@ -254,15 +325,32 @@
         });
       });
 
-      // Popover de acciones del header
+      // Popover de acciones del panel
       document.addEventListener("click", (e) => {
         const item = e.target.closest("[data-accion-cot-menu]");
         if (!item) return;
         const accion = item.dataset.accionCotMenu;
-        if (accion === "vista-previa") {
-          VistaPreviaCotizacion.abrir(this.cotActual);
-        } else {
-          window.mostrarToast(`Acción "${accion}" — próximamente`);
+        const c = this.cotActual;
+        switch (accion) {
+          case "editar":
+            EditarCotizacion.abrir(c);
+            break;
+          case "vista-previa":
+            VistaPreviaCotizacion.abrir(c);
+            break;
+          case "enviar":
+            EnviarCotizacion.abrir(c);
+            break;
+          case "eliminar":
+            if (c && confirm(`¿Eliminar la cotización "${c.titulo}"?`)) {
+              const idx = window.estadoApp.datosOriginales.findIndex(x => x.id === c.id);
+              if (idx !== -1) window.estadoApp.datosOriginales.splice(idx, 1);
+              if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+              if (window.vistasInstance) window.vistasInstance.renderizar();
+              this.cerrar();
+              window.mostrarToast("✓ Cotización eliminada");
+            }
+            break;
         }
         Popovers.cerrar();
       });
@@ -292,12 +380,8 @@
           break;
 
         case "descargar":
-          if (window.utilsExport) {
-            const csv = window.utilsExport.aCSV([c]);
-            const nombre = window.utilsExport.nombreArchivo(`cotizacion-${c.id}`);
-            window.utilsExport.descargarTexto(csv, nombre);
-            window.mostrarToast(`✓ Cotización descargada`);
-          }
+          VistaPreviaCotizacion.renderizar(c);
+          descargarVistaPreviaComoPDF(c);
           break;
 
         case "copiar":
@@ -411,8 +495,7 @@
       const btnDescargar = document.getElementById("btn-vp-descargar");
       if (btnDescargar) {
         btnDescargar.addEventListener("click", () => {
-          PanelDetalleCotizacion.cotActual = this.cotActual;
-          PanelDetalleCotizacion.ejecutarAccion("descargar");
+          descargarVistaPreviaComoPDF(this.cotActual);
         });
       }
     }
@@ -427,25 +510,29 @@
 
     // Delegación: clicks sobre filas
     tbody.addEventListener("click", (e) => {
-      // Botón "Vista previa" sobre la fila: abre overlay full-screen directo
+      // Botón "Vista previa": abre el panel de detalle lateral
       const btnVP = e.target.closest(".btn-vista-previa-fila");
       if (btnVP) {
         e.stopPropagation();
         const id = parseInt(btnVP.dataset.cotId, 10);
         const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
+        if (cot) PanelDetalleCotizacion.abrir(cot);
+        return;
+      }
+
+      // Click en el enlace del título: abre el modal de edición
+      const linkTitulo = e.target.closest(".celda-titulo__link");
+      if (linkTitulo) {
+        e.preventDefault();
+        e.stopPropagation();
+        const tr = linkTitulo.closest("tr[data-id]");
+        if (!tr) return;
+        const id = parseInt(tr.dataset.id, 10);
+        const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
         if (cot) VistaPreviaCotizacion.abrir(cot);
         return;
       }
 
-      // Click en el enlace del título: prevenir navegación, abrir panel
-      const linkTitulo = e.target.closest(".celda-titulo__link");
-      if (linkTitulo) e.preventDefault();
-
-      const tr = e.target.closest("tr[data-id]");
-      if (!tr) return;
-      const id = parseInt(tr.dataset.id, 10);
-      const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
-      if (cot) PanelDetalleCotizacion.abrir(cot);
     });
 
     // Hover: inyectar el botón "Vista previa" si no existe
@@ -456,6 +543,7 @@
       const id = tr.dataset.id;
       const td = tr.querySelector("td:first-child");
       if (!td) return;
+      td.classList.add("td-vista-previa");
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "btn-vista-previa-fila";
@@ -579,54 +667,171 @@
     const modal = document.getElementById("modal-agregar-vista");
     if (!modal) return;
 
-    let vistaSeleccionada = "todas";
-
-    // Catálogo de vistas disponibles desde el modal (filtro asociado)
-    const catalogo = {
-      pendiente_aceptacion: { nombre: "Pendiente de aceptación", filtro: (it) => (it.estado === "publicado" || it.estado === "en_revision") },
-      pendiente_aprobacion: { nombre: "Pendiente de aprobación", filtro: (it) => it.estado === "en_revision" },
-      todas: { nombre: "Todas las cotizaciones", filtro: () => true },
+    const CATALOGO = {
+      pendiente_aceptacion: {
+        nombre: "Pendiente de aceptación",
+        categoria: "hubspot",
+        creador: "Proporcionado por HubSpot",
+        tipo: "Tabla",
+        descripcion: "Cotizaciones enviadas al cliente que aún no han sido aceptadas ni rechazadas.",
+        filtrosDesc: ["Estado: Publicado", "Estado: En revisión"],
+        filtro: (it) => it.estado === "publicado" || it.estado === "en_revision"
+      },
+      pendiente_aprobacion: {
+        nombre: "Pendiente de aprobación",
+        categoria: "hubspot",
+        creador: "Proporcionado por HubSpot",
+        tipo: "Tabla",
+        descripcion: "Cotizaciones que requieren aprobación interna antes de ser enviadas al cliente.",
+        filtrosDesc: ["Estado: En revisión"],
+        filtro: (it) => it.estado === "en_revision"
+      },
+      todas: {
+        nombre: "Todas las cotizaciones",
+        categoria: "hubspot",
+        creador: "Proporcionado por HubSpot",
+        tipo: "Tabla",
+        descripcion: "Muestra todas las cotizaciones sin ningún filtro aplicado.",
+        filtrosDesc: [],
+        filtro: () => true
+      },
       vence_pronto: {
-        nombre: "Vence pronto", filtro: (it) => {
-          const hoy = new Date("2026-05-20");
+        nombre: "Vence pronto",
+        categoria: "hubspot",
+        creador: "Proporcionado por HubSpot",
+        tipo: "Tabla",
+        descripcion: "Cotizaciones cuya fecha de vencimiento cae dentro de los próximos 30 días.",
+        filtrosDesc: ["Fecha de vencimiento: Próximos 30 días"],
+        filtro: (it) => {
+          const hoy = new Date();
           const venc = new Date(it.fechaVencimiento);
           const dias = (venc - hoy) / 86400000;
           return dias >= 0 && dias <= 30;
         }
       },
-      rec_pendiente: { nombre: "Pendiente de aceptación", filtro: (it) => it.estado === "en_revision" }
+      rec_pendiente: {
+        nombre: "Pendiente de aceptación",
+        categoria: "admin",
+        creador: "Recomendado por administrador",
+        tipo: "Tabla",
+        descripcion: "Vista del equipo de ventas para el seguimiento de cotizaciones pendientes.",
+        filtrosDesc: ["Estado: En revisión", "Propietario: Equipo de ventas"],
+        filtro: (it) => it.estado === "en_revision"
+      }
     };
 
-    // Click en item de la lista
-    modal.querySelectorAll(".modal-vistas__item").forEach(item => {
-      item.addEventListener("click", () => {
-        modal.querySelectorAll(".modal-vistas__item").forEach(i =>
-          i.classList.remove("modal-vistas__item--seleccionado")
-        );
-        item.classList.add("modal-vistas__item--seleccionado");
-        vistaSeleccionada = item.dataset.vista;
+    let vistaSeleccionada = "todas";
+    const inputBuscar = document.getElementById("modal-vistas-buscar");
+    const selectCat = document.getElementById("modal-vistas-categoria");
+    const lista = document.getElementById("modal-vistas-lista");
 
-        // Actualizar panel de detalle
-        const cat = catalogo[vistaSeleccionada];
-        if (cat) {
-          modal.querySelector(".modal-vistas__detalle-titulo").innerHTML =
-            `<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"/></svg>${cat.nombre}`;
-        }
+    function estaAgregada(id) {
+      return !!(window.estadoApp?.vistas?.find(v => v.id === id));
+    }
+
+    function actualizarEstadoAgregadas() {
+      modal.querySelectorAll(".modal-vistas__item").forEach(item => {
+        item.classList.toggle("modal-vistas__item--agregada", estaAgregada(item.dataset.vista));
       });
+    }
+
+    function actualizarDetalle(id) {
+      const cat = CATALOGO[id];
+      if (!cat) return;
+
+      document.getElementById("modal-vistas-det-titulo").textContent = cat.nombre;
+      document.getElementById("modal-vistas-det-desc").textContent = cat.descripcion;
+      document.getElementById("modal-vistas-det-creador").textContent = cat.creador;
+      document.getElementById("modal-vistas-det-tipo").textContent = cat.tipo;
+
+      const filtrosEl = document.getElementById("modal-vistas-det-filtros");
+      filtrosEl.innerHTML = cat.filtrosDesc.length === 0
+        ? `<span class="modal-vistas__vacio">Esta vista no tiene filtros aplicados.</span>`
+        : `<ul class="modal-vistas__filtros-lista">${cat.filtrosDesc.map(f =>
+            `<li><span class="modal-vistas__filtro-dot"></span>${f}</li>`
+          ).join("")}</ul>`;
+
+      const cabecera = modal.querySelector(".modal-vistas__detalle-cabecera");
+      let badge = modal.querySelector(".modal-vistas__ya-agregada");
+      if (estaAgregada(id)) {
+        if (!badge) {
+          badge = document.createElement("div");
+          badge.className = "modal-vistas__ya-agregada";
+          badge.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg> Ya está en tus vistas`;
+          cabecera.insertAdjacentElement("afterend", badge);
+        }
+      } else {
+        badge?.remove();
+      }
+    }
+
+    function filtrarLista() {
+      const q = (inputBuscar?.value || "").toLowerCase().trim();
+      const cat = selectCat?.value || "";
+      const visiblePorGrupo = {};
+
+      modal.querySelectorAll(".modal-vistas__item").forEach(item => {
+        const nombre = (item.querySelector(".modal-vistas__item-nombre")?.textContent || "").toLowerCase();
+        const itemCat = item.dataset.categoria || "";
+        const visible = (!q || nombre.includes(q)) && (!cat || itemCat === cat);
+        item.style.display = visible ? "" : "none";
+        if (visible) visiblePorGrupo[itemCat] = true;
+      });
+
+      modal.querySelectorAll(".modal-vistas__grupo").forEach(g => {
+        const gCat = g.dataset.grupo;
+        g.style.display = (!cat || gCat === cat) && visiblePorGrupo[gCat] ? "" : "none";
+      });
+    }
+
+    // Selección de ítem por delegación
+    lista?.addEventListener("click", (e) => {
+      const item = e.target.closest(".modal-vistas__item");
+      if (!item || item.classList.contains("modal-vistas__item--agregada")) return;
+      modal.querySelectorAll(".modal-vistas__item--seleccionado").forEach(i => i.classList.remove("modal-vistas__item--seleccionado"));
+      item.classList.add("modal-vistas__item--seleccionado");
+      vistaSeleccionada = item.dataset.vista;
+      actualizarDetalle(vistaSeleccionada);
     });
 
+    inputBuscar?.addEventListener("input", filtrarLista);
+    selectCat?.addEventListener("change", filtrarLista);
+
     // Botón Agregar
-    const btnAgregar = modal.querySelector("#confirmar-agregar-vista");
+    const btnAgregar = document.getElementById("confirmar-agregar-vista");
     if (btnAgregar) {
       btnAgregar.addEventListener("click", () => {
-        const cat = catalogo[vistaSeleccionada];
+        if (!vistaSeleccionada) return;
+        if (estaAgregada(vistaSeleccionada)) {
+          window.mostrarToast?.("Esa vista ya está en tus pestañas");
+          return;
+        }
+        const cat = CATALOGO[vistaSeleccionada];
         if (cat && window.vistasInstance) {
           window.vistasInstance.agregarVista(vistaSeleccionada, cat.nombre, cat.filtro);
-          window.mostrarToast(`✓ Vista "${cat.nombre}" agregada`);
+          window.mostrarToast?.(`✓ Vista "${cat.nombre}" agregada`);
         }
         Modales.cerrar(modal);
       });
     }
+
+    // Resetear estado cada vez que el modal se abre
+    new MutationObserver(() => {
+      if (!modal.hidden) {
+        actualizarEstadoAgregadas();
+        modal.querySelectorAll(".modal-vistas__item--seleccionado").forEach(i => i.classList.remove("modal-vistas__item--seleccionado"));
+        const preferido = modal.querySelector(`.modal-vistas__item[data-vista="todas"]:not(.modal-vistas__item--agregada)`)
+          || modal.querySelector(".modal-vistas__item:not(.modal-vistas__item--agregada)");
+        if (preferido) {
+          preferido.classList.add("modal-vistas__item--seleccionado");
+          vistaSeleccionada = preferido.dataset.vista;
+        }
+        actualizarDetalle(vistaSeleccionada);
+        if (inputBuscar) inputBuscar.value = "";
+        if (selectCat) selectCat.value = "";
+        filtrarLista();
+      }
+    }).observe(modal, { attributes: true, attributeFilter: ["hidden"] });
   }
 
   /* ----------------------------------------------------------
@@ -727,6 +932,54 @@
   }
 
   /**
+   * Abre una ventana de impresión con el contenido de la vista previa
+   * para que el usuario pueda guardarlo como PDF.
+   */
+  function descargarVistaPreviaComoPDF(cot) {
+    const contenido = document.querySelector(".vista-previa__contenido");
+    if (!contenido) return;
+
+    const estilos = [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .map(l => `<link rel="stylesheet" href="${l.href}">`)
+      .join("\n");
+
+    const titulo = cot ? cot.titulo : "cotizacion";
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>${titulo}</title>
+  ${estilos}
+  <style>
+    @page { size: A4; margin: 15mm; }
+    body { margin: 0; background: #fff; font-family: Inter, sans-serif; }
+    .vista-previa__contenido { max-width: 100%; padding: 0; }
+    .vista-previa__acciones { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="vista-previa__contenido">
+    ${contenido.innerHTML}
+  </div>
+  <script>
+    window.addEventListener("load", function () {
+      window.print();
+      setTimeout(function () { window.close(); }, 300);
+    });
+  </scr` + `ipt>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const ventana = window.open(url, "_blank");
+    if (!ventana) {
+      window.mostrarToast("⚠ Permite ventanas emergentes para descargar el PDF");
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
+  /**
    * Descarga directa de las cotizaciones publicadas (CSV).
    */
   function descargarPublicadas() {
@@ -783,7 +1036,6 @@
         const moneda = document.getElementById("cot-moneda").value;
         const estado = document.getElementById("cot-estado").value;
         const propietario = document.getElementById("cot-propietario").value;
-        const negocio = document.getElementById("cot-negocio").value.trim();
         const fechaCreacion = document.getElementById("cot-fecha-creacion").value;
         const fechaVencimiento = document.getElementById("cot-fecha-vencimiento").value;
         const cliente = document.getElementById("cot-cliente").value.trim();
@@ -808,8 +1060,7 @@
           fechaCreacion,
           fechaVencimiento,
           responsable: propietario || "Néstor Goyes",
-          cliente: cliente || "—",
-          negocio: negocio || titulo
+          cliente: cliente || "—"
         };
 
         window.estadoApp.datosOriginales.unshift(nueva);
@@ -1270,44 +1521,17 @@
 
   /* ----------------------------------------------------------
      17. MODAL AGREGAR VISTA: búsqueda + categoría
+         (Funcionalidad integrada en initModalAgregarVista)
      ---------------------------------------------------------- */
-  function initModalVistasExtras() {
-    const modal = document.getElementById("modal-agregar-vista");
-    if (!modal) return;
-
-    const inputBuscar = modal.querySelector('input[type="search"]');
-    if (inputBuscar) {
-      inputBuscar.addEventListener("input", (e) => {
-        const q = e.target.value.toLowerCase();
-        modal.querySelectorAll(".modal-vistas__item").forEach(it => {
-          it.style.display = it.textContent.toLowerCase().includes(q) ? "" : "none";
-        });
-      });
-    }
-
-    const selectCat = modal.querySelector("select.form-select");
-    if (selectCat) {
-      selectCat.addEventListener("change", (e) => {
-        const cat = e.target.value;
-        modal.querySelectorAll(".modal-vistas__grupo").forEach(g => {
-          const titulo = g.textContent.toLowerCase();
-          if (cat === "Categoría" || !cat) {
-            g.style.display = "";
-          } else if (cat === "Mis vistas") {
-            g.style.display = titulo.includes("hubspot") ? "none" : "";
-          } else if (cat === "Compartidas") {
-            g.style.display = titulo.includes("administrador") ? "" : "none";
-          }
-        });
-      });
-    }
-  }
+  function initModalVistasExtras() {}
   document.addEventListener("DOMContentLoaded", () => {
     Popovers.init();
     Modales.init();
     PanelLateral.init();
     PanelDetalleCotizacion.init();
     VistaPreviaCotizacion.init();
+    EditarCotizacion.init();
+    EnviarCotizacion.init();
 
     initSelectorObjetos();
     initTabMenu();

@@ -31,7 +31,7 @@
 
   const REMITENTE          = "soporte@oblicua.co";
   const DAPTA_WEBHOOK_URL  = "https://api.dapta.ai/api/9c9ae2b4d48889fa/envio-cotizaciones";
-  const DAPTA_API_KEY      = "";
+  const DAPTA_API_KEY      = DAPTA_API_KEY;
 
   // -----------------------------------------------------------------
   // CONSTRUCCIÓN DEL CONTENIDO DEL CORREO

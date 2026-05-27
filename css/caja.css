@@ -51,10 +51,21 @@
   fill: currentColor;
 }
 
-.tarjeta-resumen__icono--rojo  { background: rgb(234, 240, 246); }
-.tarjeta-resumen__icono--verde { background: rgb(234, 240, 246); }
-.tarjeta-resumen__icono--azul  { background: rgb(234, 240, 246); }
-.tarjeta-resumen__icono--naranja { background: rgb(234, 240, 246); }
+.tarjeta-resumen__icono--rojo {
+  background: rgb(234, 240, 246);
+}
+
+.tarjeta-resumen__icono--verde {
+  background: rgb(234, 240, 246);
+}
+
+.tarjeta-resumen__icono--azul {
+  background: rgb(234, 240, 246);
+}
+
+.tarjeta-resumen__icono--naranja {
+  background: rgb(234, 240, 246);
+}
 
 .tarjeta-resumen__valor {
   font-size: 22px;
@@ -63,8 +74,13 @@
   line-height: 1.1;
 }
 
-.tarjeta-resumen__valor--negativo { color: #dc2626; }
-.tarjeta-resumen__valor--positivo { color: #059669; }
+.tarjeta-resumen__valor--negativo {
+  color: #dc2626;
+}
+
+.tarjeta-resumen__valor--positivo {
+  color: #059669;
+}
 
 .tarjeta-resumen__detalle {
   display: flex;
@@ -81,8 +97,13 @@
   font-weight: var(--font-peso-medio);
 }
 
-.tarjeta-resumen__cambio--up   { color: #059669; }
-.tarjeta-resumen__cambio--down { color: #dc2626; }
+.tarjeta-resumen__cambio--up {
+  color: #059669;
+}
+
+.tarjeta-resumen__cambio--down {
+  color: #dc2626;
+}
 
 /* ============================================================
    ACCIONES DE CABECERA CAJA
@@ -136,14 +157,19 @@
   font-variant-numeric: tabular-nums;
 }
 
-.valor-celda--ingreso { color: #059669; }
-.valor-celda--gasto   { color: #dc2626; }
+.valor-celda--ingreso {
+  color: #059669;
+}
+
+.valor-celda--gasto {
+  color: #dc2626;
+}
 
 /* ============================================================
-   FILA CLICKEABLE (abre panel lateral)
+   FILAS: hover visual, sin cursor pointer (solo link y botón son accionables)
    ============================================================ */
 .tabla-cotizaciones tbody tr {
-  cursor: pointer;
+  cursor: default;
   transition: background-color var(--trans-rapida);
 }
 
@@ -157,33 +183,38 @@
 
 /* ============================================================
    PANEL LATERAL DE DETALLE DE MOVIMIENTO
+   El panel vive en .contenido__body como hermano flex de
+   .bloque-tabla; la tarjeta visual está en .panel-detalle__card.
    ============================================================ */
 .panel-detalle {
-  position: fixed;
-  top: calc(var(--alto-toolbar) + 24px);
-  right: 24px;
-  bottom: 24px;
-  width: 420px;
-  background: var(--color-fondo-panel);
-  border-radius: var(--radio-xl);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  z-index: 200;
+  flex-shrink: 0;
+  width: 0;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
-  transform: translateX(calc(100% + 24px));
-  transition: transform 240ms ease-out;
+  align-items: stretch;
+  transition: width 240ms ease-out;
+  margin: 0 0 var(--esp-6) 0;
 }
 
 .panel-detalle.abierto {
-  transform: translateX(0);
+  width: calc(420px + var(--esp-6));
+}
+
+.panel-detalle__card {
+  flex-shrink: 0;
+  width: 420px;
+  background: var(--color-fondo-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-detalle__header {
   padding: var(--esp-4);
   border-bottom: 1px solid var(--color-borde);
   flex-shrink: 0;
-  background: linear-gradient(180deg, var(--color-fondo-suave) 0%, var(--color-fondo-panel) 100%);
 }
 
 .panel-detalle__top {
@@ -220,8 +251,13 @@
   margin-bottom: var(--esp-3);
 }
 
-.panel-detalle__avatar--ingreso { background: linear-gradient(135deg, #34d399 0%, #10b981 100%); }
-.panel-detalle__avatar--gasto   { background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); }
+.panel-detalle__avatar--ingreso {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+.panel-detalle__avatar--gasto {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
 
 .panel-detalle__titulo {
   font-size: var(--font-tam-lg);
@@ -242,8 +278,13 @@
   margin: var(--esp-3) 0 var(--esp-2);
 }
 
-.panel-detalle__monto--ingreso { color: #059669; }
-.panel-detalle__monto--gasto   { color: #dc2626; }
+.panel-detalle__monto--ingreso {
+  color: #059669;
+}
+
+.panel-detalle__monto--gasto {
+  color: #dc2626;
+}
 
 .panel-detalle__acciones {
   display: flex;
@@ -306,7 +347,9 @@
   text-decoration: none;
 }
 
-.panel-detalle__campo-valor a:hover { text-decoration: underline; }
+.panel-detalle__campo-valor a:hover {
+  text-decoration: underline;
+}
 
 .panel-detalle__observaciones {
   padding: var(--esp-3);
@@ -371,26 +414,52 @@
 /* ============================================================
    ESTADOS específicos del módulo Caja (badges)
    ============================================================ */
-.estado-dot--pagado    { background-color: #10b981; }
-.estado-dot--pendiente { background-color: #f59e0b; }
-.estado-dot--anulado   { background-color: #6b7280; }
+.estado-dot--pagado {
+  background-color: #10b981;
+}
+
+.estado-dot--pendiente {
+  background-color: #f59e0b;
+}
+
+.estado-dot--anulado {
+  background-color: #6b7280;
+}
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 1280px) {
-  .dashboard-caja { grid-template-columns: repeat(2, 1fr); }
-  .panel-detalle { width: 380px; }
+  .dashboard-caja {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .panel-detalle__card {
+    width: 380px;
+  }
+
+  .panel-detalle.abierto {
+    width: calc(380px + var(--esp-6));
+  }
 }
 
 @media (max-width: 768px) {
-  .dashboard-caja { grid-template-columns: 1fr; padding: var(--esp-3); }
-  .panel-detalle {
-    left: 16px;
-    right: 16px;
-    width: auto;
+  .dashboard-caja {
+    grid-template-columns: 1fr;
+    padding: var(--esp-3);
+  }
+
+  .panel-detalle.abierto {
+    width: 100%;
+    height: 280px;
+  }
+
+  .panel-detalle__card {
+    width: 100%;
+    margin: 0 var(--esp-4) var(--esp-4);
   }
 }
+
 /* ============================================================
    NUEVOS COMPONENTES — POLISH iteración 3
    - Filtro de fecha (presets + rango personalizado)
@@ -680,8 +749,13 @@
   line-height: 1.1;
 }
 
-.reporte-comisiones__kpi-valor.diff-pos { color: #059669; }
-.reporte-comisiones__kpi-valor.diff-neg { color: #dc2626; }
+.reporte-comisiones__kpi-valor.diff-pos {
+  color: #059669;
+}
+
+.reporte-comisiones__kpi-valor.diff-neg {
+  color: #dc2626;
+}
 
 .reporte-comisiones__kpi-sub {
   margin-top: var(--esp-1);
@@ -732,14 +806,20 @@
   font-style: italic;
 }
 
-.diff-pos { color: #059669; }
-.diff-neg { color: #dc2626; }
+.diff-pos {
+  color: #059669;
+}
+
+.diff-neg {
+  color: #dc2626;
+}
 
 /* Responsive — filtros del reporte */
 @media (max-width: 768px) {
   .reporte-comisiones__filtros {
     grid-template-columns: 1fr;
   }
+
   .reporte-comisiones__resumen {
     grid-template-columns: 1fr;
   }

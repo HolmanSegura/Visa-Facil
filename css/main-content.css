@@ -46,6 +46,7 @@
   width: 12px;
   height: 12px;
 }
+
 .selector-objeto svg:first-of-type {
   width: 14px;
   height: 14px;
@@ -219,7 +220,8 @@
   background: #fff;
   border-radius: var(--radio-md);
   cursor: text;
-  padding: 2px 20px 2px 8px;  /* 20px a la derecha para el dot indicador */
+  padding: 2px 20px 2px 8px;
+  /* 20px a la derecha para el dot indicador */
   margin: -2px 4px -2px -2px;
   min-width: 60px;
   max-width: 100%;
@@ -230,7 +232,10 @@
   display: inline-block;
   width: max-content;
 }
-.tab__titulo--editando:focus { outline: none; }
+
+.tab__titulo--editando:focus {
+  outline: none;
+}
 
 /* Dot verde dentro del input, indica "estás editando" */
 .tab__titulo--editando::after {
@@ -283,9 +288,11 @@
   color: var(--color-acento);
   flex-shrink: 0;
 }
+
 .tab__guardar:hover {
   background: var(--color-acento-claro);
 }
+
 .tab.tab--editando .tab__guardar {
   display: inline-flex;
 }
@@ -503,7 +510,7 @@
   min-width: 0;
 }
 
-.toolbar-tabla > .toolbar-tabla__grupo:first-child {
+.toolbar-tabla>.toolbar-tabla__grupo:first-child {
   flex: 1;
 }
 
@@ -627,6 +634,21 @@
   padding: 0 var(--esp-4);
   flex-shrink: 0;
   flex-wrap: wrap;
+}
+
+.filtros-rapidos[hidden] {
+  display: none !important;
+}
+
+.toolbar-tabla #btn-toggle-filtros.btn--activo {
+  background-color: rgb(234, 240, 246);
+  font-weight: var(--font-peso-semibold);
+}
+
+.toolbar-tabla #btn-toggle-filtros:not(.btn--activo) {
+  background-color: #fff;
+  color: var(--color-texto);
+  border-color: var(--color-borde);
 }
 
 .filtro-pill {

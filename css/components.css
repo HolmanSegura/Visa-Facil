@@ -63,7 +63,7 @@
 }
 
 .btn--ghost.btn--activo {
-  background-color: var(--color-fondo-suave);
+  background-color: var(--color-fondo-hover);
   font-weight: var(--font-peso-semibold);
 }
 

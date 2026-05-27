@@ -112,6 +112,64 @@
     }
   };
 
+  /* ---------- EDITAR MOVIMIENTO ---------- */
+  const EditarMovimiento = {
+    _mov: null,
+
+    abrir(mov) {
+      if (!mov) return;
+      this._mov = mov;
+      const titulo = document.getElementById("editar-mov-titulo");
+      if (titulo) titulo.textContent = `Editar ${mov.tipo === "ingreso" ? "ingreso" : "gasto"}`;
+
+      document.getElementById("editar-mov-id").value = mov.id;
+      document.getElementById("editar-mov-tipo").value = mov.tipo;
+      document.getElementById("editar-categoria").value = mov.categoria || "otros";
+      document.getElementById("editar-valor").value = mov.valor || 0;
+      document.getElementById("editar-moneda").value = mov.moneda || "COP";
+      document.getElementById("editar-fecha").value = mov.fecha || "";
+      document.getElementById("editar-responsable").value = mov.responsable || "";
+      document.getElementById("editar-metodo").value = mov.metodoPago || "efectivo";
+      document.getElementById("editar-descripcion").value = mov.descripcion || "";
+      document.getElementById("editar-estado").value = mov.estado || "pagado";
+      document.getElementById("editar-cliente").value = mov.cliente || "";
+      document.getElementById("editar-observaciones").value = mov.observaciones || "";
+
+      Modales.abrir("modal-editar-movimiento");
+    },
+
+    guardar() {
+      const id = parseInt(document.getElementById("editar-mov-id").value, 10);
+      const mov = window.estadoApp.datosOriginales.find(m => m.id === id);
+      if (!mov) return;
+
+      mov.categoria    = document.getElementById("editar-categoria").value;
+      mov.valor        = parseFloat(document.getElementById("editar-valor").value) || 0;
+      mov.moneda       = document.getElementById("editar-moneda").value;
+      mov.fecha        = document.getElementById("editar-fecha").value;
+      mov.responsable  = document.getElementById("editar-responsable").value;
+      mov.metodoPago   = document.getElementById("editar-metodo").value;
+      mov.descripcion  = document.getElementById("editar-descripcion").value.trim();
+      mov.estado       = document.getElementById("editar-estado").value;
+      mov.cliente      = document.getElementById("editar-cliente").value.trim();
+      mov.observaciones = document.getElementById("editar-observaciones").value.trim();
+
+      if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+      if (window.actualizarDashboard) window.actualizarDashboard();
+      if (window.vistasInstance) window.vistasInstance.renderizar();
+
+      if (PanelDetalle.movimientoActual?.id === id) PanelDetalle.renderizar(mov);
+
+      Modales.cerrar(document.getElementById("modal-editar-movimiento"));
+      window.mostrarToast("✓ Movimiento actualizado");
+    },
+
+    init() {
+      const btnGuardar = document.getElementById("guardar-editar-movimiento");
+      if (btnGuardar) btnGuardar.addEventListener("click", () => this.guardar());
+    }
+  };
+
   /* ---------- PANEL DE DETALLE DE MOVIMIENTO ---------- */
   const PanelDetalle = {
     movimientoActual: null,
@@ -122,6 +180,11 @@
       this.movimientoActual = mov;
       this.renderizar(mov);
       p.classList.add("abierto");
+
+      document.querySelectorAll(".tabla-cotizaciones tbody tr.fila-activa")
+        .forEach(tr => tr.classList.remove("fila-activa"));
+      const fila = document.querySelector(`.tabla-cotizaciones tbody tr[data-id="${mov.id}"]`);
+      if (fila) fila.classList.add("fila-activa");
     },
     cerrar() {
       const p = document.getElementById("panel-detalle-movimiento");
@@ -180,36 +243,136 @@
       $("actividad-creacion").textContent = window.formatearFecha(m.fecha);
       $("actividad-actualizacion").textContent = window.formatearFecha(m.fecha);
     },
+    ejecutarAccion(accion) {
+      const m = this.movimientoActual;
+      if (!m) return;
+      switch (accion) {
+        case "editar":
+          EditarMovimiento.abrir(m);
+          break;
+
+        case "duplicar": {
+          const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(x => x.id)) + 1;
+          const copia = { ...m, id: nuevoId, descripcion: m.descripcion + " (copia)", estado: "pendiente" };
+          window.estadoApp.datosOriginales.unshift(copia);
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+          if (window.actualizarDashboard) window.actualizarDashboard();
+          if (window.vistasInstance) window.vistasInstance.renderizar();
+          window.mostrarToast(`✓ Movimiento duplicado`);
+          break;
+        }
+
+        case "descargar":
+          descargarMovimientoComoPDF(m);
+          break;
+
+        case "anular":
+          if (confirm(`¿Anular el movimiento "${m.descripcion}"?`)) {
+            m.estado = "anulado";
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            if (window.actualizarDashboard) window.actualizarDashboard();
+            if (window.vistasInstance) window.vistasInstance.renderizar();
+            window.mostrarToast("✓ Movimiento anulado");
+            this.cerrar();
+          }
+          break;
+      }
+    },
+
     init() {
       document.addEventListener("click", (e) => {
         if (e.target.closest("[data-cerrar-detalle]")) this.cerrar();
       });
 
-      // Acciones del panel
-      const btnAnular = document.getElementById("detalle-anular");
-      if (btnAnular) {
-        btnAnular.addEventListener("click", () => {
-          if (this.movimientoActual) {
-            if (confirm(`¿Anular el movimiento "${this.movimientoActual.descripcion}"?`)) {
-              this.movimientoActual.estado = "anulado";
-              if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
-              if (window.actualizarDashboard) window.actualizarDashboard();
-              if (window.vistasInstance) window.vistasInstance.renderizar();
-              window.mostrarToast("✓ Movimiento anulado");
-              this.cerrar();
-            }
-          }
-        });
-      }
+      // Toggle de secciones colapsables (chevron)
+      document.addEventListener("click", (e) => {
+        const titulo = e.target.closest("[data-toggle-seccion]");
+        if (!titulo) return;
+        const seccion = titulo.closest(".panel-detalle__seccion--colapsable");
+        if (seccion) seccion.classList.toggle("colapsado");
+      });
 
-      const btnEditar = document.getElementById("detalle-editar");
-      if (btnEditar) {
-        btnEditar.addEventListener("click", () => {
-          window.mostrarToast("✎ Función Editar (próximamente)");
-        });
-      }
+      // Botones circulares y popover de acciones — delegación
+      document.addEventListener("click", (e) => {
+        const btnCirc = e.target.closest("[data-accion-caja]");
+        if (btnCirc) { this.ejecutarAccion(btnCirc.dataset.accionCaja); return; }
+
+        const btnMenu = e.target.closest("[data-accion-caja-menu]");
+        if (btnMenu) {
+          this.ejecutarAccion(btnMenu.dataset.accionCajaMenu);
+          Popovers.cerrar();
+        }
+      });
     }
   };
+
+  /* ---------- DESCARGA PDF DE MOVIMIENTO ---------- */
+  function descargarMovimientoComoPDF(m) {
+    const estilos = [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .map(l => `<link rel="stylesheet" href="${l.href}">`)
+      .join("\n");
+
+    const signo = m.tipo === "ingreso" ? "+" : "−";
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>${m.descripcion}</title>
+  ${estilos}
+  <style>
+    @page { size: A4; margin: 20mm; }
+    body { font-family: Inter, sans-serif; color: #111; background: #fff; margin: 0; }
+    .mov-pdf { max-width: 680px; margin: 0 auto; }
+    .mov-pdf__cabecera { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+    .mov-pdf__empresa { font-size: 22px; font-weight: 700; color: #111; }
+    .mov-pdf__tipo { font-size: 13px; color: #6b7280; margin-top: 4px; }
+    .mov-pdf__monto { font-size: 28px; font-weight: 700; }
+    .mov-pdf__monto--ingreso { color: #059669; }
+    .mov-pdf__monto--gasto { color: #dc2626; }
+    .mov-pdf__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 32px; margin-bottom: 32px; }
+    .mov-pdf__campo-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .mov-pdf__campo-valor { font-size: 14px; color: #111; }
+    .mov-pdf__obs { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: #374151; }
+    .mov-pdf__pie { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="mov-pdf">
+    <div class="mov-pdf__cabecera">
+      <div>
+        <div class="mov-pdf__empresa">Oblicua</div>
+        <div class="mov-pdf__tipo">Comprobante de ${window.etiquetaTipo ? window.etiquetaTipo(m.tipo) : m.tipo}</div>
+      </div>
+      <div class="mov-pdf__monto mov-pdf__monto--${m.tipo}">${signo} ${window.formatearMoneda ? window.formatearMoneda(m.valor, m.moneda) : m.valor}</div>
+    </div>
+    <div class="mov-pdf__grid">
+      <div><div class="mov-pdf__campo-label">Descripción</div><div class="mov-pdf__campo-valor">${m.descripcion}</div></div>
+      <div><div class="mov-pdf__campo-label">Referencia</div><div class="mov-pdf__campo-valor">${m.referencia || "—"}</div></div>
+      <div><div class="mov-pdf__campo-label">Fecha</div><div class="mov-pdf__campo-valor">${window.formatearFecha ? window.formatearFecha(m.fecha) : m.fecha}</div></div>
+      <div><div class="mov-pdf__campo-label">Categoría</div><div class="mov-pdf__campo-valor">${window.etiquetaCategoria ? window.etiquetaCategoria(m.categoria) : m.categoria}</div></div>
+      <div><div class="mov-pdf__campo-label">Responsable</div><div class="mov-pdf__campo-valor">${m.responsable}</div></div>
+      <div><div class="mov-pdf__campo-label">Método de pago</div><div class="mov-pdf__campo-valor">${window.etiquetaMetodoPago ? window.etiquetaMetodoPago(m.metodoPago) : m.metodoPago}</div></div>
+      <div><div class="mov-pdf__campo-label">Estado</div><div class="mov-pdf__campo-valor">${window.etiquetaEstado ? window.etiquetaEstado(m.estado) : m.estado}</div></div>
+      <div><div class="mov-pdf__campo-label">Cliente</div><div class="mov-pdf__campo-valor">${m.cliente || "—"}</div></div>
+    </div>
+    ${m.observaciones ? `<div class="mov-pdf__campo-label" style="margin-bottom:8px;">Observaciones</div><div class="mov-pdf__obs">${m.observaciones}</div>` : ""}
+    <div class="mov-pdf__pie">Generado por Sistema de Caja · Oblicua</div>
+  </div>
+  <scr` + `ipt>
+    window.addEventListener("load", function() {
+      window.print();
+      setTimeout(function() { window.close(); }, 300);
+    });
+  </scr` + `ipt>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const ventana = window.open(url, "_blank");
+    if (!ventana) window.mostrarToast("⚠ Permite ventanas emergentes para descargar el PDF");
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
 
   /* ---------- SELECTOR DE OBJETOS ---------- */
   function initSelectorObjetos() {
@@ -293,7 +456,7 @@
         }
       }
       if (accion === "agregar-vista") {
-        window.mostrarToast("📋 Catálogo de vistas (próximamente)");
+        Modales.abrir("modal-agregar-vista");
       }
     });
   }
@@ -714,6 +877,51 @@
     });
   }
 
+  /* ---------- BOTÓN VISTA PREVIA EN FILA (columna Descripción) ---------- */
+  function initClickFilasCaja() {
+    const tbody = document.getElementById("tbody-cotizaciones");
+    if (!tbody) return;
+
+    tbody.addEventListener("click", (e) => {
+      const btnVP = e.target.closest(".btn-vista-previa-fila");
+      if (btnVP) {
+        e.stopPropagation();
+        const id = parseInt(btnVP.dataset.cotId, 10);
+        const mov = window.estadoApp.datosOriginales.find(m => m.id === id);
+        if (mov && window.PanelDetalle) window.PanelDetalle.abrir(mov);
+        return;
+      }
+
+      const linkTitulo = e.target.closest(".celda-titulo__link");
+      if (linkTitulo) {
+        e.preventDefault();
+        e.stopPropagation();
+        const tr = linkTitulo.closest("tr[data-id]");
+        if (!tr) return;
+        const id = parseInt(tr.dataset.id, 10);
+        const mov = window.estadoApp.datosOriginales.find(m => m.id === id);
+        if (mov) EditarMovimiento.abrir(mov);
+        return;
+      }
+    });
+
+    tbody.addEventListener("mouseenter", (e) => {
+      const tr = e.target.closest && e.target.closest("tr[data-id]");
+      if (!tr) return;
+      if (tr.querySelector(".btn-vista-previa-fila")) return;
+      const id = tr.dataset.id;
+      const td = tr.querySelector(".celda-titulo")?.closest("td");
+      if (!td) return;
+      td.classList.add("td-vista-previa");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-vista-previa-fila";
+      btn.dataset.cotId = id;
+      btn.textContent = "Vista previa";
+      td.appendChild(btn);
+    }, true);
+  }
+
   /* ---------- DUPLICAR VISTA ACTIVA ---------- */
   function initDuplicarVista() {
     const btn = document.getElementById("btn-duplicar-vista");
@@ -926,6 +1134,205 @@
     });
   }
 
+  /* ---------- MODAL AGREGAR VISTA ---------- */
+  function initModalAgregarVista() {
+    const modal = document.getElementById("modal-agregar-vista");
+    if (!modal) return;
+
+    const CATALOGO = {
+      todos: {
+        nombre: "Todos los movimientos",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Muestra todos los movimientos sin ningún filtro aplicado.",
+        filtrosDesc: [],
+        filtro: () => true
+      },
+      solo_ingresos: {
+        nombre: "Solo ingresos",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Muestra únicamente los movimientos de tipo ingreso.",
+        filtrosDesc: ["Tipo: Ingreso"],
+        filtro: (m) => m.tipo === "ingreso"
+      },
+      solo_gastos: {
+        nombre: "Solo gastos",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Muestra únicamente los movimientos de tipo gasto.",
+        filtrosDesc: ["Tipo: Gasto"],
+        filtro: (m) => m.tipo === "gasto"
+      },
+      gastos_mes: {
+        nombre: "Gastos del mes",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Gastos registrados durante el mes en curso.",
+        filtrosDesc: ["Tipo: Gasto", "Fecha: Mes actual"],
+        filtro: (m) => {
+          const f = new Date(m.fecha);
+          const hoy = new Date();
+          return m.tipo === "gasto" && f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
+        }
+      },
+      ingresos_mes: {
+        nombre: "Ingresos del mes",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Ingresos registrados durante el mes en curso.",
+        filtrosDesc: ["Tipo: Ingreso", "Fecha: Mes actual"],
+        filtro: (m) => {
+          const f = new Date(m.fecha);
+          const hoy = new Date();
+          return m.tipo === "ingreso" && f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
+        }
+      },
+      pendientes: {
+        nombre: "Pendientes",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Movimientos cuyo pago aún no ha sido procesado.",
+        filtrosDesc: ["Estado: Pendiente"],
+        filtro: (m) => m.estado === "pendiente"
+      },
+      sin_conciliar: {
+        nombre: "Sin conciliar",
+        categoria: "sistema",
+        creador: "Proporcionado por el sistema",
+        tipo: "Tabla",
+        descripcion: "Movimientos pendientes o en borrador que requieren conciliación.",
+        filtrosDesc: ["Estado: Pendiente", "Estado: Borrador"],
+        filtro: (m) => m.estado === "pendiente" || m.estado === "borrador"
+      },
+      publicidad: {
+        nombre: "Gastos de publicidad",
+        categoria: "admin",
+        creador: "Recomendado por administrador",
+        tipo: "Tabla",
+        descripcion: "Todos los gastos asociados a campañas publicitarias y marketing.",
+        filtrosDesc: ["Categoría: Publicidad"],
+        filtro: (m) => m.categoria === "publicidad"
+      }
+    };
+
+    let vistaSeleccionada = "todos";
+    const inputBuscar = document.getElementById("modal-vistas-buscar");
+    const selectCat = document.getElementById("modal-vistas-categoria");
+    const lista = document.getElementById("modal-vistas-lista");
+
+    function estaAgregada(id) {
+      return !!(window.estadoApp?.vistas?.find(v => v.id === id));
+    }
+
+    function actualizarEstadoAgregadas() {
+      modal.querySelectorAll(".modal-vistas__item").forEach(item => {
+        item.classList.toggle("modal-vistas__item--agregada", estaAgregada(item.dataset.vista));
+      });
+    }
+
+    function actualizarDetalle(id) {
+      const cat = CATALOGO[id];
+      if (!cat) return;
+
+      document.getElementById("modal-vistas-det-titulo").textContent = cat.nombre;
+      document.getElementById("modal-vistas-det-desc").textContent = cat.descripcion;
+      document.getElementById("modal-vistas-det-creador").textContent = cat.creador;
+      document.getElementById("modal-vistas-det-tipo").textContent = cat.tipo;
+
+      const filtrosEl = document.getElementById("modal-vistas-det-filtros");
+      filtrosEl.innerHTML = cat.filtrosDesc.length === 0
+        ? `<span class="modal-vistas__vacio">Esta vista no tiene filtros aplicados.</span>`
+        : `<ul class="modal-vistas__filtros-lista">${cat.filtrosDesc.map(f =>
+            `<li><span class="modal-vistas__filtro-dot"></span>${f}</li>`
+          ).join("")}</ul>`;
+
+      const cabecera = modal.querySelector(".modal-vistas__detalle-cabecera");
+      let badge = modal.querySelector(".modal-vistas__ya-agregada");
+      if (estaAgregada(id)) {
+        if (!badge) {
+          badge = document.createElement("div");
+          badge.className = "modal-vistas__ya-agregada";
+          badge.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg> Ya está en tus vistas`;
+          cabecera.insertAdjacentElement("afterend", badge);
+        }
+      } else {
+        badge?.remove();
+      }
+    }
+
+    function filtrarLista() {
+      const q = (inputBuscar?.value || "").toLowerCase().trim();
+      const cat = selectCat?.value || "";
+      const visiblePorGrupo = {};
+
+      modal.querySelectorAll(".modal-vistas__item").forEach(item => {
+        const nombre = (item.querySelector(".modal-vistas__item-nombre")?.textContent || "").toLowerCase();
+        const itemCat = item.dataset.categoria || "";
+        const visible = (!q || nombre.includes(q)) && (!cat || itemCat === cat);
+        item.style.display = visible ? "" : "none";
+        if (visible) visiblePorGrupo[itemCat] = true;
+      });
+
+      modal.querySelectorAll(".modal-vistas__grupo").forEach(g => {
+        const gCat = g.dataset.grupo;
+        g.style.display = (!cat || gCat === cat) && visiblePorGrupo[gCat] ? "" : "none";
+      });
+    }
+
+    lista?.addEventListener("click", (e) => {
+      const item = e.target.closest(".modal-vistas__item");
+      if (!item || item.classList.contains("modal-vistas__item--agregada")) return;
+      modal.querySelectorAll(".modal-vistas__item--seleccionado").forEach(i => i.classList.remove("modal-vistas__item--seleccionado"));
+      item.classList.add("modal-vistas__item--seleccionado");
+      vistaSeleccionada = item.dataset.vista;
+      actualizarDetalle(vistaSeleccionada);
+    });
+
+    inputBuscar?.addEventListener("input", filtrarLista);
+    selectCat?.addEventListener("change", filtrarLista);
+
+    const btnAgregar = document.getElementById("confirmar-agregar-vista");
+    if (btnAgregar) {
+      btnAgregar.addEventListener("click", () => {
+        if (!vistaSeleccionada) return;
+        if (estaAgregada(vistaSeleccionada)) {
+          window.mostrarToast?.("Esa vista ya está en tus pestañas");
+          return;
+        }
+        const cat = CATALOGO[vistaSeleccionada];
+        if (cat && window.vistasInstance) {
+          window.vistasInstance.agregarVista(vistaSeleccionada, cat.nombre, cat.filtro);
+          window.mostrarToast?.(`✓ Vista "${cat.nombre}" agregada`);
+        }
+        Modales.cerrar(modal);
+      });
+    }
+
+    new MutationObserver(() => {
+      if (!modal.hidden) {
+        actualizarEstadoAgregadas();
+        modal.querySelectorAll(".modal-vistas__item--seleccionado").forEach(i => i.classList.remove("modal-vistas__item--seleccionado"));
+        const preferido = modal.querySelector(`.modal-vistas__item[data-vista="todos"]:not(.modal-vistas__item--agregada)`)
+          || modal.querySelector(".modal-vistas__item:not(.modal-vistas__item--agregada)");
+        if (preferido) {
+          preferido.classList.add("modal-vistas__item--seleccionado");
+          vistaSeleccionada = preferido.dataset.vista;
+        }
+        actualizarDetalle(vistaSeleccionada);
+        if (inputBuscar) inputBuscar.value = "";
+        if (selectCat) selectCat.value = "";
+        filtrarLista();
+      }
+    }).observe(modal, { attributes: true, attributeFilter: ["hidden"] });
+  }
+
   /* ---------- INIT ---------- */
   document.addEventListener("DOMContentLoaded", () => {
     Popovers.init();
@@ -936,6 +1343,7 @@
     initSelectorObjetos();
     initTabMenu();
     initTabAdd();
+    initModalAgregarVista();
     initCabeceraMenu();
     initFormGasto();
     initEditarColumnas();
@@ -946,9 +1354,11 @@
     initTarjetasResumen();
     initTamanoPagina();
 
+    EditarMovimiento.init();
     initToggleFiltros();
     initVistaTabla();
     initDuplicarVista();
+    initClickFilasCaja();
 
     window.Popovers = Popovers;
     window.Modales = Modales;

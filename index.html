@@ -95,9 +95,8 @@
       <div class="cabecera__selector">
         <button class="selector-objeto" id="btn-selector-objeto" data-popover="popover-objetos" aria-haspopup="true"
           aria-expanded="false">
-          <svg viewBox="0 0 32 32" width="12" height="12" aria-hidden="true">
-            <path fill="currentColor"
-              d="M7 2h18a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4Zm2 22h14v2H9v-2Zm0-4h14v2H9v-2Zm7-15a1 1 0 0 0-1 1v1c-1 .2-2 .8-2 2 0 1.3 1 2 2.3 2.4l.7.2v2c-.5-.1-1-.4-1.4-.7a.7.7 0 0 0-1 .8c.4.8 1.4 1.3 2.4 1.4v1a1 1 0 0 0 2 0v-1c1.2-.3 2-1 2-2.3 0-1.5-1.2-2.2-2.6-2.6l-.4-.1V9.7c.4.1.7.3 1 .6a.7.7 0 0 0 1-.8c-.4-.7-1.2-1.1-2-1.3V7a1 1 0 0 0-1-1Z" />
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M5 2h14v20H5V2Zm2 5h10V5H7v2Zm0 4h10V9H7v2Zm0 4h7v-2H7v2Z" />
           </svg>
           <span>Cotizaciones</span>
           <svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true">
@@ -161,171 +160,315 @@
       </div>
     </section>
 
-    <!-- Bloque unificado: toolbar + filtros + tabla + paginación dentro de un solo contenedor con borde -->
-    <div class="bloque-tabla">
+    <!-- Fila flex: tabla + panel lateral lado a lado -->
+    <div class="contenido__body">
 
-      <!-- Toolbar de tabla -->
-      <section class="toolbar-tabla" aria-label="Acciones sobre la tabla">
-        <div class="toolbar-tabla__grupo">
-          <div class="campo-busqueda">
-            <svg viewBox="0 0 24 24" width="14" height="14" class="campo-busqueda__icono">
-              <path fill="currentColor"
-                d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
-            </svg>
-            <input type="search" id="input-buscar-tabla" class="campo-busqueda__input" placeholder="Buscar"
-              aria-label="Buscar en la tabla" />
+      <!-- Bloque unificado: toolbar + filtros + tabla + paginación dentro de un solo contenedor con borde -->
+      <div class="bloque-tabla">
+
+        <!-- Toolbar de tabla -->
+        <section class="toolbar-tabla" aria-label="Acciones sobre la tabla">
+          <div class="toolbar-tabla__grupo">
+            <div class="campo-busqueda">
+              <svg viewBox="0 0 24 24" width="14" height="14" class="campo-busqueda__icono">
+                <path fill="currentColor"
+                  d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+              </svg>
+              <input type="search" id="input-buscar-tabla" class="campo-busqueda__input" placeholder="Buscar"
+                aria-label="Buscar en la tabla" />
+            </div>
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--ghost" id="btn-vista-tabla" data-popover="popover-vista-tabla" aria-haspopup="true"
+              aria-expanded="false">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor" d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z" />
+              </svg>
+              <span id="lbl-vista-tabla">Vista de tabla</span>
+              <svg viewBox="0 0 8 8" width="8" height="8">
+                <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+              </svg>
+            </button>
+            <button class="btn btn--icon" id="btn-config-tabla" aria-label="Configuración de columnas">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor"
+                  d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+              </svg>
+            </button>
+            <button class="btn btn--ghost" id="btn-editar-columnas">Editar columnas</button>
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--ghost btn--activo" id="btn-toggle-filtros" aria-pressed="true">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z" />
+              </svg>
+              Filtros
+            </button>
+            <button class="btn btn--ghost" id="btn-ordenar" data-popover="popover-ordenar">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor"
+                  d="M12 24H10V4H8v20H6l3 3 3-3Zm6-17v2h10V7H18Zm0 6v2h8v-2h-8Zm0 6v2h6v-2h-6Zm0 6v2h4v-2h-4Z" />
+              </svg>
+              Ordenar
+            </button>
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--ghost" id="btn-exportar-toolbar" data-popover="popover-export-opciones">
+              Exportar
+            </button>
           </div>
-          <div class="toolbar-tabla__sep"></div>
-          <button class="btn btn--ghost" id="btn-vista-tabla" data-popover="popover-vista-tabla" aria-haspopup="true" aria-expanded="false">
-            <svg viewBox="0 0 32 32" width="14" height="14">
-              <path fill="currentColor" d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z" />
-            </svg>
-            <span id="lbl-vista-tabla">Vista de tabla</span>
+
+          <div class="toolbar-tabla__grupo toolbar-tabla__grupo--final">
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--icon" id="btn-duplicar-vista" aria-label="Duplicar vista">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor"
+                  d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
+              </svg>
+            </button>
+            <button class="btn btn--ghost" id="btn-guardar-vista"
+              data-popover="popover-guardar-readonly">Guardar</button>
+          </div>
+        </section>
+
+        <!-- Filtros rápidos -->
+        <section class="filtros-rapidos" id="filtros-rapidos" aria-label="Filtros rápidos">
+          <button class="filtro-pill" data-popover="popover-filtro-estado" data-filtro="estado">
+            Estado
             <svg viewBox="0 0 8 8" width="8" height="8">
               <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-          <button class="btn btn--icon" id="btn-config-tabla" aria-label="Configuración de columnas">
-            <svg viewBox="0 0 32 32" width="14" height="14">
-              <path fill="currentColor"
-                d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+          <button class="filtro-pill" data-popover="popover-filtro-actividad" data-filtro="actividad">
+            Última actividad
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-          <button class="btn btn--ghost" id="btn-editar-columnas">Editar columnas</button>
+          <button class="filtro-pill" data-popover="popover-filtro-propietario" data-filtro="propietario">
+            Propietario
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+            </svg>
+          </button>
+          <button class="filtro-pill" data-popover="popover-filtro-firma" data-filtro="firma">
+            Estado de la firma
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+            </svg>
+          </button>
           <div class="toolbar-tabla__sep"></div>
-          <button class="btn btn--ghost btn--activo" id="btn-toggle-filtros" aria-pressed="true">
+          <button class="filtro-icon" id="btn-add-filtro" data-popover="popover-filtro-add"
+            aria-label="Agregar filtro rápido">
+            <svg viewBox="0 0 12 12" width="12" height="12">
+              <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+            </svg>
+          </button>
+          <button class="filtro-icon" id="btn-edit-filtros" aria-label="Editar filtros rápidos">
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
+            </svg>
+          </button>
+          <button class="filtro-avanzados">
             <svg viewBox="0 0 32 32" width="14" height="14">
               <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z" />
             </svg>
-            Filtros
+            Filtros avanzados
           </button>
-          <button class="btn btn--ghost" id="btn-ordenar" data-popover="popover-ordenar">
-            <svg viewBox="0 0 32 32" width="14" height="14">
-              <path fill="currentColor"
-                d="M12 24H10V4H8v20H6l3 3 3-3Zm6-17v2h10V7H18Zm0 6v2h8v-2h-8Zm0 6v2h6v-2h-6Zm0 6v2h4v-2h-4Z" />
-            </svg>
-            Ordenar
-          </button>
-          <div class="toolbar-tabla__sep"></div>
-          <button class="btn btn--ghost" id="btn-exportar-toolbar" data-popover="popover-export-opciones">
-            Exportar
-          </button>
-        </div>
+        </section>
 
-        <div class="toolbar-tabla__grupo toolbar-tabla__grupo--final">
-          <div class="toolbar-tabla__sep"></div>
-          <button class="btn btn--icon" id="btn-duplicar-vista" aria-label="Duplicar vista">
-            <svg viewBox="0 0 32 32" width="14" height="14">
-              <path fill="currentColor"
-                d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
-            </svg>
-          </button>
-          <button class="btn btn--ghost" id="btn-guardar-vista" data-popover="popover-guardar-readonly">Guardar</button>
-        </div>
-      </section>
-
-      <!-- Filtros rápidos -->
-      <section class="filtros-rapidos" id="filtros-rapidos" aria-label="Filtros rápidos">
-        <button class="filtro-pill" data-popover="popover-filtro-estado" data-filtro="estado">
-          Estado
-          <svg viewBox="0 0 8 8" width="8" height="8">
-            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-          </svg>
-        </button>
-        <button class="filtro-pill" data-popover="popover-filtro-actividad" data-filtro="actividad">
-          Última actividad
-          <svg viewBox="0 0 8 8" width="8" height="8">
-            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-          </svg>
-        </button>
-        <button class="filtro-pill" data-popover="popover-filtro-propietario" data-filtro="propietario">
-          Propietario
-          <svg viewBox="0 0 8 8" width="8" height="8">
-            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-          </svg>
-        </button>
-        <button class="filtro-pill" data-popover="popover-filtro-firma" data-filtro="firma">
-          Estado de la firma
-          <svg viewBox="0 0 8 8" width="8" height="8">
-            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-          </svg>
-        </button>
-        <div class="toolbar-tabla__sep"></div>
-        <button class="filtro-icon" id="btn-add-filtro" data-popover="popover-filtro-add"
-          aria-label="Agregar filtro rápido">
-          <svg viewBox="0 0 12 12" width="12" height="12">
-            <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
-          </svg>
-        </button>
-        <button class="filtro-icon" id="btn-edit-filtros" aria-label="Editar filtros rápidos">
-          <svg viewBox="0 0 24 24" width="12" height="12">
-            <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
-          </svg>
-        </button>
-        <button class="filtro-avanzados">
-          <svg viewBox="0 0 32 32" width="14" height="14">
-            <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z" />
-          </svg>
-          Filtros avanzados
-        </button>
-      </section>
-
-      <!-- Tabla -->
-      <section class="tabla-wrapper" aria-label="Listado de cotizaciones">
-        <div class="tabla-scroll">
-          <table class="tabla-cotizaciones" id="tabla-cotizaciones" role="table">
-            <thead>
-              <tr>
-                <th data-columna="titulo" data-orden="desc" class="th th--orden"><span>TÍTULO</span><span
-                    class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10">
-                      <path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6" />
-                    </svg></span></th>
-                <th data-columna="estado" class="th">ESTADO</th>
-                <th data-columna="cantidad" class="th th--num">CANTIDAD</th>
-                <th data-columna="firma" class="th">ESTADO DE LA FIRMA</th>
-                <th data-columna="propietario" class="th">PROPIETARIO</th>
-                <th data-columna="creacion" class="th">FECHA DE CREACIÓN</th>
-                <th data-columna="vencimiento" class="th">FECHA DE VENCIMIENTO</th>
-                <th data-columna="negocio" class="th">NOMBRE DEL NEGOCIO</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-cotizaciones"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Paginación -->
-      <section class="paginacion" aria-label="Paginación">
-        <button class="pag-btn pag-btn--nav" disabled aria-label="Página anterior">
-          <svg viewBox="0 0 24 24" width="12" height="12">
-            <path fill="currentColor" d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z" />
-          </svg>
-          Anterior
-        </button>
-        <div class="pag-numeros" id="pag-numeros"></div>
-        <button class="pag-btn pag-btn--nav" aria-label="Página siguiente">
-          Siguiente
-          <svg viewBox="0 0 24 24" width="12" height="12">
-            <path fill="currentColor" d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z" />
-          </svg>
-        </button>
-        <button class="pag-tamano" id="btn-tamano-pagina" data-popover="popover-tamano-pagina" aria-haspopup="true"
-          aria-expanded="false">
-          <span id="lbl-tamano">25 por página</span>
-          <svg viewBox="0 0 8 8" width="8" height="8">
-            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"></path>
-          </svg>
-        </button>
-        <div class="popover" id="popover-tamano-pagina" hidden style="width: 180px;">
-          <div class="popover__lista">
-            <button class="popover__item" data-page-size="25">25 por página</button>
-            <button class="popover__item" data-page-size="50">50 por página</button>
-            <button class="popover__item" data-page-size="100">100 por página</button>
+        <!-- Tabla -->
+        <section class="tabla-wrapper" aria-label="Listado de cotizaciones">
+          <div class="tabla-scroll">
+            <table class="tabla-cotizaciones" id="tabla-cotizaciones" role="table">
+              <thead>
+                <tr>
+                  <th data-columna="titulo" data-orden="desc" class="th th--orden"><span>TÍTULO</span><span
+                      class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10">
+                        <path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6" />
+                      </svg></span></th>
+                  <th data-columna="estado" class="th">ESTADO</th>
+                  <th data-columna="cantidad" class="th th--num">CANTIDAD</th>
+                  <th data-columna="firma" class="th">ESTADO DE LA FIRMA</th>
+                  <th data-columna="propietario" class="th">PROPIETARIO</th>
+                  <th data-columna="creacion" class="th">FECHA DE CREACIÓN</th>
+                  <th data-columna="vencimiento" class="th">FECHA DE VENCIMIENTO</th>
+                  <th data-columna="negocio" class="th">NOMBRE DEL NEGOCIO</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-cotizaciones"></tbody>
+            </table>
           </div>
-        </div>
-      </section>
+        </section>
 
-    </div><!-- /.bloque-tabla -->
+        <!-- Paginación -->
+        <section class="paginacion" aria-label="Paginación">
+          <button class="pag-btn pag-btn--nav" disabled aria-label="Página anterior">
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path fill="currentColor" d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z" />
+            </svg>
+            Anterior
+          </button>
+          <div class="pag-numeros" id="pag-numeros"></div>
+          <button class="pag-btn pag-btn--nav" aria-label="Página siguiente">
+            Siguiente
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path fill="currentColor" d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z" />
+            </svg>
+          </button>
+          <button class="pag-tamano" id="btn-tamano-pagina" data-popover="popover-tamano-pagina" aria-haspopup="true"
+            aria-expanded="false">
+            <span id="lbl-tamano">25 por página</span>
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"></path>
+            </svg>
+          </button>
+          <div class="popover" id="popover-tamano-pagina" hidden style="width: 180px;">
+            <div class="popover__lista">
+              <button class="popover__item" data-page-size="25">25 por página</button>
+              <button class="popover__item" data-page-size="50">50 por página</button>
+              <button class="popover__item" data-page-size="100">100 por página</button>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /.bloque-tabla -->
+
+      <!-- Panel lateral: Detalle de cotización (hermano flex de .bloque-tabla) -->
+      <aside class="panel-detalle" id="panel-detalle-cotizacion" aria-label="Detalle de cotización">
+        <div class="panel-detalle__card">
+
+          <!-- Header mínimo: etiqueta + cerrar -->
+          <div class="panel-detalle__header">
+            <span class="panel-detalle__vp-label">Vista previa</span>
+            <button class="panel-detalle__cerrar" data-cerrar-detalle aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Cuerpo scrollable -->
+          <div class="panel-detalle__body">
+
+            <!-- Bloque highlight: acciones, título, valores, botones -->
+            <div class="panel-detalle__highlight">
+              <div class="panel-detalle__highlight-top">
+                <button class="btn btn--link" id="detalle-cot-acciones" data-popover="popover-detalle-cot-acciones">
+                  Acciones
+                  <svg viewBox="0 0 8 8" width="8" height="8">
+                    <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+                  </svg>
+                </button>
+              </div>
+              <h3 class="panel-detalle__titulo" id="detalle-cot-titulo">—</h3>
+              <dl class="panel-detalle__dl">
+                <dt>Valor de la cotización</dt>
+                <dd class="panel-detalle__valor-grande" id="detalle-cot-monto">—</dd>
+                <dt>Número de cotización</dt>
+                <dd id="detalle-cot-numero">—</dd>
+                <dt>Estado</dt>
+                <dd id="detalle-cot-estado">—</dd>
+              </dl>
+              <div class="panel-detalle__acciones panel-detalle__acciones--cot">
+                <button class="panel-detalle__accion-circ" data-accion-cot="retirar" title="Retirar">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
+                    </svg>
+                  </span>
+                  <span>Retirar</span>
+                </button>
+                <button class="panel-detalle__accion-circ" data-accion-cot="clonar" title="Clonar">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 32 32" width="14" height="14">
+                      <path fill="currentColor"
+                        d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
+                    </svg>
+                  </span>
+                  <span>Clonar</span>
+                </button>
+                <button class="panel-detalle__accion-circ" data-accion-cot="descargar" title="Descargar">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path fill="currentColor" d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" />
+                    </svg>
+                  </span>
+                  <span>Descargar</span>
+                </button>
+                <button class="panel-detalle__accion-circ" data-accion-cot="copiar" title="Copiar enlace">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path fill="currentColor"
+                        d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 1 0-7-7l-1 1m-2 6a5 5 0 0 0-7 0l-3 3a5 5 0 1 0 7 7l1-1" />
+                    </svg>
+                  </span>
+                  <span>Copiar enl…</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sección: Acerca de este objeto (abierta por defecto) -->
+            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
+              <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
+                <span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
+                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                  </svg>
+                  Acerca de este objeto Cotización
+                </span>
+                <button class="btn btn--link" style="font-size:11px;">
+                  Acciones
+                  <svg viewBox="0 0 8 8" width="8" height="8">
+                    <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+                  </svg>
+                </button>
+              </div>
+              <div class="panel-detalle__seccion-cuerpo">
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Propietario</span>
+                  <div class="panel-detalle__campo-valor celda-avatar" id="detalle-cot-propietario">—</div>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Cliente</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-cot-cliente">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Negocio asociado</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-cot-negocio">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Fecha de creación</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-cot-fcreacion">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Fecha de vencimiento</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-cot-fvencimiento">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Estado de la firma</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-cot-firma">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección: Actividades (colapsada por defecto) -->
+            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable colapsado" data-colapsable>
+              <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
+                <span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
+                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                  </svg>
+                  Actividades de cotizaciones
+                </span>
+              </div>
+              <div class="panel-detalle__seccion-cuerpo">
+                <p class="panel-detalle__vacio">No hay actividades registradas para esta cotización.</p>
+              </div>
+            </div>
+
+          </div><!-- /.panel-detalle__body -->
+        </div><!-- /.panel-detalle__card -->
+      </aside>
+
+    </div><!-- /.contenido__body -->
   </main>
 
   <!-- ============================================================
@@ -353,15 +496,22 @@
     <div class="popover__lista">
       <div class="popover__grupo-titulo">Tipo de vista</div>
       <button class="popover__item popover__item--seleccionado" data-vista-tipo="tabla">
-        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 5h18v3H3V5Zm0 5h18v3H3v-3Zm0 5h18v3H3v-3Z"/></svg></span>
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 5h18v3H3V5Zm0 5h18v3H3v-3Zm0 5h18v3H3v-3Z" />
+          </svg></span>
         Vista de tabla
       </button>
       <button class="popover__item" data-vista-tipo="tablero">
-        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 3h6v18H3V3Zm8 0h6v12h-6V3Zm8 0h2v18h-2V3Z"/></svg></span>
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 3h6v18H3V3Zm8 0h6v12h-6V3Zm8 0h2v18h-2V3Z" />
+          </svg></span>
         Vista de tablero
       </button>
       <button class="popover__item" data-vista-tipo="lista">
-        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 5h2v2H3V5Zm0 6h2v2H3v-2Zm0 6h2v2H3v-2Zm4-12h14v2H7V5Zm0 6h14v2H7v-2Zm0 6h14v2H7v-2Z"/></svg></span>
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor"
+              d="M3 5h2v2H3V5Zm0 6h2v2H3v-2Zm0 6h2v2H3v-2Zm4-12h14v2H7V5Zm0 6h14v2H7v-2Zm0 6h14v2H7v-2Z" />
+          </svg></span>
         Vista de lista
       </button>
     </div>
@@ -373,7 +523,8 @@
       <div class="popover__titulo-info">Vista de solo lectura</div>
     </div>
     <div class="popover__nota popover__nota--info">
-      Esta vista es de solo lectura y fue creada por HubSpot u otra persona. Clona esta vista para guardar los cambios que hayas hecho en los filtros, los órdenes o las columnas.
+      Esta vista es de solo lectura y fue creada por HubSpot u otra persona. Clona esta vista para guardar los cambios
+      que hayas hecho en los filtros, los órdenes o las columnas.
     </div>
   </div>
 
@@ -540,11 +691,14 @@
   <!-- Opciones de exportación -->
   <div class="popover" id="popover-export-opciones" hidden style="width: 320px;">
     <div class="popover__grupo-titulo">Exportar a Excel (CSV)</div>
-    <div class="popover__nota">Se generará un archivo .csv compatible con Excel. Las columnas siguen el orden visible en la tabla.</div>
+    <div class="popover__nota">Se generará un archivo .csv compatible con Excel. Las columnas siguen el orden visible en
+      la tabla.</div>
     <div class="popover__lista">
       <button class="popover__item popover__item--rico" data-export-alcance="visibles">
         <div class="popover__item-icono">
-          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h12v2H3v-2Z"/></svg>
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h12v2H3v-2Z" />
+          </svg>
         </div>
         <div class="popover__item-cuerpo">
           <div class="popover__item-titulo">Cotizaciones visibles (con filtros)</div>
@@ -553,7 +707,9 @@
       </button>
       <button class="popover__item popover__item--rico" data-export-alcance="todos">
         <div class="popover__item-icono">
-          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h16v4H4v-4Z"/></svg>
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h16v4H4v-4Z" />
+          </svg>
         </div>
         <div class="popover__item-cuerpo">
           <div class="popover__item-titulo">Todas las cotizaciones</div>
@@ -576,79 +732,106 @@
             <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
           </svg></button>
       </div>
-      <div class="modal__body">
+      <div class="modal__body modal__body--sin-padding">
         <div class="modal-vistas">
-          <div class="modal-vistas__col">
+
+          <!-- Columna izquierda: búsqueda + lista -->
+          <div class="modal-vistas__col modal-vistas__col--lista">
             <div class="modal-vistas__head">
-              <div style="position:relative;flex:1;">
-                <input type="search" class="form-input" placeholder="Buscar una vista"
-                  style="width:100%;padding-right:30px;" />
-                <svg style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#7c98b6;"
-                  viewBox="0 0 24 24" width="14" height="14">
+              <div class="modal-vistas__buscar-wrap">
+                <svg class="modal-vistas__buscar-ico" viewBox="0 0 24 24" width="14" height="14">
                   <path fill="currentColor"
                     d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
                 </svg>
+                <input type="search" id="modal-vistas-buscar" class="modal-vistas__buscar-input"
+                  placeholder="Buscar vista..." />
               </div>
-              <select class="form-select" style="width: 120px;">
-                <option>Categoría</option>
-                <option>Mis vistas</option>
-                <option>Compartidas</option>
+              <select id="modal-vistas-categoria" class="form-select form-select--sm"
+                style="width:100px;flex-shrink:0;">
+                <option value="">Todas</option>
+                <option value="hubspot">HubSpot</option>
+                <option value="admin">Compartidas</option>
               </select>
             </div>
-            <div class="modal-vistas__lista">
-              <div class="modal-vistas__grupo">Proporcionado por HubSpot (4)</div>
-              <div class="modal-vistas__item" data-vista="pendiente_aceptacion">
-                <svg viewBox="0 0 24 24" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z" />
+            <div class="modal-vistas__lista" id="modal-vistas-lista">
+              <div class="modal-vistas__grupo" data-grupo="hubspot">Proporcionado por HubSpot</div>
+              <div class="modal-vistas__item" data-vista="pendiente_aceptacion" data-categoria="hubspot">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                Pendiente de aceptación
+                <span class="modal-vistas__item-nombre">Pendiente de aceptación</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
               </div>
-              <div class="modal-vistas__item" data-vista="pendiente_aprobacion">
-                <svg viewBox="0 0 24 24" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z" />
+              <div class="modal-vistas__item" data-vista="pendiente_aprobacion" data-categoria="hubspot">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                Pendiente de aprobación
+                <span class="modal-vistas__item-nombre">Pendiente de aprobación</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
               </div>
-              <div class="modal-vistas__item modal-vistas__item--seleccionado" data-vista="todas">
-                <svg viewBox="0 0 24 24" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z" />
+              <div class="modal-vistas__item" data-vista="todas" data-categoria="hubspot">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                Todas las cotizaciones
+                <span class="modal-vistas__item-nombre">Todas las cotizaciones</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
               </div>
-              <div class="modal-vistas__item" data-vista="vence_pronto">
-                <svg viewBox="0 0 24 24" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z" />
+              <div class="modal-vistas__item" data-vista="vence_pronto" data-categoria="hubspot">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                Vence pronto
+                <span class="modal-vistas__item-nombre">Vence pronto</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
               </div>
-              <div class="modal-vistas__grupo">Recomendado por administrador (4)</div>
-              <div class="modal-vistas__item" data-vista="rec_pendiente">
-                <svg viewBox="0 0 24 24" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z" />
+              <div class="modal-vistas__grupo" data-grupo="admin">Recomendado por administrador</div>
+              <div class="modal-vistas__item" data-vista="rec_pendiente" data-categoria="admin">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                Pendiente de aceptación
+                <span class="modal-vistas__item-nombre">Pendiente de aceptación</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
               </div>
             </div>
           </div>
-          <div class="modal-vistas__col">
+
+          <!-- Columna derecha: detalle de la vista seleccionada -->
+          <div class="modal-vistas__col modal-vistas__col--detalle">
             <div class="modal-vistas__detalle">
-              <div class="modal-vistas__detalle-titulo">
-                <svg viewBox="0 0 24 24" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z" />
+              <div class="modal-vistas__detalle-cabecera">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                Todas las cotizaciones
+                <span id="modal-vistas-det-titulo">Todas las cotizaciones</span>
+              </div>
+              <p id="modal-vistas-det-desc" class="modal-vistas__detalle-desc">Muestra todas las cotizaciones sin ningún
+                filtro aplicado.</p>
+              <div class="modal-vistas__campo">
+                <span class="modal-vistas__campo-label">Creado por</span>
+                <span class="modal-vistas__campo-valor" id="modal-vistas-det-creador">Proporcionado por HubSpot</span>
               </div>
               <div class="modal-vistas__campo">
-                <span class="modal-vistas__campo-label">Creado por:</span>
-                <span class="modal-vistas__campo-valor">Proporcionado por HubSpot</span>
+                <span class="modal-vistas__campo-label">Tipo de vista</span>
+                <span class="modal-vistas__campo-valor" id="modal-vistas-det-tipo">Tabla</span>
               </div>
               <div class="modal-vistas__campo">
-                <span class="modal-vistas__campo-label">Tipo de vista:</span>
-                <span class="modal-vistas__campo-valor">Tabla</span>
+                <span class="modal-vistas__campo-label">Filtros aplicados</span>
+                <div id="modal-vistas-det-filtros">
+                  <span class="modal-vistas__vacio">Esta vista no tiene filtros aplicados.</span>
+                </div>
               </div>
-              <div class="modal-vistas__vacio">Esta vista no tiene filtros aplicados.</div>
             </div>
           </div>
+
         </div>
       </div>
       <div class="modal__footer">
@@ -682,15 +865,11 @@
           <div class="form-grupo form-grupo--full">
             <label class="form-label" for="cot-cliente">Empresa o cliente</label>
             <div class="contacto-autocomplete" id="contacto-autocomplete-wrap">
-              <input type="text" id="cot-cliente" class="form-input"
-                placeholder="Buscar contacto o empresa…"
-                autocomplete="off"
-                role="combobox"
-                aria-expanded="false"
-                aria-owns="contacto-sugerencias"
+              <input type="text" id="cot-cliente" class="form-input" placeholder="Buscar contacto o empresa…"
+                autocomplete="off" role="combobox" aria-expanded="false" aria-owns="contacto-sugerencias"
                 aria-autocomplete="list" />
-              <ul id="contacto-sugerencias" class="contacto-sugerencias" hidden
-                role="listbox" aria-label="Sugerencias de contacto"></ul>
+              <ul id="contacto-sugerencias" class="contacto-sugerencias" hidden role="listbox"
+                aria-label="Sugerencias de contacto"></ul>
             </div>
             <input type="hidden" id="cot-contacto-id" />
           </div>
@@ -740,10 +919,6 @@
             </select>
           </div>
           <div class="form-grupo form-grupo--full">
-            <label class="form-label" for="cot-negocio">Nombre del negocio asociado (hs_deal_name)</label>
-            <input type="text" id="cot-negocio" class="form-input" placeholder="Nombre del deal" />
-          </div>
-          <div class="form-grupo form-grupo--full">
             <label class="form-label" for="cot-comentarios">Términos y comentarios</label>
             <textarea id="cot-comentarios" class="form-textarea"
               placeholder="Términos de pago, comentarios al cliente, etc."></textarea>
@@ -753,12 +928,13 @@
         <!-- ── TAB: PRODUCTOS Y DESCUENTOS ─────────────────────── -->
         <div class="cot-seccion" id="cot-seccion-productos" style="margin-top:20px;">
           <div class="cot-seccion__titulo">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="margin-right:6px;vertical-align:-2px;">
-              <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 2h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h7v2H7v-2Z"/>
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"
+              style="margin-right:6px;vertical-align:-2px;">
+              <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 2h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h7v2H7v-2Z" />
             </svg>
             Productos / Líneas de artículo
-            <button class="btn btn--ghost btn--sm" id="btn-recargar-productos"
-              style="margin-left:auto;font-size:11px;" title="Recargar catálogo desde HubSpot">
+            <button class="btn btn--ghost btn--sm" id="btn-recargar-productos" style="margin-left:auto;font-size:11px;"
+              title="Recargar catálogo desde HubSpot">
               Actualizar catálogo
             </button>
           </div>
@@ -770,7 +946,8 @@
             <div class="cot-catalogo">
               <div class="cot-catalogo__buscar">
                 <svg viewBox="0 0 24 24" width="13" height="13" style="color:#7c98b6;flex-shrink:0;">
-                  <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/>
+                  <path fill="currentColor"
+                    d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
                 </svg>
                 <input type="search" id="input-buscar-producto" class="campo-busqueda__input"
                   placeholder="Buscar producto..." aria-label="Buscar en el catálogo" />
@@ -795,8 +972,7 @@
                 </thead>
                 <tbody id="cotizacion-lineas-tbody"></tbody>
               </table>
-              <button class="btn btn--ghost btn--sm" id="btn-agregar-linea-custom"
-                style="margin-top:8px;">
+              <button class="btn btn--ghost btn--sm" id="btn-agregar-linea-custom" style="margin-top:8px;">
                 + Línea personalizada
               </button>
             </div>
@@ -807,10 +983,10 @@
             <div class="cot-descuentos__titulo">Descuento global</div>
             <div class="cot-descuentos__fila">
               <label class="form-label" for="cot-desc-valor" style="min-width:56px;">Valor</label>
-              <input type="number" id="cot-desc-valor" class="form-input form-input--sm"
-                min="0" step="0.01" placeholder="0"
-                data-desc-campo="valor" style="width:90px;" />
-              <select class="form-select form-select--sm" data-desc-campo="tipo" aria-label="Tipo de descuento global" style="width:68px;">
+              <input type="number" id="cot-desc-valor" class="form-input form-input--sm" min="0" step="0.01"
+                placeholder="0" data-desc-campo="valor" style="width:90px;" />
+              <select class="form-select form-select--sm" data-desc-campo="tipo" aria-label="Tipo de descuento global"
+                style="width:68px;">
                 <option value="porcentaje">%</option>
                 <option value="fijo">$</option>
               </select>
@@ -830,15 +1006,15 @@
                 </tr>
                 <tr id="cot-resumen-fila-descuento" hidden>
                   <td class="cot-resumen__label" style="color:var(--color-error, #e53e3e);">Descuento</td>
-                  <td class="cot-resumen__valor" id="cot-resumen-descuento" style="color:var(--color-error, #e53e3e);">—</td>
+                  <td class="cot-resumen__valor" id="cot-resumen-descuento" style="color:var(--color-error, #e53e3e);">—
+                  </td>
                 </tr>
                 <tr>
                   <td class="cot-resumen__label">
                     IVA
                     <span style="font-weight:400;color:var(--color-texto-suave);">
-                      (<input type="number" id="cot-tasa-iva" class="form-input form-input--sm"
-                        min="0" max="100" step="1" value="19"
-                        style="width:40px;display:inline-block;padding:1px 4px;"
+                      (<input type="number" id="cot-tasa-iva" class="form-input form-input--sm" min="0" max="100"
+                        step="1" value="19" style="width:40px;display:inline-block;padding:1px 4px;"
                         aria-label="Tasa de IVA en %"> %)
                     </span>
                   </td>
@@ -856,8 +1032,9 @@
         <!-- ── TAB: ENVÍO POR CORREO ───────────────────────────── -->
         <div class="cot-seccion" id="cot-seccion-email" style="margin-top:20px;">
           <div class="cot-seccion__titulo">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="margin-right:6px;vertical-align:-2px;">
-              <path fill="currentColor" d="M2 4h20v16H2V4Zm2 2v1.4l8 5.1 8-5.1V6H4Zm16 2.6-8 5.1-8-5.1V18h16V8.6Z"/>
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"
+              style="margin-right:6px;vertical-align:-2px;">
+              <path fill="currentColor" d="M2 4h20v16H2V4Zm2 2v1.4l8 5.1 8-5.1V6H4Zm16 2.6-8 5.1-8-5.1V18h16V8.6Z" />
             </svg>
             Enviar por correo
           </div>
@@ -866,12 +1043,11 @@
               <label class="form-label" for="cot-email-destinatario">
                 Destinatario
               </label>
-              <input type="email" id="cot-email-destinatario" class="form-input"
-                placeholder="email@cliente.com" />
+              <input type="email" id="cot-email-destinatario" class="form-input" placeholder="email@cliente.com" />
             </div>
             <button class="btn btn--naranja" data-accion-email="enviar" style="white-space:nowrap;">
               <svg viewBox="0 0 24 24" width="13" height="13" style="margin-right:4px;vertical-align:-1px;">
-                <path fill="currentColor" d="M3 3l18 9-18 9V13l13-4-13-4V3Z"/>
+                <path fill="currentColor" d="M3 3l18 9-18 9V13l13-4-13-4V3Z" />
               </svg>
               Enviar cotización
             </button>
@@ -886,6 +1062,107 @@
       </div><!-- /.modal__body -->
       <div class="modal__footer">
         <button class="btn btn--naranja" id="guardar-cotizacion">Guardar</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar cotización -->
+  <div class="modal-overlay" id="modal-editar-cotizacion" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo" id="editar-cot-titulo-modal">Editar cotización</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <form id="form-editar-cotizacion">
+          <input type="hidden" id="editar-cot-id" />
+          <div class="form-grupo">
+            <label class="form-label form-label--req" for="editar-cot-nombre">Nombre de la cotización</label>
+            <input type="text" id="editar-cot-nombre" class="form-input" placeholder="Ej: Servicios CRM 2026" />
+          </div>
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label" for="editar-cot-estado">Estado</label>
+              <select id="editar-cot-estado" class="form-select">
+                <option value="borrador">Borrador</option>
+                <option value="publicado">Publicado</option>
+                <option value="aprobado">Aprobado</option>
+                <option value="en_revision">En revisión</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="editar-cot-moneda">Moneda</label>
+              <select id="editar-cot-moneda" class="form-select">
+                <option value="COP">COP</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label" for="editar-cot-propietario">Propietario</label>
+              <select id="editar-cot-propietario" class="form-select">
+                <option>Néstor Goyes</option>
+                <option>Maria González</option>
+                <option>Carlos Ramírez</option>
+                <option>Lizeth Carrillo</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="editar-cot-fvencimiento">Fecha de vencimiento</label>
+              <input type="date" id="editar-cot-fvencimiento" class="form-input" />
+            </div>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-cot-cliente">Cliente / Empresa</label>
+            <input type="text" id="editar-cot-cliente" class="form-input" placeholder="—" />
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--naranja" id="guardar-editar-cotizacion">Guardar cambios</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Enviar cotización al cliente -->
+  <div class="modal-overlay" id="modal-enviar-cotizacion" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo">Enviar al cliente</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <form id="form-enviar-cotizacion">
+          <input type="hidden" id="enviar-cot-id" />
+          <div class="form-grupo">
+            <label class="form-label form-label--req" for="enviar-cot-destinatario">Destinatario</label>
+            <input type="email" id="enviar-cot-destinatario" class="form-input" placeholder="email@cliente.com" />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="enviar-cot-asunto">Asunto</label>
+            <input type="text" id="enviar-cot-asunto" class="form-input" />
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="enviar-cot-mensaje">Mensaje</label>
+            <textarea id="enviar-cot-mensaje" class="form-textarea" rows="4"
+              placeholder="Hola, adjunto la cotización para su revisión…"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--naranja" id="confirmar-enviar-cotizacion">Enviar</button>
         <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
       </div>
     </div>
@@ -935,7 +1212,7 @@
           </div>
           <div class="editar-columnas__col">
             <div class="editar-columnas__head">
-              <div class="editar-columnas__titulo">Columnas seleccionadas (<span id="contador-cols">8</span>)</div>
+              <div class="editar-columnas__titulo">Columnas seleccionadas (<span id="contador-cols">7</span>)</div>
               <div style="font-size: 12px; color: #516f90;">Columnas inmovilizadas <select
                   style="padding: 2px 6px; margin-left: 4px;">
                   <option>0</option>
@@ -957,8 +1234,6 @@
                 creación<button class="editar-columnas__remover">×</button></div>
               <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Fecha de
                 vencimiento<button class="editar-columnas__remover">×</button></div>
-              <div class="editar-columnas__seleccionada"><span class="editar-columnas__drag">⋮⋮</span>Nombre del
-                negocio<button class="editar-columnas__remover">×</button></div>
             </div>
           </div>
         </div>
@@ -1075,11 +1350,13 @@
       </div>
       <div class="modal__body">
         <p class="modal__intro">
-          Define el porcentaje de comisión que aplica para cada asesor. Esta configuración se comparte con el módulo de Caja y se usa para calcular las comisiones teóricas en el reporte.
+          Define el porcentaje de comisión que aplica para cada asesor. Esta configuración se comparte con el módulo de
+          Caja y se usa para calcular las comisiones teóricas en el reporte.
         </p>
 
         <div class="config-comisiones__tabs">
-          <button class="config-comisiones__tab config-comisiones__tab--activo" data-tab-comisiones="asesor">Por asesor</button>
+          <button class="config-comisiones__tab config-comisiones__tab--activo" data-tab-comisiones="asesor">Por
+            asesor</button>
           <button class="config-comisiones__tab" data-tab-comisiones="producto">Por producto / categoría</button>
         </div>
 
@@ -1226,7 +1503,8 @@
       </div>
       <div class="modal__body">
         <p class="modal__intro">
-          Habilita pagos en línea para que tus clientes paguen las cotizaciones aprobadas directamente desde el link público. Selecciona los métodos que quieres aceptar.
+          Habilita pagos en línea para que tus clientes paguen las cotizaciones aprobadas directamente desde el link
+          público. Selecciona los métodos que quieres aceptar.
         </p>
         <div class="form-grupo">
           <label class="form-label" for="cfg-pagos-pasarela">Pasarela de pagos</label>
@@ -1284,7 +1562,11 @@
         <div class="reporte-comisiones__resumen" id="informes-kpis"></div>
         <table class="tabla-reporte-comisiones">
           <thead>
-            <tr><th>Estado</th><th class="num"># Cotizaciones</th><th class="num">Monto total</th></tr>
+            <tr>
+              <th>Estado</th>
+              <th class="num"># Cotizaciones</th>
+              <th class="num">Monto total</th>
+            </tr>
           </thead>
           <tbody id="informes-tbody"></tbody>
         </table>
@@ -1294,101 +1576,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ============================================================
-       PANEL LATERAL: Detalle de cotización (Vista previa lateral)
-       Se abre al hacer click en una fila de la tabla.
-       ============================================================ -->
-  <aside class="panel-detalle" id="panel-detalle-cotizacion" aria-label="Detalle de cotización">
-    <div class="panel-detalle__header">
-      <div class="panel-detalle__top">
-        <div class="panel-detalle__top-acciones">
-          <button class="btn btn--link" id="detalle-cot-acciones" data-popover="popover-detalle-cot-acciones">
-            Acciones
-            <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"/></svg>
-          </button>
-        </div>
-        <button class="panel-detalle__cerrar" data-cerrar-detalle aria-label="Cerrar">
-          <svg viewBox="0 0 24 24" width="16" height="16">
-            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
-          </svg>
-        </button>
-      </div>
-      <div class="panel-detalle__titulo" id="detalle-cot-titulo">—</div>
-      <div class="panel-detalle__campo-stacked">
-        <span class="panel-detalle__campo-label">Valor de la cotización</span>
-        <span class="panel-detalle__campo-valor panel-detalle__valor-grande" id="detalle-cot-monto">—</span>
-      </div>
-      <div class="panel-detalle__campo-stacked">
-        <span class="panel-detalle__campo-label">Número de cotización</span>
-        <span class="panel-detalle__campo-valor" id="detalle-cot-numero">—</span>
-      </div>
-      <div class="panel-detalle__campo-stacked">
-        <span class="panel-detalle__campo-label">Estado</span>
-        <span class="panel-detalle__campo-valor" id="detalle-cot-estado">—</span>
-      </div>
-      <div class="panel-detalle__acciones panel-detalle__acciones--cot">
-        <button class="panel-detalle__accion-circ" data-accion-cot="retirar" title="Retirar">
-          <span class="panel-detalle__accion-icono">
-            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z"/></svg>
-          </span>
-          <span>Retirar</span>
-        </button>
-        <button class="panel-detalle__accion-circ" data-accion-cot="clonar" title="Clonar">
-          <span class="panel-detalle__accion-icono">
-            <svg viewBox="0 0 32 32" width="14" height="14"><path fill="currentColor" d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z"/></svg>
-          </span>
-          <span>Clonar</span>
-        </button>
-        <button class="panel-detalle__accion-circ" data-accion-cot="descargar" title="Descargar">
-          <span class="panel-detalle__accion-icono">
-            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
-          </span>
-          <span>Descargar</span>
-        </button>
-        <button class="panel-detalle__accion-circ" data-accion-cot="copiar" title="Copiar enlace">
-          <span class="panel-detalle__accion-icono">
-            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 1 0-7-7l-1 1m-2 6a5 5 0 0 0-7 0l-3 3a5 5 0 1 0 7 7l1-1"/></svg>
-          </span>
-          <span>Copiar enl…</span>
-        </button>
-      </div>
-    </div>
-    <div class="panel-detalle__body">
-      <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
-        <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
-          <span><svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion"><path fill="currentColor" d="m6 9 6 6 6-6H6Z"/></svg> Acerca de este objeto Cotización</span>
-          <button class="btn btn--link" style="font-size:11px;">Acciones <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"/></svg></button>
-        </div>
-        <div class="panel-detalle__seccion-cuerpo">
-          <div class="panel-detalle__campo-stacked">
-            <span class="panel-detalle__campo-label">Propietario</span>
-            <div class="panel-detalle__campo-valor celda-avatar" id="detalle-cot-propietario">—</div>
-          </div>
-          <div class="panel-detalle__campo-stacked">
-            <span class="panel-detalle__campo-label">Cliente</span>
-            <span class="panel-detalle__campo-valor" id="detalle-cot-cliente">—</span>
-          </div>
-          <div class="panel-detalle__campo-stacked">
-            <span class="panel-detalle__campo-label">Negocio asociado</span>
-            <span class="panel-detalle__campo-valor" id="detalle-cot-negocio">—</span>
-          </div>
-          <div class="panel-detalle__campo-stacked">
-            <span class="panel-detalle__campo-label">Fecha de creación</span>
-            <span class="panel-detalle__campo-valor" id="detalle-cot-fcreacion">—</span>
-          </div>
-          <div class="panel-detalle__campo-stacked">
-            <span class="panel-detalle__campo-label">Fecha de vencimiento</span>
-            <span class="panel-detalle__campo-valor" id="detalle-cot-fvencimiento">—</span>
-          </div>
-          <div class="panel-detalle__campo-stacked">
-            <span class="panel-detalle__campo-label">Estado de la firma</span>
-            <span class="panel-detalle__campo-valor" id="detalle-cot-firma">—</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </aside>
 
   <!-- Popover de acciones (header del panel detalle) -->
   <div class="popover" id="popover-detalle-cot-acciones" hidden style="width: 200px;">
@@ -1413,7 +1600,7 @@
       </button>
       <div class="vista-previa__contenido">
         <div class="vista-previa__logo">
-          <span class="vista-previa__logo-texto">Oblicua</span>
+          <img src="img/visafacil.png" alt="Visa Fácil" class="vista-previa__logo-img">
         </div>
         <h1 class="vista-previa__titulo" id="vp-titulo">—</h1>
 
@@ -1458,7 +1645,9 @@
           </thead>
           <tbody id="vp-productos-tbody"></tbody>
           <tbody class="vista-previa__resumen-tbody">
-            <tr class="vista-previa__resumen-cabecera"><td colspan="3">Resumen</td></tr>
+            <tr class="vista-previa__resumen-cabecera">
+              <td colspan="3">Resumen</td>
+            </tr>
             <tr>
               <td>Subtotal Por única vez</td>
               <td colspan="2" class="num" id="vp-subtotal">—</td>

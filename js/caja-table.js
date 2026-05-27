@@ -208,24 +208,6 @@
       if (bAnt) bAnt.addEventListener("click", () => this.cambiarPagina(window.estadoApp.paginaActual - 1));
       if (bSig) bSig.addEventListener("click", () => this.cambiarPagina(window.estadoApp.paginaActual + 1));
 
-      // Click en fila: abrir panel de detalle
-      this.tbody.addEventListener("click", (e) => {
-        const tr = e.target.closest("tr");
-        if (!tr || !tr.dataset.id) return;
-        // Evitar abrir si se hizo click en un link interno
-        if (e.target.tagName === "A" && e.target.getAttribute("href") === "#") {
-          e.preventDefault();
-        }
-        // Marcar fila activa
-        this.tbody.querySelectorAll("tr").forEach(t => t.classList.remove("fila-activa"));
-        tr.classList.add("fila-activa");
-
-        const id = parseInt(tr.dataset.id, 10);
-        const mov = window.estadoApp.datosOriginales.find(m => m.id === id);
-        if (mov && window.PanelDetalle) {
-          window.PanelDetalle.abrir(mov);
-        }
-      });
     }
   }
 

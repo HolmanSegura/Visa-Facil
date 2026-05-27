@@ -14,7 +14,7 @@
   const API_BASE = "https://api.hubapi.com";
 
   const cfg = {
-    token:    "",
+    token:    HUBSPOT_TOKEN,
     portalId: "50772182"
   };
 
