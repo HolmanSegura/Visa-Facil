@@ -68,6 +68,10 @@ const estadoApp = {
     altura: "default",
     zebra: false,
   },
+  columnasActivas: [
+    "titulo", "estado", "cantidad", "firma",
+    "propietario", "creacion", "vencimiento", "negocio"
+  ],
 };
 
 function formatearMoneda(monto, moneda) {

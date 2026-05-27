@@ -792,6 +792,44 @@
       </div><!-- /.panel-detalle__card -->
     </aside>
 
+      <!-- Panel de configuración: hermano flex de .bloque-tabla (misma altura) -->
+      <aside
+        class="panel-detalle"
+        id="panel-config-tabla"
+        aria-label="Configuración de la tabla"
+      >
+        <div class="panel-detalle__card">
+          <div class="panel-detalle__header">
+            <span class="panel-detalle__vp-label">Configuración de la tabla</span>
+            <button class="panel-detalle__cerrar" data-cerrar-panel aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+              </svg>
+            </button>
+          </div>
+          <div class="panel-lateral__body">
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__seccion-titulo">Registros por página</div>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="25" checked /> 25 por página</label>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="50" /> 50 por página</label>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="100" /> 100 por página</label>
+            </div>
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="compacto" /> Compacto</label>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="default" checked /> Valor predeterminado</label>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="comodo" /> Cómodo</label>
+            </div>
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__switch-row">
+                <span>Zebra striping ⓘ</span>
+                <div class="switch" id="switch-zebra"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
     </div><!-- /.contenido__body -->
   </main>
 
@@ -1591,36 +1629,26 @@
                 <div style="position: relative; flex: 1">
                   <input
                     type="search"
+                    id="input-buscar-columnas"
                     class="form-input"
                     placeholder="Buscar columnas..."
                     style="width: 100%"
                   />
                 </div>
               </div>
-              <div class="editar-columnas__lista">
-                <div class="editar-columnas__categoria">Movimiento</div>
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Método de pago</label
-                >
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Referencia</label
-                >
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Cliente relacionado</label
-                >
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Adjuntos</label
-                >
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Observaciones</label
-                >
-                <div class="editar-columnas__categoria">Auditoría</div>
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Creado por</label
-                >
-                <label class="editar-columnas__opt"
-                  ><input type="checkbox" /> Fecha de modificación</label
-                >
+              <div class="editar-columnas__lista" id="cols-disponibles">
+                <div class="editar-columnas__categoria">Columnas principales</div>
+                <label class="editar-columnas__opt" data-col="tipo"><input type="checkbox"> Tipo</label>
+                <label class="editar-columnas__opt" data-col="categoria"><input type="checkbox"> Categoría</label>
+                <label class="editar-columnas__opt" data-col="descripcion"><input type="checkbox"> Descripción</label>
+                <label class="editar-columnas__opt" data-col="responsable"><input type="checkbox"> Responsable</label>
+                <label class="editar-columnas__opt" data-col="valor"><input type="checkbox"> Valor</label>
+                <label class="editar-columnas__opt" data-col="estado"><input type="checkbox"> Estado</label>
+                <div class="editar-columnas__categoria">Adicionales</div>
+                <label class="editar-columnas__opt" data-col="metodoPago"><input type="checkbox"> Método de pago</label>
+                <label class="editar-columnas__opt" data-col="referencia"><input type="checkbox"> Referencia</label>
+                <label class="editar-columnas__opt" data-col="cliente"><input type="checkbox"> Cliente relacionado</label>
+                <label class="editar-columnas__opt" data-col="observaciones"><input type="checkbox"> Observaciones</label>
               </div>
             </div>
             <div class="editar-columnas__col">
@@ -1629,59 +1657,16 @@
                   Columnas seleccionadas (<span id="contador-cols">7</span>)
                 </div>
               </div>
-              <div class="editar-columnas__lista">
-                <div
-                  class="editar-columnas__seleccionada editar-columnas__seleccionada--fija"
-                >
-                  Fecha
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Tipo<button
-                    class="editar-columnas__remover"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Categoría<button
-                    class="editar-columnas__remover"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span
-                  >Descripción<button class="editar-columnas__remover">
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span
-                  >Responsable<button class="editar-columnas__remover">
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Valor<button
-                    class="editar-columnas__remover"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Estado<button
-                    class="editar-columnas__remover"
-                  >
-                    ×
-                  </button>
-                </div>
+              <div class="editar-columnas__lista" id="cols-seleccionadas">
+                <!-- Poblado por initEditarColumnas() en caja-interactions.js -->
               </div>
             </div>
           </div>
         </div>
         <div class="modal__footer">
-          <button class="btn btn--naranja">Aplicar</button>
-          <button class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
+          <button type="button" class="btn btn--naranja" id="btn-aplicar-columnas">Aplicar</button>
+          <button type="button" class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
+          <a href="#" class="btn--link" style="color: var(--color-acento)">Eliminar todas las columnas</a>
         </div>
       </div>
     </div>
@@ -1747,62 +1732,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Panel lateral: Configuración de tabla -->
-    <aside class="panel-lateral" id="panel-config-tabla">
-      <div class="panel-lateral__header">
-        <div class="panel-lateral__titulo">Configuración de la tabla</div>
-        <button
-          class="modal__cerrar"
-          data-cerrar-panel
-          style="color: var(--color-texto-suave)"
-        >
-          <svg viewBox="0 0 24 24" width="16" height="16">
-            <path
-              fill="currentColor"
-              d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
-            />
-          </svg>
-        </button>
-      </div>
-      <div class="panel-lateral__body">
-        <div class="panel-lateral__seccion">
-          <div class="panel-lateral__seccion-titulo">Registros por página</div>
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="tamano-pag" value="25" checked /> 25 por
-            página</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="tamano-pag" value="50" /> 50 por
-            página</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="tamano-pag" value="100" /> 100 por
-            página</label
-          >
-        </div>
-        <div class="panel-lateral__seccion">
-          <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="altura" value="compacto" />
-            Compacto</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="altura" value="default" checked /> Valor
-            predeterminado</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="altura" value="comodo" /> Cómodo</label
-          >
-        </div>
-        <div class="panel-lateral__seccion">
-          <div class="panel-lateral__switch-row">
-            <span>Zebra striping ⓘ</span>
-            <div class="switch" id="switch-zebra"></div>
-          </div>
-        </div>
-      </div>
-    </aside>
 
     <!-- Panel lateral: Detalle de movimiento -->
     <aside class="panel-detalle" id="panel-detalle-movimiento">

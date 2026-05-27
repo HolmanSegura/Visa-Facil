@@ -608,6 +608,11 @@
   font-weight: var(--font-peso-medio);
 }
 
+.editar-columnas__seleccionada.dragging {
+  opacity: 0.35;
+  outline: 2px dashed var(--color-acento);
+}
+
 .editar-columnas__drag {
   color: var(--color-texto-debil);
   cursor: grab;

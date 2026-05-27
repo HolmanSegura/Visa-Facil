@@ -92,7 +92,8 @@ const estadoApp = {
   configTabla: {
     altura: "default",
     zebra:  false
-  }
+  },
+  columnasActivas: ["fecha", "tipo", "categoria", "descripcion", "responsable", "valor", "estado"]
 };
 
 /* ============================================================

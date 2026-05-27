@@ -721,97 +721,155 @@
 
   /* ---------- EDITAR COLUMNAS Y ORDENAR ---------- */
   function initEditarColumnas() {
-    const btn = document.getElementById("btn-editar-columnas");
-    if (btn) btn.addEventListener("click", () => Modales.abrir("modal-editar-columnas"));
+    const modal   = document.getElementById("modal-editar-columnas");
+    const colDisp = document.getElementById("cols-disponibles");
+    const colSel  = document.getElementById("cols-seleccionadas");
+    if (!modal || !colDisp || !colSel) return;
 
-    const modal = document.getElementById("modal-editar-columnas");
-    if (!modal) return;
+    const MAPA_TEXTO = {
+      fecha: "Fecha", tipo: "Tipo", categoria: "Categoría",
+      descripcion: "Descripción", responsable: "Responsable",
+      valor: "Valor", estado: "Estado",
+      metodoPago: "Método de pago", referencia: "Referencia",
+      cliente: "Cliente relacionado", observaciones: "Observaciones"
+    };
+    const texto = k => (window.MAPA_TEXTO_CAJA || MAPA_TEXTO)[k] || k;
 
-    const colDisponibles  = modal.querySelector(".editar-columnas__col:first-child .editar-columnas__lista");
-    const colSeleccionadas = modal.querySelector(".editar-columnas__col:last-child .editar-columnas__lista");
-
-    function actualizarContador() {
-      const cont = document.getElementById("contador-cols");
-      if (cont && colSeleccionadas) {
-        cont.textContent = colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada").length;
-      }
+    /* ---- Contador ---- */
+    function contar() {
+      const el = document.getElementById("contador-cols");
+      if (el) el.textContent = colSel.querySelectorAll(".editar-columnas__seleccionada").length;
     }
 
-    function crearSeleccionada(texto) {
+    /* ---- Fábrica de items ---- */
+    function crearItem(clave, fija) {
       const div = document.createElement("div");
-      div.className = "editar-columnas__seleccionada";
-      div.innerHTML = `<span class="editar-columnas__drag">⋮⋮</span>${texto}<button class="editar-columnas__remover">×</button>`;
+      div.dataset.col = clave;
+      if (fija) {
+        div.className = "editar-columnas__seleccionada editar-columnas__seleccionada--fija";
+        div.textContent = texto(clave);
+      } else {
+        div.className = "editar-columnas__seleccionada";
+        div.draggable = true;
+        div.innerHTML =
+          `<span class="editar-columnas__drag">⋮⋮</span>` +
+          texto(clave) +
+          `<button type="button" class="editar-columnas__remover" aria-label="Quitar">×</button>`;
+      }
       return div;
     }
 
-    // Buscar
-    const inputBuscar = modal.querySelector('input[type="search"]');
-    if (inputBuscar) {
-      inputBuscar.addEventListener("input", (e) => {
-        const q = e.target.value.toLowerCase();
-        modal.querySelectorAll(".editar-columnas__opt").forEach(opt => {
-          opt.style.display = opt.textContent.toLowerCase().includes(q) ? "" : "none";
-        });
+    /* ---- Sincronizar modal con estado actual de la tabla ---- */
+    function sincronizar() {
+      const cols = window.estadoApp?.columnasActivas
+        || window.COLUMNAS_DEFECTO_CAJA
+        || ["fecha", "tipo", "categoria", "descripcion", "responsable", "valor", "estado"];
+
+      colSel.innerHTML = "";
+      cols.forEach(k => colSel.appendChild(crearItem(k, k === "fecha")));
+      contar();
+
+      colDisp.querySelectorAll("[data-col]").forEach(lbl => {
+        const cb = lbl.querySelector("input[type=checkbox]");
+        if (cb) cb.checked = cols.includes(lbl.dataset.col);
       });
     }
 
-    // Check izquierda → agrega/quita derecha
-    if (colDisponibles) {
-      colDisponibles.addEventListener("change", (e) => {
-        const cb = e.target.closest('input[type="checkbox"]');
-        if (!cb) return;
-        const label = cb.closest(".editar-columnas__opt");
-        const texto = label ? label.textContent.trim() : "";
-        if (!texto) return;
-        if (cb.checked) {
-          const yaExiste = [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
-            .some(d => d.textContent.replace("⋮⋮", "").replace("×", "").trim() === texto);
-          if (!yaExiste) {
-            colSeleccionadas.appendChild(crearSeleccionada(texto));
-            actualizarContador();
-          }
-        } else {
-          [...colSeleccionadas.querySelectorAll(".editar-columnas__seleccionada")]
-            .forEach(d => {
-              if (d.textContent.replace("⋮⋮", "").replace("×", "").trim() === texto) {
-                d.remove(); actualizarContador();
-              }
-            });
+    /* ---- Drag & Drop ---- */
+    let dragged = null;
+
+    colSel.addEventListener("dragstart", e => {
+      const row = e.target.closest(
+        ".editar-columnas__seleccionada:not(.editar-columnas__seleccionada--fija)"
+      );
+      if (!row) { e.preventDefault(); return; }
+      dragged = row;
+      requestAnimationFrame(() => row.classList.add("dragging"));
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    colSel.addEventListener("dragend", () => {
+      dragged?.classList.remove("dragging");
+      dragged = null;
+    });
+
+    colSel.addEventListener("dragover", e => {
+      e.preventDefault();
+      if (!dragged) return;
+      const over = e.target.closest(".editar-columnas__seleccionada");
+      if (!over || over === dragged || over.classList.contains("editar-columnas__seleccionada--fija")) return;
+      const { top, height } = over.getBoundingClientRect();
+      colSel.insertBefore(dragged, e.clientY < top + height / 2 ? over : over.nextSibling);
+    });
+
+    /* ---- Checkbox panel izquierdo ---- */
+    colDisp.addEventListener("change", e => {
+      const cb    = e.target.closest("input[type=checkbox]");
+      if (!cb) return;
+      const lbl   = cb.closest("[data-col]");
+      const clave = lbl?.dataset.col;
+      if (!clave) return;
+
+      if (cb.checked) {
+        if (!colSel.querySelector(`[data-col="${clave}"]`)) {
+          colSel.appendChild(crearItem(clave, false));
+          contar();
         }
-      });
-    }
+      } else {
+        colSel.querySelector(`[data-col="${clave}"]`)?.remove();
+        contar();
+      }
+    });
 
-    // Remover desde derecha
-    if (colSeleccionadas) {
-      colSeleccionadas.addEventListener("click", (e) => {
-        const x = e.target.closest(".editar-columnas__remover");
-        if (!x) return;
-        e.stopPropagation();
-        const row = x.closest(".editar-columnas__seleccionada");
-        if (row) {
-          const texto = row.textContent.replace("⋮⋮", "").replace("×", "").trim();
-          row.remove();
-          actualizarContador();
-          [...modal.querySelectorAll(".editar-columnas__opt")]
-            .forEach(lbl => {
-              if (lbl.textContent.trim() === texto) {
-                const cb = lbl.querySelector('input[type="checkbox"]');
-                if (cb) cb.checked = false;
-              }
-            });
-        }
-      });
-    }
+    /* ---- Botón × ---- */
+    colSel.addEventListener("click", e => {
+      const btn   = e.target.closest(".editar-columnas__remover");
+      if (!btn) return;
+      const row   = btn.closest(".editar-columnas__seleccionada");
+      const clave = row?.dataset.col;
+      row?.remove();
+      contar();
+      const cb = colDisp.querySelector(`[data-col="${clave}"] input[type=checkbox]`);
+      if (cb) cb.checked = false;
+    });
 
-    // Aplicar
-    const btnAplicar = modal.querySelector(".modal__footer .btn--naranja");
-    if (btnAplicar) {
-      btnAplicar.addEventListener("click", () => {
-        const total = colSeleccionadas?.querySelectorAll(".editar-columnas__seleccionada").length || 0;
-        Modales.cerrar(modal);
-        window.mostrarToast(`✓ Configuración de columnas aplicada (${total} columnas)`);
+    /* ---- Aplicar ---- */
+    document.getElementById("btn-aplicar-columnas")?.addEventListener("click", () => {
+      const cols = [...colSel.querySelectorAll("[data-col]")]
+        .map(d => d.dataset.col).filter(Boolean);
+      if (!cols.length) { window.mostrarToast?.("⚠ Agrega al menos una columna"); return; }
+      window.estadoApp.columnasActivas = cols;
+      if (window.filtrosInstance)     window.filtrosInstance.aplicarFiltros();
+      else if (window.tablaInstance)  window.tablaInstance.renderizar();
+      Modales.cerrar(modal);
+      window.mostrarToast?.(`✓ ${cols.length} columnas aplicadas`);
+    });
+
+    /* ---- Eliminar todas ---- */
+    modal.querySelector(".modal__footer a.btn--link")?.addEventListener("click", e => {
+      e.preventDefault();
+      colSel.querySelectorAll(
+        ".editar-columnas__seleccionada:not(.editar-columnas__seleccionada--fija)"
+      ).forEach(d => d.remove());
+      colDisp.querySelectorAll("input[type=checkbox]").forEach(cb => cb.checked = false);
+      contar();
+    });
+
+    /* ---- Búsqueda ---- */
+    document.getElementById("input-buscar-columnas")?.addEventListener("input", e => {
+      const q = e.target.value.toLowerCase();
+      colDisp.querySelectorAll(".editar-columnas__opt").forEach(opt => {
+        opt.style.display = opt.textContent.toLowerCase().includes(q) ? "" : "none";
       });
-    }
+    });
+
+    /* ---- Abrir modal ---- */
+    document.getElementById("btn-editar-columnas")?.addEventListener("click", () => {
+      sincronizar();
+      Modales.abrir("modal-editar-columnas");
+    });
+
+    sincronizar();
   }
 
   function initOrdenar() {

@@ -684,6 +684,44 @@
         </div><!-- /.panel-detalle__card -->
       </aside>
 
+      <!-- Panel de configuración: hermano flex de .bloque-tabla (misma altura) -->
+      <aside
+        class="panel-detalle"
+        id="panel-config-tabla"
+        aria-label="Configuración de la tabla"
+      >
+        <div class="panel-detalle__card">
+          <div class="panel-detalle__header">
+            <span class="panel-detalle__vp-label">Configuración de la tabla</span>
+            <button class="panel-detalle__cerrar" data-cerrar-panel aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+              </svg>
+            </button>
+          </div>
+          <div class="panel-lateral__body">
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__seccion-titulo">Registros por página</div>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="25" checked /> 25 por página</label>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="50" /> 50 por página</label>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="100" /> 100 por página</label>
+            </div>
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="compacto" /> Compacto</label>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="default" checked /> Valor predeterminado</label>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="comodo" /> Cómodo</label>
+            </div>
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__switch-row">
+                <span>Zebra striping ⓘ</span>
+                <div class="switch" id="switch-zebra"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
     </div><!-- /.contenido__body -->
   </main>
 
@@ -1771,6 +1809,21 @@
                 </div>
               </div>
               <div class="editar-columnas__lista" id="cols-disponibles">
+                <div class="editar-columnas__categoria">Columnas principales</div>
+                <label class="editar-columnas__opt" data-col="estado"
+                  ><input type="checkbox" /> Estado</label>
+                <label class="editar-columnas__opt" data-col="cantidad"
+                  ><input type="checkbox" /> Cantidad</label>
+                <label class="editar-columnas__opt" data-col="firma"
+                  ><input type="checkbox" /> Estado de la firma</label>
+                <label class="editar-columnas__opt" data-col="propietario"
+                  ><input type="checkbox" /> Propietario</label>
+                <label class="editar-columnas__opt" data-col="creacion"
+                  ><input type="checkbox" /> Fecha de creación</label>
+                <label class="editar-columnas__opt" data-col="vencimiento"
+                  ><input type="checkbox" /> Fecha de vencimiento</label>
+                <label class="editar-columnas__opt" data-col="negocio"
+                  ><input type="checkbox" /> Nombre del negocio</label>
                 <div class="editar-columnas__categoria">Asociaciones</div>
                 <label class="editar-columnas__opt"
                   ><input type="checkbox" /> Cotización (Principal) →
@@ -1835,54 +1888,14 @@
                 </div>
               </div>
               <div class="editar-columnas__lista" id="cols-seleccionadas">
-                <div
-                  class="editar-columnas__seleccionada editar-columnas__seleccionada--fija"
-                >
-                  Título
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Estado<button
-                    class="editar-columnas__remover"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Cantidad<button
-                    class="editar-columnas__remover"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Estado de la
-                  firma<button class="editar-columnas__remover">×</button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span
-                  >Propietario<button class="editar-columnas__remover">
-                    ×
-                  </button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Fecha de
-                  creación<button class="editar-columnas__remover">×</button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Fecha de
-                  vencimiento<button class="editar-columnas__remover">×</button>
-                </div>
-                <div class="editar-columnas__seleccionada">
-                  <span class="editar-columnas__drag">⋮⋮</span>Nombre del
-                  negocio<button class="editar-columnas__remover">×</button>
-                </div>
+                <!-- Poblado por initEditarColumnas() en ui-interactions.js -->
               </div>
             </div>
           </div>
         </div>
         <div class="modal__footer">
-          <button class="btn btn--naranja">Aplicar</button>
-          <button class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
+          <button type="button" class="btn btn--naranja" id="btn-aplicar-columnas">Aplicar</button>
+          <button type="button" class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
           <a href="#" class="btn--link" style="color: var(--color-acento)"
             >Eliminar todas las columnas</a
           >
@@ -1951,66 +1964,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Panel lateral: Configuración de la tabla -->
-    <aside
-      class="panel-lateral"
-      id="panel-config-tabla"
-      aria-label="Configuración de la tabla"
-    >
-      <div class="panel-lateral__header">
-        <div class="panel-lateral__titulo">Configuración de la tabla</div>
-        <button
-          class="modal__cerrar"
-          data-cerrar-panel
-          style="color: var(--color-texto-suave)"
-        >
-          <svg viewBox="0 0 24 24" width="16" height="16">
-            <path
-              fill="currentColor"
-              d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
-            />
-          </svg>
-        </button>
-      </div>
-      <div class="panel-lateral__body">
-        <div class="panel-lateral__seccion">
-          <div class="panel-lateral__seccion-titulo">Registros por página</div>
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="tamano-pag" value="25" checked /> 25 por
-            página</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="tamano-pag" value="50" /> 50 por
-            página</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="tamano-pag" value="100" /> 100 por
-            página</label
-          >
-        </div>
-        <div class="panel-lateral__seccion">
-          <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="altura" value="compacto" />
-            Compacto</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="altura" value="default" checked /> Valor
-            predeterminado</label
-          >
-          <label class="panel-lateral__radio"
-            ><input type="radio" name="altura" value="comodo" /> Cómodo</label
-          >
-        </div>
-        <div class="panel-lateral__seccion">
-          <div class="panel-lateral__switch-row">
-            <span>Zebra striping ⓘ</span>
-            <div class="switch" id="switch-zebra"></div>
-          </div>
-        </div>
-      </div>
-    </aside>
 
     <!-- ============================================================
        MODAL: Configurar comisiones (Task 4)
@@ -2595,9 +2548,6 @@
           </svg>
         </button>
         <div class="vista-previa__contenido">
-          <div class="vista-previa__logo">
-            <img src="img/visafacil.png" alt="Visa Fácil" class="vista-previa__logo-img">
-          </div>
           <h1 class="vista-previa__titulo" id="vp-titulo">—</h1>
 
           <div class="vista-previa__partes">
