@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <base href="/Visa-Facil/" />
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -241,9 +240,8 @@
         </div>
       </section>
 
-    <!-- Fila flex: tabla + panel lateral lado a lado -->
-    <div class="contenido__body">
-
+      <!-- Fila flex: tabla + panel lateral lado a lado -->
+      <div class="contenido__body">
         <!-- Bloque unificado: toolbar + filtros + tabla + paginación dentro de un solo contenedor con borde -->
         <div class="bloque-tabla">
           <!-- Toolbar de tabla -->
@@ -251,38 +249,37 @@
             <div class="toolbar-tabla__grupo">
               <div class="campo-busqueda">
                 <svg
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                class="campo-busqueda__icono"
-              >
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  class="campo-busqueda__icono"
+                >
                   <path
-                  fill="currentColor"
+                    fill="currentColor"
                     d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-                />
+                  />
                 </svg>
                 <input
-                type="search"
-                id="input-buscar-tabla"
-                class="campo-busqueda__input"
-                placeholder="Buscar"
+                  type="search"
+                  id="input-buscar-tabla"
+                  class="campo-busqueda__input"
+                  placeholder="Buscar"
                   aria-label="Buscar en la tabla"
-              />
+                />
               </div>
               <div class="toolbar-tabla__sep"></div>
               <button
-              class="btn btn--ghost"
-              id="btn-vista-tabla"
-              data-popover="popover-vista-tabla"
-              aria-haspopup="true"
-             
-              aria-expanded="false"
-            >
+                class="btn btn--ghost"
+                id="btn-vista-tabla"
+                data-popover="popover-vista-tabla"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
                 <svg viewBox="0 0 32 32" width="14" height="14">
                   <path
-                  fill="currentColor"
-                  d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z"
-                />
+                    fill="currentColor"
+                    d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z"
+                  />
                 </svg>
                 <span id="lbl-vista-tabla">Vista de tabla</span>
                 <svg viewBox="0 0 8 8" width="8" height="8">
@@ -290,53 +287,53 @@
                 </svg>
               </button>
               <button
-              class="btn btn--icon"
-              id="btn-config-tabla"
-              aria-label="Configuración de columnas"
-            >
+                class="btn btn--icon"
+                id="btn-config-tabla"
+                aria-label="Configuración de columnas"
+              >
                 <svg viewBox="0 0 32 32" width="14" height="14">
                   <path
-                  fill="currentColor"
+                    fill="currentColor"
                     d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z"
-                />
+                  />
                 </svg>
               </button>
               <button class="btn btn--ghost" id="btn-editar-columnas">
-              Editar columnas
-            </button>
+                Editar columnas
+              </button>
               <div class="toolbar-tabla__sep"></div>
               <button
-              class="btn btn--ghost btn--activo"
-              id="btn-toggle-filtros"
-              aria-pressed="true"
-            >
+                class="btn btn--ghost btn--activo"
+                id="btn-toggle-filtros"
+                aria-pressed="true"
+              >
                 <svg viewBox="0 0 32 32" width="14" height="14">
                   <path
-                  fill="currentColor"
-                  d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z"
-                />
+                    fill="currentColor"
+                    d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z"
+                  />
                 </svg>
                 Filtros
               </button>
               <button
-              class="btn btn--ghost"
-              id="btn-ordenar"
-              data-popover="popover-ordenar"
-            >
+                class="btn btn--ghost"
+                id="btn-ordenar"
+                data-popover="popover-ordenar"
+              >
                 <svg viewBox="0 0 32 32" width="14" height="14">
                   <path
-                  fill="currentColor"
+                    fill="currentColor"
                     d="M12 24H10V4H8v20H6l3 3 3-3Zm6-17v2h10V7H18Zm0 6v2h8v-2h-8Zm0 6v2h6v-2h-6Zm0 6v2h4v-2h-4Z"
-                />
+                  />
                 </svg>
                 Ordenar
               </button>
               <div class="toolbar-tabla__sep"></div>
               <button
-              class="btn btn--ghost"
-              id="btn-exportar-toolbar"
-              data-popover="popover-export-opciones"
-            >
+                class="btn btn--ghost"
+                id="btn-exportar-toolbar"
+                data-popover="popover-export-opciones"
+              >
                 Exportar
               </button>
             </div>
@@ -344,69 +341,68 @@
             <div class="toolbar-tabla__grupo toolbar-tabla__grupo--final">
               <div class="toolbar-tabla__sep"></div>
               <button
-              class="btn btn--icon"
-              id="btn-duplicar-vista"
-              aria-label="Duplicar vista"
-            >
+                class="btn btn--icon"
+                id="btn-duplicar-vista"
+                aria-label="Duplicar vista"
+              >
                 <svg viewBox="0 0 32 32" width="14" height="14">
                   <path
-                  fill="currentColor"
+                    fill="currentColor"
                     d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z"
-                />
+                  />
                 </svg>
               </button>
               <button
-              class="btn btn--ghost"
-              id="btn-guardar-vista"
-             
-              data-popover="popover-guardar-readonly"
-            >
-              Guardar
-            </button>
+                class="btn btn--ghost"
+                id="btn-guardar-vista"
+                data-popover="popover-guardar-readonly"
+              >
+                Guardar
+              </button>
             </div>
           </section>
 
           <!-- Filtros rápidos -->
           <section
-          class="filtros-rapidos"
-          id="filtros-rapidos"
-          aria-label="Filtros rápidos"
-        >
-            <button
-            class="filtro-pill"
-            data-popover="popover-filtro-estado"
-            data-filtro="estado"
+            class="filtros-rapidos"
+            id="filtros-rapidos"
+            aria-label="Filtros rápidos"
           >
+            <button
+              class="filtro-pill"
+              data-popover="popover-filtro-estado"
+              data-filtro="estado"
+            >
               Estado
               <svg viewBox="0 0 8 8" width="8" height="8">
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
               </svg>
             </button>
             <button
-            class="filtro-pill"
-            data-popover="popover-filtro-actividad"
-            data-filtro="actividad"
-          >
+              class="filtro-pill"
+              data-popover="popover-filtro-actividad"
+              data-filtro="actividad"
+            >
               Última actividad
               <svg viewBox="0 0 8 8" width="8" height="8">
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
               </svg>
             </button>
             <button
-            class="filtro-pill"
-            data-popover="popover-filtro-propietario"
-            data-filtro="propietario"
-          >
+              class="filtro-pill"
+              data-popover="popover-filtro-propietario"
+              data-filtro="propietario"
+            >
               Propietario
               <svg viewBox="0 0 8 8" width="8" height="8">
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
               </svg>
             </button>
             <button
-            class="filtro-pill"
-            data-popover="popover-filtro-firma"
-            data-filtro="firma"
-          >
+              class="filtro-pill"
+              data-popover="popover-filtro-firma"
+              data-filtro="firma"
+            >
               Estado de la firma
               <svg viewBox="0 0 8 8" width="8" height="8">
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
@@ -417,7 +413,7 @@
               class="filtro-pill"
               data-popover="popover-filtro-moneda"
               data-filtro="moneda"
-              style="display:none"
+              style="display: none"
             >
               Moneda
               <svg viewBox="0 0 8 8" width="8" height="8">
@@ -426,33 +422,33 @@
             </button>
             <div class="toolbar-tabla__sep"></div>
             <button
-            class="filtro-icon"
-            id="btn-add-filtro"
-            data-popover="popover-filtro-add"
+              class="filtro-icon"
+              id="btn-add-filtro"
+              data-popover="popover-filtro-add"
               aria-label="Agregar filtro rápido"
-          >
+            >
               <svg viewBox="0 0 12 12" width="12" height="12">
                 <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
               </svg>
             </button>
             <button
-            class="filtro-icon"
-            id="btn-edit-filtros"
-            aria-label="Editar filtros rápidos"
-          >
+              class="filtro-icon"
+              id="btn-edit-filtros"
+              aria-label="Editar filtros rápidos"
+            >
               <svg viewBox="0 0 24 24" width="12" height="12">
                 <path
-                fill="currentColor"
-                d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z"
-              />
+                  fill="currentColor"
+                  d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z"
+                />
               </svg>
             </button>
             <button class="filtro-avanzados">
               <svg viewBox="0 0 32 32" width="14" height="14">
                 <path
-                fill="currentColor"
-                d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z"
-              />
+                  fill="currentColor"
+                  d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z"
+                />
               </svg>
               Filtros avanzados
             </button>
@@ -462,37 +458,41 @@
           <section class="tabla-wrapper" aria-label="Listado de cotizaciones">
             <div class="tabla-scroll">
               <table
-              class="tabla-cotizaciones"
-              id="tabla-cotizaciones"
-              role="table"
-            >
+                class="tabla-cotizaciones"
+                id="tabla-cotizaciones"
+                role="table"
+              >
                 <thead>
                   <tr>
                     <th
-                    data-columna="titulo"
-                    data-orden="desc"
-                    class="th th--orden"
-                  >
-                    <span>TÍTULO</span
+                      data-columna="titulo"
+                      data-orden="desc"
+                      class="th th--orden"
+                    >
+                      <span>TÍTULO</span
                       ><span class="th__icono-orden"
-                      ><svg viewBox="0 0 24 24" width="10" height="10">
+                        ><svg viewBox="0 0 24 24" width="10" height="10">
                           <path
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          d="M12 4v15M6 14l6 6 6-6"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            d="M12 4v15M6 14l6 6 6-6"
                           /></svg
-                    ></span>
-                  </th>
+                      ></span>
+                    </th>
                     <th data-columna="estado" class="th">ESTADO</th>
                     <th data-columna="cantidad" class="th th--num">CANTIDAD</th>
                     <th data-columna="firma" class="th">ESTADO DE LA FIRMA</th>
                     <th data-columna="propietario" class="th">PROPIETARIO</th>
-                    <th data-columna="creacion" class="th">FECHA DE CREACIÓN</th>
+                    <th data-columna="creacion" class="th">
+                      FECHA DE CREACIÓN
+                    </th>
                     <th data-columna="vencimiento" class="th">
-                    FECHA DE VENCIMIENTO
-                  </th>
-                    <th data-columna="negocio" class="th">NOMBRE DEL NEGOCIO</th>
+                      FECHA DE VENCIMIENTO
+                    </th>
+                    <th data-columna="negocio" class="th">
+                      NOMBRE DEL NEGOCIO
+                    </th>
                   </tr>
                 </thead>
                 <tbody id="tbody-cotizaciones"></tbody>
@@ -503,15 +503,15 @@
           <!-- Paginación -->
           <section class="paginacion" aria-label="Paginación">
             <button
-            class="pag-btn pag-btn--nav"
-            disabled
-            aria-label="Página anterior"
-          >
+              class="pag-btn pag-btn--nav"
+              disabled
+              aria-label="Página anterior"
+            >
               <svg viewBox="0 0 24 24" width="12" height="12">
                 <path
-                fill="currentColor"
-                d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z"
-              />
+                  fill="currentColor"
+                  d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z"
+                />
               </svg>
               Anterior
             </button>
@@ -520,222 +520,351 @@
               Siguiente
               <svg viewBox="0 0 24 24" width="12" height="12">
                 <path
-                fill="currentColor"
-                d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z"
-              />
+                  fill="currentColor"
+                  d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z"
+                />
               </svg>
             </button>
             <button
-            class="pag-tamano"
-            id="btn-tamano-pagina"
-            data-popover="popover-tamano-pagina"
-            aria-haspopup="true"
+              class="pag-tamano"
+              id="btn-tamano-pagina"
+              data-popover="popover-tamano-pagina"
+              aria-haspopup="true"
               aria-expanded="false"
-          >
+            >
               <span id="lbl-tamano">25 por página</span>
               <svg viewBox="0 0 8 8" width="8" height="8">
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"></path>
               </svg>
             </button>
             <div
-            class="popover"
-            id="popover-tamano-pagina"
-            hidden
-            style="width: 180px"
-          >
+              class="popover"
+              id="popover-tamano-pagina"
+              hidden
+              style="width: 180px"
+            >
               <div class="popover__lista">
                 <button class="popover__item" data-page-size="25">
-                25 por página
-              </button>
+                  25 por página
+                </button>
                 <button class="popover__item" data-page-size="50">
-                50 por página
-              </button>
+                  50 por página
+                </button>
                 <button class="popover__item" data-page-size="100">
-                100 por página
-              </button>
+                  100 por página
+                </button>
               </div>
             </div>
           </section>
         </div>
-      <!-- /.bloque-tabla -->
-  
-      <!-- Panel lateral: Detalle de cotización (hermano flex de .bloque-tabla) -->
-      <aside class="panel-detalle" id="panel-detalle-cotizacion" aria-label="Detalle de cotización">
-        <div class="panel-detalle__card">
+        <!-- /.bloque-tabla -->
 
-          <!-- Header mínimo: etiqueta + cerrar -->
-          <div class="panel-detalle__header">
-            <span class="panel-detalle__vp-label">Vista previa</span>
-            <button class="panel-detalle__cerrar" data-cerrar-detalle aria-label="Cerrar">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
-              </svg>
-            </button>
+        <!-- Panel lateral: Detalle de cotización (hermano flex de .bloque-tabla) -->
+        <aside
+          class="panel-detalle"
+          id="panel-detalle-cotizacion"
+          aria-label="Detalle de cotización"
+        >
+          <div class="panel-detalle__card">
+            <!-- Header mínimo: etiqueta + cerrar -->
+            <div class="panel-detalle__header">
+              <span class="panel-detalle__vp-label">Vista previa</span>
+              <button
+                class="panel-detalle__cerrar"
+                data-cerrar-detalle
+                aria-label="Cerrar"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path
+                    fill="currentColor"
+                    d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Cuerpo scrollable -->
+            <div class="panel-detalle__body">
+              <!-- Bloque highlight: acciones, título, valores, botones -->
+              <div class="panel-detalle__highlight">
+                <div class="panel-detalle__highlight-top">
+                  <button
+                    class="btn btn--link"
+                    id="detalle-cot-acciones"
+                    data-popover="popover-detalle-cot-acciones"
+                  >
+                    Acciones
+                    <svg viewBox="0 0 8 8" width="8" height="8">
+                      <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+                    </svg>
+                  </button>
+                </div>
+                <h3 class="panel-detalle__titulo" id="detalle-cot-titulo">—</h3>
+                <dl class="panel-detalle__dl">
+                  <dt>Valor de la cotización</dt>
+                  <dd
+                    class="panel-detalle__valor-grande"
+                    id="detalle-cot-monto"
+                  >
+                    —
+                  </dd>
+                  <dt>Número de cotización</dt>
+                  <dd id="detalle-cot-numero">—</dd>
+                  <dt>Estado</dt>
+                  <dd id="detalle-cot-estado">—</dd>
+                </dl>
+                <div
+                  class="panel-detalle__acciones panel-detalle__acciones--cot"
+                >
+                  <button
+                    class="panel-detalle__accion-circ"
+                    data-accion-cot="retirar"
+                    title="Retirar"
+                  >
+                    <span class="panel-detalle__accion-icono">
+                      <svg viewBox="0 0 24 24" width="14" height="14">
+                        <path
+                          fill="currentColor"
+                          d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z"
+                        />
+                      </svg>
+                    </span>
+                    <span>Retirar</span>
+                  </button>
+                  <button
+                    class="panel-detalle__accion-circ"
+                    data-accion-cot="clonar"
+                    title="Clonar"
+                  >
+                    <span class="panel-detalle__accion-icono">
+                      <svg viewBox="0 0 32 32" width="14" height="14">
+                        <path
+                          fill="currentColor"
+                          d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z"
+                        />
+                      </svg>
+                    </span>
+                    <span>Clonar</span>
+                  </button>
+                  <button
+                    class="panel-detalle__accion-circ"
+                    data-accion-cot="descargar"
+                    title="Descargar"
+                  >
+                    <span class="panel-detalle__accion-icono">
+                      <svg viewBox="0 0 24 24" width="14" height="14">
+                        <path
+                          fill="currentColor"
+                          d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"
+                        />
+                      </svg>
+                    </span>
+                    <span>Descargar</span>
+                  </button>
+                  <button
+                    class="panel-detalle__accion-circ"
+                    data-accion-cot="copiar"
+                    title="Copiar enlace"
+                  >
+                    <span class="panel-detalle__accion-icono">
+                      <svg viewBox="0 0 24 24" width="14" height="14">
+                        <path
+                          fill="currentColor"
+                          d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 1 0-7-7l-1 1m-2 6a5 5 0 0 0-7 0l-3 3a5 5 0 1 0 7 7l1-1"
+                        />
+                      </svg>
+                    </span>
+                    <span>Copiar enl…</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Sección: Acerca de este objeto (abierta por defecto) -->
+              <div
+                class="panel-detalle__seccion panel-detalle__seccion--colapsable"
+                data-colapsable
+              >
+                <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
+                  <span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="10"
+                      height="10"
+                      class="chevron-seccion"
+                    >
+                      <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                    </svg>
+                    Acerca de este objeto Cotización
+                  </span>
+                  <button class="btn btn--link" style="font-size: 11px">
+                    Acciones
+                    <svg viewBox="0 0 8 8" width="8" height="8">
+                      <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="panel-detalle__seccion-cuerpo">
+                  <div class="panel-detalle__campo-stacked">
+                    <span class="panel-detalle__campo-label">Propietario</span>
+                    <div
+                      class="panel-detalle__campo-valor celda-avatar"
+                      id="detalle-cot-propietario"
+                    >
+                      —
+                    </div>
+                  </div>
+                  <div class="panel-detalle__campo-stacked">
+                    <span class="panel-detalle__campo-label">Cliente</span>
+                    <span
+                      class="panel-detalle__campo-valor"
+                      id="detalle-cot-cliente"
+                      >—</span
+                    >
+                  </div>
+                  <div class="panel-detalle__campo-stacked">
+                    <span class="panel-detalle__campo-label"
+                      >Negocio asociado</span
+                    >
+                    <span
+                      class="panel-detalle__campo-valor"
+                      id="detalle-cot-negocio"
+                      >—</span
+                    >
+                  </div>
+                  <div class="panel-detalle__campo-stacked">
+                    <span class="panel-detalle__campo-label"
+                      >Fecha de creación</span
+                    >
+                    <span
+                      class="panel-detalle__campo-valor"
+                      id="detalle-cot-fcreacion"
+                      >—</span
+                    >
+                  </div>
+                  <div class="panel-detalle__campo-stacked">
+                    <span class="panel-detalle__campo-label"
+                      >Fecha de vencimiento</span
+                    >
+                    <span
+                      class="panel-detalle__campo-valor"
+                      id="detalle-cot-fvencimiento"
+                      >—</span
+                    >
+                  </div>
+                  <div class="panel-detalle__campo-stacked">
+                    <span class="panel-detalle__campo-label"
+                      >Estado de la firma</span
+                    >
+                    <span
+                      class="panel-detalle__campo-valor"
+                      id="detalle-cot-firma"
+                      >—</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sección: Actividades (colapsada por defecto) -->
+              <div
+                class="panel-detalle__seccion panel-detalle__seccion--colapsable colapsado"
+                data-colapsable
+              >
+                <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
+                  <span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="10"
+                      height="10"
+                      class="chevron-seccion"
+                    >
+                      <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                    </svg>
+                    Actividades de cotizaciones
+                  </span>
+                </div>
+                <div class="panel-detalle__seccion-cuerpo">
+                  <p class="panel-detalle__vacio">
+                    No hay actividades registradas para esta cotización.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <!-- /.panel-detalle__body -->
           </div>
+          <!-- /.panel-detalle__card -->
+        </aside>
 
-          <!-- Cuerpo scrollable -->
-          <div class="panel-detalle__body">
-
-            <!-- Bloque highlight: acciones, título, valores, botones -->
-            <div class="panel-detalle__highlight">
-              <div class="panel-detalle__highlight-top">
-                <button class="btn btn--link" id="detalle-cot-acciones" data-popover="popover-detalle-cot-acciones">
-                  Acciones
-                  <svg viewBox="0 0 8 8" width="8" height="8">
-                    <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-                  </svg>
-                </button>
-              </div>
-              <h3 class="panel-detalle__titulo" id="detalle-cot-titulo">—</h3>
-              <dl class="panel-detalle__dl">
-                <dt>Valor de la cotización</dt>
-                <dd class="panel-detalle__valor-grande" id="detalle-cot-monto">—</dd>
-                <dt>Número de cotización</dt>
-                <dd id="detalle-cot-numero">—</dd>
-                <dt>Estado</dt>
-                <dd id="detalle-cot-estado">—</dd>
-              </dl>
-              <div class="panel-detalle__acciones panel-detalle__acciones--cot">
-                <button class="panel-detalle__accion-circ" data-accion-cot="retirar" title="Retirar">
-                  <span class="panel-detalle__accion-icono">
-                    <svg viewBox="0 0 24 24" width="14" height="14">
-                      <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
-                    </svg>
-                  </span>
-                  <span>Retirar</span>
-                </button>
-                <button class="panel-detalle__accion-circ" data-accion-cot="clonar" title="Clonar">
-                  <span class="panel-detalle__accion-icono">
-                    <svg viewBox="0 0 32 32" width="14" height="14">
-                      <path fill="currentColor"
-                        d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
-                    </svg>
-                  </span>
-                  <span>Clonar</span>
-                </button>
-                <button class="panel-detalle__accion-circ" data-accion-cot="descargar" title="Descargar">
-                  <span class="panel-detalle__accion-icono">
-                    <svg viewBox="0 0 24 24" width="14" height="14">
-                      <path fill="currentColor" d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" />
-                    </svg>
-                  </span>
-                  <span>Descargar</span>
-                </button>
-                <button class="panel-detalle__accion-circ" data-accion-cot="copiar" title="Copiar enlace">
-                  <span class="panel-detalle__accion-icono">
-                    <svg viewBox="0 0 24 24" width="14" height="14">
-                      <path fill="currentColor"
-                        d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 1 0-7-7l-1 1m-2 6a5 5 0 0 0-7 0l-3 3a5 5 0 1 0 7 7l1-1" />
-                    </svg>
-                  </span>
-                  <span>Copiar enl…</span>
-                </button>
-              </div>
+        <!-- Panel de configuración: hermano flex de .bloque-tabla (misma altura) -->
+        <aside
+          class="panel-detalle"
+          id="panel-config-tabla"
+          aria-label="Configuración de la tabla"
+        >
+          <div class="panel-detalle__card">
+            <div class="panel-detalle__header">
+              <span class="panel-detalle__vp-label"
+                >Configuración de la tabla</span
+              >
+              <button
+                class="panel-detalle__cerrar"
+                data-cerrar-panel
+                aria-label="Cerrar"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path
+                    fill="currentColor"
+                    d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
+                  />
+                </svg>
+              </button>
             </div>
-
-            <!-- Sección: Acerca de este objeto (abierta por defecto) -->
-            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
-              <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
-                <span>
-                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
-                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
-                  </svg>
-                  Acerca de este objeto Cotización
-                </span>
-                <button class="btn btn--link" style="font-size:11px;">
-                  Acciones
-                  <svg viewBox="0 0 8 8" width="8" height="8">
-                    <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-                  </svg>
-                </button>
+            <div class="panel-lateral__body">
+              <div class="panel-lateral__seccion">
+                <div class="panel-lateral__seccion-titulo">
+                  Registros por página
+                </div>
+                <label class="panel-lateral__radio"
+                  ><input type="radio" name="tamano-pag" value="25" checked />
+                  25 por página</label
+                >
+                <label class="panel-lateral__radio"
+                  ><input type="radio" name="tamano-pag" value="50" /> 50 por
+                  página</label
+                >
+                <label class="panel-lateral__radio"
+                  ><input type="radio" name="tamano-pag" value="100" /> 100 por
+                  página</label
+                >
               </div>
-              <div class="panel-detalle__seccion-cuerpo">
-                <div class="panel-detalle__campo-stacked">
-                  <span class="panel-detalle__campo-label">Propietario</span>
-                  <div class="panel-detalle__campo-valor celda-avatar" id="detalle-cot-propietario">—</div>
+              <div class="panel-lateral__seccion">
+                <div class="panel-lateral__seccion-titulo">
+                  Altura de fila ⓘ
                 </div>
-                <div class="panel-detalle__campo-stacked">
-                  <span class="panel-detalle__campo-label">Cliente</span>
-                  <span class="panel-detalle__campo-valor" id="detalle-cot-cliente">—</span>
-                </div>
-                <div class="panel-detalle__campo-stacked">
-                  <span class="panel-detalle__campo-label">Negocio asociado</span>
-                  <span class="panel-detalle__campo-valor" id="detalle-cot-negocio">—</span>
-                </div>
-                <div class="panel-detalle__campo-stacked">
-                  <span class="panel-detalle__campo-label">Fecha de creación</span>
-                  <span class="panel-detalle__campo-valor" id="detalle-cot-fcreacion">—</span>
-                </div>
-                <div class="panel-detalle__campo-stacked">
-                  <span class="panel-detalle__campo-label">Fecha de vencimiento</span>
-                  <span class="panel-detalle__campo-valor" id="detalle-cot-fvencimiento">—</span>
-                </div>
-                <div class="panel-detalle__campo-stacked">
-                  <span class="panel-detalle__campo-label">Estado de la firma</span>
-                  <span class="panel-detalle__campo-valor" id="detalle-cot-firma">—</span>
-                </div>
+                <label class="panel-lateral__radio"
+                  ><input type="radio" name="altura" value="compacto" />
+                  Compacto</label
+                >
+                <label class="panel-lateral__radio"
+                  ><input type="radio" name="altura" value="default" checked />
+                  Valor predeterminado</label
+                >
+                <label class="panel-lateral__radio"
+                  ><input type="radio" name="altura" value="comodo" />
+                  Cómodo</label
+                >
               </div>
-            </div>
-
-            <!-- Sección: Actividades (colapsada por defecto) -->
-            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable colapsado" data-colapsable>
-              <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
-                <span>
-                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
-                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
-                  </svg>
-                  Actividades de cotizaciones
-                </span>
-              </div>
-              <div class="panel-detalle__seccion-cuerpo">
-                <p class="panel-detalle__vacio">No hay actividades registradas para esta cotización.</p>
-              </div>
-            </div>
-
-          </div><!-- /.panel-detalle__body -->
-        </div><!-- /.panel-detalle__card -->
-      </aside>
-
-      <!-- Panel de configuración: hermano flex de .bloque-tabla (misma altura) -->
-      <aside
-        class="panel-detalle"
-        id="panel-config-tabla"
-        aria-label="Configuración de la tabla"
-      >
-        <div class="panel-detalle__card">
-          <div class="panel-detalle__header">
-            <span class="panel-detalle__vp-label">Configuración de la tabla</span>
-            <button class="panel-detalle__cerrar" data-cerrar-panel aria-label="Cerrar">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
-              </svg>
-            </button>
-          </div>
-          <div class="panel-lateral__body">
-            <div class="panel-lateral__seccion">
-              <div class="panel-lateral__seccion-titulo">Registros por página</div>
-              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="25" checked /> 25 por página</label>
-              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="50" /> 50 por página</label>
-              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="100" /> 100 por página</label>
-            </div>
-            <div class="panel-lateral__seccion">
-              <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
-              <label class="panel-lateral__radio"><input type="radio" name="altura" value="compacto" /> Compacto</label>
-              <label class="panel-lateral__radio"><input type="radio" name="altura" value="default" checked /> Valor predeterminado</label>
-              <label class="panel-lateral__radio"><input type="radio" name="altura" value="comodo" /> Cómodo</label>
-            </div>
-            <div class="panel-lateral__seccion">
-              <div class="panel-lateral__switch-row">
-                <span>Zebra striping ⓘ</span>
-                <div class="switch" id="switch-zebra"></div>
+              <div class="panel-lateral__seccion">
+                <div class="panel-lateral__switch-row">
+                  <span>Zebra striping ⓘ</span>
+                  <div class="switch" id="switch-zebra"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </aside>
-
-    </div><!-- /.contenido__body -->
-  </main>
+        </aside>
+      </div>
+      <!-- /.contenido__body -->
+    </main>
 
     <!-- ============================================================
        POPOVERS (dropdowns flotantes)
@@ -776,37 +905,30 @@
         >
           <span class="tipo-icono"
             ><svg viewBox="0 0 24 24" width="14" height="14">
-              
-            <path
+              <path
                 fill="currentColor"
                 d="M3 5h18v3H3V5Zm0 5h18v3H3v-3Zm0 5h18v3H3v-3Z"
-               />
-          </svg
+              /></svg
           ></span>
           Vista de tabla
         </button>
         <button class="popover__item" data-vista-tipo="tablero">
           <span class="tipo-icono"
             ><svg viewBox="0 0 24 24" width="14" height="14">
-              
-            <path
+              <path
                 fill="currentColor"
                 d="M3 3h6v18H3V3Zm8 0h6v12h-6V3Zm8 0h2v18h-2V3Z"
-               />
-          </svg
+              /></svg
           ></span>
           Vista de tablero
         </button>
         <button class="popover__item" data-vista-tipo="lista">
           <span class="tipo-icono"
             ><svg viewBox="0 0 24 24" width="14" height="14">
-              
-            <path
+              <path
                 fill="currentColor"
-               
-              d="M3 5h2v2H3V5Zm0 6h2v2H3v-2Zm0 6h2v2H3v-2Zm4-12h14v2H7V5Zm0 6h14v2H7v-2Zm0 6h14v2H7v-2Z"
-               />
-          </svg
+                d="M3 5h2v2H3V5Zm0 6h2v2H3v-2Zm0 6h2v2H3v-2Zm4-12h14v2H7V5Zm0 6h14v2H7v-2Zm0 6h14v2H7v-2Z"
+              /></svg
           ></span>
           Vista de lista
         </button>
@@ -825,8 +947,7 @@
       </div>
       <div class="popover__nota popover__nota--info">
         Esta vista es de solo lectura y fue creada por HubSpot u otra persona.
-        Clona esta vista para guardar los cambios
-      que hayas hecho en los
+        Clona esta vista para guardar los cambios que hayas hecho en los
         filtros, los órdenes o las columnas.
       </div>
     </div>
@@ -1059,9 +1180,23 @@
     <!-- 10. Filtro: + agregar filtro rápido -->
     <div class="popover" id="popover-filtro-add" hidden style="width: 280px">
       <div class="popover__buscar">
-        <input type="search" class="popover__buscar-input" id="filtro-add-buscar" placeholder="Buscar" autocomplete="off"/>
-        <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
-          <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/>
+        <input
+          type="search"
+          class="popover__buscar-input"
+          id="filtro-add-buscar"
+          placeholder="Buscar"
+          autocomplete="off"
+        />
+        <svg
+          class="popover__buscar-icono"
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+        >
+          <path
+            fill="currentColor"
+            d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
+          />
         </svg>
       </div>
       <div class="popover__lista" id="filtro-add-lista">
@@ -1075,9 +1210,16 @@
     <!-- 11. Filtro: Moneda (opcional) -->
     <div class="popover" id="popover-filtro-moneda" hidden style="width: 200px">
       <div class="popover__lista">
-        <label class="check-lista__item"><input type="checkbox" data-filtro-val="COP" /> COP — Peso colombiano</label>
-        <label class="check-lista__item"><input type="checkbox" data-filtro-val="USD" /> USD — Dólar</label>
-        <label class="check-lista__item"><input type="checkbox" data-filtro-val="EUR" /> EUR — Euro</label>
+        <label class="check-lista__item"
+          ><input type="checkbox" data-filtro-val="COP" /> COP — Peso
+          colombiano</label
+        >
+        <label class="check-lista__item"
+          ><input type="checkbox" data-filtro-val="USD" /> USD — Dólar</label
+        >
+        <label class="check-lista__item"
+          ><input type="checkbox" data-filtro-val="EUR" /> EUR — Euro</label
+        >
       </div>
     </div>
 
@@ -1478,9 +1620,8 @@
                   >
                     <path
                       fill="currentColor"
-                     
-                    d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-                     />
+                      d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
+                    />
                   </svg>
                   <input
                     type="search"
@@ -1745,21 +1886,30 @@
                 </div>
               </div>
               <div class="editar-columnas__lista" id="cols-disponibles">
-                <div class="editar-columnas__categoria">Columnas principales</div>
+                <div class="editar-columnas__categoria">
+                  Columnas principales
+                </div>
                 <label class="editar-columnas__opt" data-col="estado"
-                  ><input type="checkbox" /> Estado</label>
+                  ><input type="checkbox" /> Estado</label
+                >
                 <label class="editar-columnas__opt" data-col="cantidad"
-                  ><input type="checkbox" /> Cantidad</label>
+                  ><input type="checkbox" /> Cantidad</label
+                >
                 <label class="editar-columnas__opt" data-col="firma"
-                  ><input type="checkbox" /> Estado de la firma</label>
+                  ><input type="checkbox" /> Estado de la firma</label
+                >
                 <label class="editar-columnas__opt" data-col="propietario"
-                  ><input type="checkbox" /> Propietario</label>
+                  ><input type="checkbox" /> Propietario</label
+                >
                 <label class="editar-columnas__opt" data-col="creacion"
-                  ><input type="checkbox" /> Fecha de creación</label>
+                  ><input type="checkbox" /> Fecha de creación</label
+                >
                 <label class="editar-columnas__opt" data-col="vencimiento"
-                  ><input type="checkbox" /> Fecha de vencimiento</label>
+                  ><input type="checkbox" /> Fecha de vencimiento</label
+                >
                 <label class="editar-columnas__opt" data-col="negocio"
-                  ><input type="checkbox" /> Nombre del negocio</label>
+                  ><input type="checkbox" /> Nombre del negocio</label
+                >
                 <div class="editar-columnas__categoria">Asociaciones</div>
                 <label class="editar-columnas__opt"
                   ><input type="checkbox" /> Cotización (Principal) →
@@ -1830,8 +1980,16 @@
           </div>
         </div>
         <div class="modal__footer">
-          <button type="button" class="btn btn--naranja" id="btn-aplicar-columnas">Aplicar</button>
-          <button type="button" class="btn btn--blanco" data-cerrar-modal>Cancelar</button>
+          <button
+            type="button"
+            class="btn btn--naranja"
+            id="btn-aplicar-columnas"
+          >
+            Aplicar
+          </button>
+          <button type="button" class="btn btn--blanco" data-cerrar-modal>
+            Cancelar
+          </button>
           <a href="#" class="btn--link" style="color: var(--color-acento)"
             >Eliminar todas las columnas</a
           >
@@ -1841,22 +1999,39 @@
 
     <!-- Modal: Editar filtros rápidos -->
     <div class="modal-overlay" id="modal-editar-filtros" hidden>
-      <div class="modal" style="max-width:460px">
+      <div class="modal" style="max-width: 460px">
         <div class="modal__header">
           <div class="modal__titulo">Editar filtros rápidos</div>
           <button class="modal__cerrar" data-cerrar-modal>
             <svg viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
+              <path
+                fill="currentColor"
+                d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
+              />
             </svg>
           </button>
         </div>
         <div class="modal__body">
-          <div class="contador-uso">Filtros rápidos usados: <span id="contador-filtros">0</span></div>
+          <div class="contador-uso">
+            Filtros rápidos usados: <span id="contador-filtros">0</span>
+          </div>
           <div class="popover-fila-editor" id="lista-filtros-edit"></div>
           <div class="popover-fila-editor__acciones">
-            <button class="btn btn--blanco" id="btn-agregar-filtro-rapido">+ Agregar filtro rápido</button>
+            <button class="btn btn--blanco" id="btn-agregar-filtro-rapido">
+              + Agregar filtro rápido
+            </button>
             <button class="btn btn--blanco" data-limpiar-valores>
-              <svg viewBox="0 0 24 24" width="12" height="12" style="margin-right:4px"><path fill="currentColor" d="M3 6h18v2H3V6Zm3 5h12v2H6v-2Zm3 5h6v2H9v-2Z"/></svg>
+              <svg
+                viewBox="0 0 24 24"
+                width="12"
+                height="12"
+                style="margin-right: 4px"
+              >
+                <path
+                  fill="currentColor"
+                  d="M3 6h18v2H3V6Zm3 5h12v2H6v-2Zm3 5h6v2H9v-2Z"
+                />
+              </svg>
               Limpiar valores de filtros
             </button>
           </div>
@@ -1889,8 +2064,7 @@
         <div class="modal__body">
           <p class="modal__intro">
             Define el porcentaje de comisión que aplica para cada asesor. Esta
-            configuración se comparte con el módulo de
-          Caja y se usa para
+            configuración se comparte con el módulo de Caja y se usa para
             calcular las comisiones teóricas en el reporte.
           </p>
 
@@ -1899,8 +2073,7 @@
               class="config-comisiones__tab config-comisiones__tab--activo"
               data-tab-comisiones="asesor"
             >
-              Por
-            asesor
+              Por asesor
             </button>
             <button
               class="config-comisiones__tab"
@@ -2107,8 +2280,7 @@
         <div class="modal__body">
           <p class="modal__intro">
             Habilita pagos en línea para que tus clientes paguen las
-            cotizaciones aprobadas directamente desde el link
-          público.
+            cotizaciones aprobadas directamente desde el link público.
             Selecciona los métodos que quieres aceptar.
           </p>
           <div class="form-grupo">
@@ -2524,10 +2696,8 @@
             <tbody id="vp-productos-tbody"></tbody>
             <tbody class="vista-previa__resumen-tbody">
               <tr class="vista-previa__resumen-cabecera">
-                
-              <td colspan="3">Resumen</td>
-              
-            </tr>
+                <td colspan="3">Resumen</td>
+              </tr>
               <tr>
                 <td>Subtotal Por única vez</td>
                 <td colspan="2" class="num" id="vp-subtotal">—</td>
@@ -2597,66 +2767,197 @@
 
     <!-- Modal: Filtros avanzados -->
     <div class="modal-overlay" id="modal-filtros-avanzados" hidden>
-      <div class="modal" style="max-width:520px">
+      <div class="modal" style="max-width: 520px">
         <div class="modal__header">
           <div class="modal__titulo">Filtros avanzados</div>
           <button class="modal__cerrar" data-cerrar-modal>
             <svg viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
+              <path
+                fill="currentColor"
+                d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
+              />
             </svg>
           </button>
         </div>
-        <div class="modal__body" style="display:flex;flex-direction:column;gap:var(--esp-6)">
+        <div
+          class="modal__body"
+          style="display: flex; flex-direction: column; gap: var(--esp-6)"
+        >
           <!-- Estado -->
           <div>
-            <div class="form-label" style="margin-bottom:var(--esp-2)">Estado</div>
-            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="publicado"/> Publicado</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="aprobado"/> Aprobado</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="vencido"/> Vencido</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="borrador"/> Borrador</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="en_revision"/> En revisión</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="rechazado"/> Rechazado</label>
+            <div class="form-label" style="margin-bottom: var(--esp-2)">
+              Estado
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--esp-2)">
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="estado"
+                  data-avanzado-val="publicado"
+                />
+                Publicado</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="estado"
+                  data-avanzado-val="aprobado"
+                />
+                Aprobado</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="estado"
+                  data-avanzado-val="vencido"
+                />
+                Vencido</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="estado"
+                  data-avanzado-val="borrador"
+                />
+                Borrador</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="estado"
+                  data-avanzado-val="en_revision"
+                />
+                En revisión</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="estado"
+                  data-avanzado-val="rechazado"
+                />
+                Rechazado</label
+              >
             </div>
           </div>
           <!-- Propietario -->
           <div>
-            <div class="form-label" style="margin-bottom:var(--esp-2)">Propietario</div>
-            <div id="avanzados-propietarios" style="display:flex;flex-wrap:wrap;gap:var(--esp-2)"></div>
+            <div class="form-label" style="margin-bottom: var(--esp-2)">
+              Propietario
+            </div>
+            <div
+              id="avanzados-propietarios"
+              style="display: flex; flex-wrap: wrap; gap: var(--esp-2)"
+            ></div>
           </div>
           <!-- Estado de firma -->
           <div>
-            <div class="form-label" style="margin-bottom:var(--esp-2)">Estado de firma</div>
-            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="firmado"/> Firmado</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="pendiente"/> Pendiente</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="expirado"/> Expirado</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="rechazado"/> Rechazado</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="no_aplica"/> No aplicable</label>
+            <div class="form-label" style="margin-bottom: var(--esp-2)">
+              Estado de firma
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--esp-2)">
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="firma"
+                  data-avanzado-val="firmado"
+                />
+                Firmado</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="firma"
+                  data-avanzado-val="pendiente"
+                />
+                Pendiente</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="firma"
+                  data-avanzado-val="expirado"
+                />
+                Expirado</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="firma"
+                  data-avanzado-val="rechazado"
+                />
+                Rechazado</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="firma"
+                  data-avanzado-val="no_aplica"
+                />
+                No aplicable</label
+              >
             </div>
           </div>
           <!-- Moneda -->
           <div>
-            <div class="form-label" style="margin-bottom:var(--esp-2)">Moneda</div>
-            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="moneda" data-avanzado-val="COP"/> COP</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="moneda" data-avanzado-val="USD"/> USD</label>
-              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="moneda" data-avanzado-val="EUR"/> EUR</label>
+            <div class="form-label" style="margin-bottom: var(--esp-2)">
+              Moneda
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: var(--esp-2)">
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="moneda"
+                  data-avanzado-val="COP"
+                />
+                COP</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="moneda"
+                  data-avanzado-val="USD"
+                />
+                USD</label
+              >
+              <label class="check-lista__item"
+                ><input
+                  type="checkbox"
+                  data-avanzado-grupo="moneda"
+                  data-avanzado-val="EUR"
+                />
+                EUR</label
+              >
             </div>
           </div>
           <!-- Última actividad -->
           <div>
-            <div class="form-label" style="margin-bottom:var(--esp-2)">Última actividad (rango)</div>
-            <div style="display:flex;align-items:center;gap:var(--esp-3)">
-              <input type="date" data-avanzado-fecha="desde" class="form-input form-input--sm" aria-label="Desde"/>
-              <span style="color:var(--color-texto-suave)">→</span>
-              <input type="date" data-avanzado-fecha="hasta" class="form-input form-input--sm" aria-label="Hasta"/>
+            <div class="form-label" style="margin-bottom: var(--esp-2)">
+              Última actividad (rango)
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--esp-3)">
+              <input
+                type="date"
+                data-avanzado-fecha="desde"
+                class="form-input form-input--sm"
+                aria-label="Desde"
+              />
+              <span style="color: var(--color-texto-suave)">→</span>
+              <input
+                type="date"
+                data-avanzado-fecha="hasta"
+                class="form-input form-input--sm"
+                aria-label="Hasta"
+              />
             </div>
           </div>
         </div>
         <div class="modal__footer">
-          <button class="btn btn--naranja" data-avanzados-aplicar>Aplicar filtros</button>
-          <button class="btn btn--blanco" data-avanzados-limpiar>Limpiar todo</button>
+          <button class="btn btn--naranja" data-avanzados-aplicar>
+            Aplicar filtros
+          </button>
+          <button class="btn btn--blanco" data-avanzados-limpiar>
+            Limpiar todo
+          </button>
         </div>
       </div>
     </div>

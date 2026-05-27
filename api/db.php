@@ -19,8 +19,8 @@ if (file_exists($envFile)) {
 
 define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
 define('DB_NAME', $_ENV['DB_NAME'] ?? 'visa_facil');
-define('DB_USER', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASS', $_ENV['DB_PASS'] ?? '');
+define('DB_USER', $_ENV['DB_USER'] ?? 'visafacildev');
+define('DB_PASS', $_ENV['DB_PASS'] ?? '=V[#}sud]aNZbP$i');
 define('DB_PORT', $_ENV['DB_PORT'] ?? '3306');
 
 define('DAPTA_WEBHOOK_URL', $_ENV['DAPTA_WEBHOOK_URL'] ?? '');
