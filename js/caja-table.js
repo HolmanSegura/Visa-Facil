@@ -198,7 +198,12 @@
         est.ordenColumna  = columna;
         est.ordenDireccion = "asc";
       }
+      this.aplicarOrden();
+    }
 
+    /** Ordena datosVisibles usando el estado actual (sin toglear dirección). */
+    aplicarOrden() {
+      const est = window.estadoApp;
       const extractor = {
         fecha:        it => new Date(it.fecha).getTime(),
         tipo:         it => it.tipo,
@@ -212,7 +217,7 @@
         cliente:      it => (it.cliente || "").toLowerCase(),
         observaciones: it => (it.observaciones || "").toLowerCase()
       };
-      const fn  = extractor[columna];
+      const fn = extractor[est.ordenColumna];
       if (!fn) return;
       const dir = est.ordenDireccion === "asc" ? 1 : -1;
       est.datosVisibles.sort((a, b) => {

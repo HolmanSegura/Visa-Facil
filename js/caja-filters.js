@@ -165,6 +165,11 @@
         r = r.filter(m => est.filtros.estado.includes(m.estado));
       }
 
+      // Método de pago
+      if (est.filtros.metodoPago && est.filtros.metodoPago.length > 0) {
+        r = r.filter(m => est.filtros.metodoPago.includes(m.metodoPago));
+      }
+
       est.datosVisibles = r;
       est.paginaActual = 1;
       if (window.tablaInstance)        window.tablaInstance.renderizar();
@@ -186,8 +191,9 @@
           etiqueta = etiquetaFecha(est.filtros.fecha);
           count = etiqueta ? 1 : 0;
         }
-        if (tipo === "asesor")    count = est.filtros.asesor.length;
-        if (tipo === "estado")    count = est.filtros.estado.length;
+        if (tipo === "asesor")     count = est.filtros.asesor.length;
+        if (tipo === "estado")     count = est.filtros.estado.length;
+        if (tipo === "metodoPago") count = (est.filtros.metodoPago || []).length;
 
         const tieneValor = count > 0;
         pill.classList.toggle("tiene-valor", tieneValor);
@@ -277,6 +283,19 @@
 
     buscar(texto) {
       window.estadoApp.busquedaActual = texto;
+      this.aplicarFiltros();
+    }
+
+    limpiarFiltros() {
+      const est = window.estadoApp;
+      est.busquedaActual = "";
+      est.filtros.tipo = [];
+      est.filtros.categoria = [];
+      est.filtros.fecha = null;
+      est.filtros.asesor = [];
+      est.filtros.estado = [];
+      est.filtros.metodoPago = [];
+      if (this.inputBusqueda) this.inputBusqueda.value = "";
       this.aplicarFiltros();
     }
 

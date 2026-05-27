@@ -609,26 +609,21 @@
 
     function abrirComo(tipo) {
       tipoInput.value = tipo;
-      modoComision(false);  // siempre resetear al abrir
+      modoComision(false);
+
+      const cats = window.categoriasCatalogo || [];
+      selectCat.innerHTML = cats.length
+        ? cats.map(c => `<option value="${c.valor}">${c.icono ? c.icono + ' ' : ''}${c.nombre}</option>`).join("")
+        : `<option value="otros">Otros</option>`;
 
       if (tipo === "ingreso") {
         tituloModal.textContent = "Registrar ingreso";
-        selectCat.innerHTML = `
-          <option value="servicios">Cobro por servicios</option>
-          <option value="otros">Reembolso</option>
-          <option value="otros">Otros ingresos</option>`;
+        if (cats.find(c => c.valor === "servicios")) selectCat.value = "servicios";
       } else {
         tituloModal.textContent = "Registrar gasto";
-        selectCat.innerHTML = `
-          <option value="alimentacion">Alimentación</option>
-          <option value="transporte">Transporte</option>
-          <option value="papeleria">Papelería</option>
-          <option value="publicidad">Publicidad</option>
-          <option value="comisiones">Comisiones</option>
-          <option value="servicios">Servicios públicos</option>
-          <option value="tramites">Trámites</option>
-          <option value="otros">Otros</option>`;
+        if (cats.find(c => c.valor === "alimentacion")) selectCat.value = "alimentacion";
       }
+
       document.getElementById("g-fecha").value = new Date().toISOString().split("T")[0];
       Modales.abrir("modal-registrar-gasto");
     }
@@ -875,44 +870,38 @@
   function initOrdenar() {
     const popover = document.getElementById("popover-ordenar");
     if (!popover) return;
+
     const select = popover.querySelector("#select-orden");
+    const dirBtns = popover.querySelectorAll(".popover-ordenar__dir button");
+
+    function sincronizarUI() {
+      const est = window.estadoApp;
+      if (select) select.value = est.ordenColumna;
+      dirBtns.forEach(b => b.classList.toggle("activo", b.dataset.dir === est.ordenDireccion));
+    }
+
     if (select) {
       select.addEventListener("change", (e) => {
         if (window.tablaInstance) {
           window.estadoApp.ordenColumna = e.target.value;
-          window.tablaInstance.ordenarPorColumna(e.target.value);
-          window.tablaInstance.ordenarPorColumna(e.target.value);
+          window.tablaInstance.aplicarOrden();
         }
       });
     }
-    popover.querySelectorAll(".popover-ordenar__dir button").forEach(btn => {
+
+    dirBtns.forEach(btn => {
       btn.addEventListener("click", () => {
-        popover.querySelectorAll(".popover-ordenar__dir button").forEach(b => b.classList.remove("activo"));
+        dirBtns.forEach(b => b.classList.remove("activo"));
         btn.classList.add("activo");
         window.estadoApp.ordenDireccion = btn.dataset.dir;
-        if (window.tablaInstance) window.tablaInstance.renderizar();
+        if (window.tablaInstance) window.tablaInstance.aplicarOrden();
       });
     });
 
-    // Buscador interno (si existe)
-    const inputBuscar = popover.querySelector(".popover__buscar-input");
-    if (inputBuscar) {
-      inputBuscar.addEventListener("input", (e) => {
-        const q = e.target.value.toLowerCase();
-        popover.querySelectorAll(".popover__lista .popover__item").forEach(item => {
-          item.style.display = item.textContent.toLowerCase().includes(q) ? "" : "none";
-        });
-      });
-    }
-
-    popover.querySelectorAll(".popover__lista .popover__item").forEach(it => {
-      it.addEventListener("click", () => {
-        popover.querySelectorAll(".popover__lista .popover__item")
-          .forEach(i => i.classList.remove("popover__item--seleccionado"));
-        it.classList.add("popover__item--seleccionado");
-        window.mostrarToast(`Ordenando por: ${it.textContent.trim()}`);
-      });
-    });
+    // Sincronizar UI al abrir el popover
+    new MutationObserver(() => {
+      if (!popover.hasAttribute("hidden")) sincronizarUI();
+    }).observe(popover, { attributes: true, attributeFilter: ["hidden"] });
   }
 
   /* ---------- TOGGLE FILTROS RÁPIDOS ---------- */
@@ -1129,25 +1118,223 @@
         });
       });
     }
+
+    // MÉTODO DE PAGO (pill opcional)
+    const popMetodo = document.getElementById("popover-filtro-metodo");
+    if (popMetodo) {
+      popMetodo.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener("change", () => {
+          window.estadoApp.filtros.metodoPago = [...popMetodo.querySelectorAll('input:checked')].map(c => c.dataset.filtroVal);
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        });
+      });
+    }
   }
 
-  /* ---------- EDITAR FILTROS RÁPIDOS ---------- */
+  /* ---------- AGREGAR FILTRO RÁPIDO (botón +) ---------- */
+  function initFiltroAdd() {
+    const pop = document.getElementById("popover-filtro-add");
+    if (!pop) return;
+    pop.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
+      item.addEventListener("click", () => {
+        const pillId = item.dataset.pillId;
+        const pill = document.querySelector(`.filtro-pill[data-filtro="${pillId}"]`);
+        if (!pill) return;
+        const oculta = pill.style.display === "none";
+        if (oculta) {
+          pill.style.display = "";
+          item.classList.add("popover__item--seleccionado");
+        } else {
+          pill.style.display = "none";
+          item.classList.remove("popover__item--seleccionado");
+          const est = window.estadoApp;
+          if (pillId === "metodoPago") est.filtros.metodoPago = [];
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        }
+        Popovers.cerrar();
+      });
+    });
+    new MutationObserver(() => {
+      if (!pop.hasAttribute("hidden")) {
+        pop.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
+          const pillId = item.dataset.pillId;
+          const pill = document.querySelector(`.filtro-pill[data-filtro="${pillId}"]`);
+          const visible = pill && pill.style.display !== "none";
+          item.classList.toggle("popover__item--seleccionado", visible);
+        });
+      }
+    }).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
+  }
+
+  /* ---------- EDITAR FILTROS RÁPIDOS (lápiz) ---------- */
   function initEditarFiltros() {
     const btn = document.getElementById("btn-edit-filtros");
-    if (btn) btn.addEventListener("click", () => Modales.abrir("modal-editar-filtros"));
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      _poblarModalEditarFiltrosCaja();
+      Modales.abrir("modal-editar-filtros");
+    });
 
     const modal = document.getElementById("modal-editar-filtros");
     if (!modal) return;
     modal.addEventListener("click", (e) => {
-      const r = e.target.closest(".popover-fila-editor__remover");
-      if (r) {
+      const remover = e.target.closest("[data-limpiar-filtro]");
+      if (remover) {
         e.stopPropagation();
-        const row = r.closest(".popover-fila-editor__item");
-        if (row) row.remove();
-        const cont = document.getElementById("contador-filtros");
-        if (cont) cont.textContent = modal.querySelectorAll(".popover-fila-editor__item").length;
+        const clave = remover.dataset.limpiarFiltro;
+        const est = window.estadoApp;
+        if (clave === "tipo")       est.filtros.tipo = [];
+        if (clave === "categoria")  est.filtros.categoria = [];
+        if (clave === "fecha")      est.filtros.fecha = null;
+        if (clave === "asesor")     est.filtros.asesor = [];
+        if (clave === "estado")     est.filtros.estado = [];
+        if (clave === "metodoPago") est.filtros.metodoPago = [];
+        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        _poblarModalEditarFiltrosCaja();
+      }
+      const limpiarTodo = e.target.closest("[data-limpiar-todos]");
+      if (limpiarTodo) {
+        if (window.filtrosInstance) window.filtrosInstance.limpiarFiltros();
+        _poblarModalEditarFiltrosCaja();
       }
     });
+  }
+
+  function _poblarModalEditarFiltrosCaja() {
+    const modal = document.getElementById("modal-editar-filtros");
+    if (!modal) return;
+    const lista = modal.querySelector(".filtros-activos-lista");
+    if (!lista) return;
+    const est = window.estadoApp;
+
+    const ETIQUETAS = {
+      tipo:       { nombre: "Tipo",            val: (v) => v.join(", ") },
+      categoria:  { nombre: "Categoría",       val: (v) => v.join(", ") },
+      fecha:      { nombre: "Fecha",           val: (v) => window.etiquetaFecha ? window.etiquetaFecha(v) : String(v) },
+      asesor:     { nombre: "Responsable",     val: (v) => v.join(", ") },
+      estado:     { nombre: "Estado",          val: (v) => v.join(", ") },
+      metodoPago: { nombre: "Método de pago",  val: (v) => v.join(", ") },
+    };
+
+    const activos = Object.entries(ETIQUETAS).filter(([clave]) => {
+      const v = est.filtros[clave];
+      return Array.isArray(v) ? v.length > 0 : !!v;
+    });
+
+    if (activos.length === 0) {
+      lista.innerHTML = '<p class="filtros-activos-vacios">No hay filtros activos.</p>';
+    } else {
+      lista.innerHTML = activos.map(([clave, def]) => {
+        const v = est.filtros[clave];
+        return `
+          <div class="filtro-activo-fila">
+            <span class="filtro-activo-fila__nombre">${def.nombre}</span>
+            <span class="filtro-activo-fila__valor">${def.val(v)}</span>
+            <button class="filtro-activo-fila__remover" data-limpiar-filtro="${clave}" aria-label="Eliminar filtro">
+              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
+            </button>
+          </div>`;
+      }).join("");
+    }
+
+    const sinFiltros = activos.length === 0;
+    const btnLimpiar = modal.querySelector("[data-limpiar-todos]");
+    if (btnLimpiar) btnLimpiar.disabled = sinFiltros;
+  }
+
+  /* ---------- FILTROS AVANZADOS ---------- */
+  function initFiltrosAvanzados() {
+    document.querySelectorAll(".filtro-avanzados").forEach(btn => {
+      btn.addEventListener("click", () => {
+        _sincronizarFiltrosAvanzadosCaja();
+        Modales.abrir("modal-filtros-avanzados");
+      });
+    });
+
+    const modal = document.getElementById("modal-filtros-avanzados");
+    if (!modal) return;
+
+    const btnAplicar = modal.querySelector("[data-avanzados-aplicar]");
+    if (btnAplicar) {
+      btnAplicar.addEventListener("click", () => {
+        _leerFiltrosAvanzadosCaja();
+        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        Modales.cerrar();
+      });
+    }
+
+    const btnLimpiar = modal.querySelector("[data-avanzados-limpiar]");
+    if (btnLimpiar) {
+      btnLimpiar.addEventListener("click", () => {
+        modal.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+        modal.querySelectorAll('input[type="date"]').forEach(inp => { inp.value = ""; });
+        const est = window.estadoApp;
+        est.filtros.tipo = []; est.filtros.categoria = []; est.filtros.fecha = null;
+        est.filtros.asesor = []; est.filtros.estado = []; est.filtros.metodoPago = [];
+        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        Modales.cerrar();
+      });
+    }
+  }
+
+  function _sincronizarFiltrosAvanzadosCaja() {
+    const modal = document.getElementById("modal-filtros-avanzados");
+    if (!modal) return;
+    const est = window.estadoApp;
+
+    // Poblar categorías dinámicamente si aún no están
+    const listaCat = modal.querySelector("#avanzados-categorias");
+    if (listaCat && !listaCat.hasChildNodes()) {
+      const cats = window.categoriasCatalogo || [];
+      listaCat.innerHTML = cats.map(c => `
+        <label class="check-lista__item">
+          <input type="checkbox" data-avanzado-grupo="categoria" data-avanzado-val="${c.valor}"/>
+          ${c.icono ? c.icono + " " : ""}${c.nombre}
+        </label>`).join("");
+    }
+
+    // Poblar asesores dinámicamente si aún no están
+    const listaAse = modal.querySelector("#avanzados-asesores");
+    if (listaAse && !listaAse.hasChildNodes()) {
+      const asesores = [...new Set(est.datosOriginales.map(m => m.responsable))].filter(Boolean).sort();
+      listaAse.innerHTML = asesores.map(n => `
+        <label class="check-lista__item">
+          <input type="checkbox" data-avanzado-grupo="asesor" data-avanzado-val="${n}"/>
+          ${n}
+        </label>`).join("");
+    }
+
+    modal.querySelectorAll('input[type="checkbox"][data-avanzado-grupo][data-avanzado-val]').forEach(cb => {
+      const grupo = cb.dataset.avanzadoGrupo;
+      const val   = cb.dataset.avanzadoVal;
+      const filtro = est.filtros[grupo];
+      cb.checked = Array.isArray(filtro) ? filtro.includes(val) : false;
+    });
+    const desde = modal.querySelector('[data-avanzado-fecha="desde"]');
+    const hasta  = modal.querySelector('[data-avanzado-fecha="hasta"]');
+    if (desde && hasta && est.filtros.fecha && typeof est.filtros.fecha === "object") {
+      desde.value = est.filtros.fecha.desde || "";
+      hasta.value  = est.filtros.fecha.hasta  || "";
+    } else if (desde && hasta) {
+      desde.value = ""; hasta.value = "";
+    }
+  }
+
+  function _leerFiltrosAvanzadosCaja() {
+    const modal = document.getElementById("modal-filtros-avanzados");
+    if (!modal) return;
+    const est = window.estadoApp;
+    ["tipo", "categoria", "asesor", "estado", "metodoPago"].forEach(grupo => {
+      const cbs = modal.querySelectorAll(`input[type="checkbox"][data-avanzado-grupo="${grupo}"]:checked`);
+      est.filtros[grupo] = [...cbs].map(cb => cb.dataset.avanzadoVal);
+    });
+    const desde = modal.querySelector('[data-avanzado-fecha="desde"]');
+    const hasta  = modal.querySelector('[data-avanzado-fecha="hasta"]');
+    if (desde || hasta) {
+      const d = desde ? desde.value : "";
+      const h = hasta  ? hasta.value  : "";
+      est.filtros.fecha = (d || h) ? { desde: d || null, hasta: h || null } : null;
+    }
   }
 
   /* ---------- PANEL CONFIG ---------- */
@@ -1429,7 +1616,9 @@
     initEditarColumnas();
     initOrdenar();
     initFiltrosPill();
+    initFiltroAdd();
     initEditarFiltros();
+    initFiltrosAvanzados();
     initConfigTabla();
     initTarjetasResumen();
     initTamanoPagina();

@@ -412,6 +412,18 @@
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
               </svg>
             </button>
+            <!-- Pills opcionales (ocultas hasta que se agregan con el botón +) -->
+            <button
+              class="filtro-pill"
+              data-popover="popover-filtro-moneda"
+              data-filtro="moneda"
+              style="display:none"
+            >
+              Moneda
+              <svg viewBox="0 0 8 8" width="8" height="8">
+                <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+              </svg>
+            </button>
             <div class="toolbar-tabla__sep"></div>
             <button
             class="filtro-icon"
@@ -907,40 +919,6 @@
           <button data-dir="asc">A → Z</button>
         </div>
       </div>
-      <div class="popover__buscar" style="padding: 0; border: none">
-        <input
-          type="search"
-          class="popover__buscar-input"
-          placeholder="Buscar"
-        />
-        <svg
-          class="popover__buscar-icono"
-          viewBox="0 0 24 24"
-          width="14"
-          height="14"
-        >
-          <path
-            fill="currentColor"
-            d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-          />
-        </svg>
-      </div>
-      <div class="popover__lista" style="max-height: 240px">
-        <div class="popover__grupo-titulo">Información del presupuesto</div>
-        <button class="popover__item popover__item--seleccionado">
-          Aprobador
-        </button>
-        <button class="popover__item">Está archivado</button>
-        <button class="popover__item">
-          Dirección de facturación del comprador
-        </button>
-        <button class="popover__item">
-          Dirección de facturación del comprador 2
-        </button>
-        <button class="popover__item">
-          Ciudad de facturación del comprador
-        </button>
-      </div>
     </div>
 
     <!-- 6. Filtro: Estado -->
@@ -1081,64 +1059,25 @@
     <!-- 10. Filtro: + agregar filtro rápido -->
     <div class="popover" id="popover-filtro-add" hidden style="width: 280px">
       <div class="popover__buscar">
-        <input
-          type="search"
-          class="popover__buscar-input"
-          placeholder="Buscar"
-        />
-        <svg
-          class="popover__buscar-icono"
-          viewBox="0 0 24 24"
-          width="14"
-          height="14"
-        >
-          <path
-            fill="currentColor"
-            d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-          />
+        <input type="search" class="popover__buscar-input" id="filtro-add-buscar" placeholder="Buscar" autocomplete="off"/>
+        <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+          <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/>
         </svg>
       </div>
+      <div class="popover__lista" id="filtro-add-lista">
+        <div class="popover__grupo-titulo">Filtros de cotizaciones</div>
+        <button class="popover__item" data-pill-id="moneda">
+          <span class="tipo-icono">$</span>Moneda
+        </button>
+      </div>
+    </div>
+
+    <!-- 11. Filtro: Moneda (opcional) -->
+    <div class="popover" id="popover-filtro-moneda" hidden style="width: 200px">
       <div class="popover__lista">
-        <div class="popover__grupo-titulo">Información del presupuesto</div>
-        <button class="popover__item popover__item--seleccionado">
-          <span class="tipo-icono"
-            ><svg viewBox="0 0 24 24" width="14" height="14">
-              <path
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              /></svg></span
-          >Actualizado por ID de usuario
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono"
-            ><svg viewBox="0 0 24 24" width="14" height="14">
-              <path
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              /></svg></span
-          >Aprobador
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">#</span>Cantidad
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">𝑓𝑥</span>Cantidad en moneda local
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">Abc</span>Ciudad de facturación del comprador
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">Abc</span>Código del estado/región de
-          facturación
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">Abc</span>Código del país de facturación del
-          comprador
-        </button>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="COP" /> COP — Peso colombiano</label>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="USD" /> USD — Dólar</label>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="EUR" /> EUR — Euro</label>
       </div>
     </div>
 
@@ -1470,10 +1409,7 @@
                 >Propietario (hubspot_owner_id)</label
               >
               <select id="cot-propietario" class="form-select">
-                <option>Néstor Goyes</option>
-                <option>Maria González</option>
-                <option>Carlos Ramírez</option>
-                <option>Lizeth Carrillo</option>
+                <option value="">Cargando…</option>
               </select>
             </div>
             <div class="form-grupo form-grupo--full">
@@ -1905,56 +1841,23 @@
 
     <!-- Modal: Editar filtros rápidos -->
     <div class="modal-overlay" id="modal-editar-filtros" hidden>
-      <div class="modal">
+      <div class="modal" style="max-width:460px">
         <div class="modal__header">
           <div class="modal__titulo">Editar filtros rápidos</div>
           <button class="modal__cerrar" data-cerrar-modal>
             <svg viewBox="0 0 24 24" width="16" height="16">
-              <path
-                fill="currentColor"
-                d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
-              />
+              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
             </svg>
           </button>
         </div>
         <div class="modal__body">
-          <div class="contador-uso">
-            Filtros rápidos usados: <span id="contador-filtros">4</span>/10
-          </div>
-          <div class="popover-fila-editor" id="lista-filtros-edit">
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">𝑓𝑥</div>
-              <select class="popover-fila-editor__select">
-                <option>Estado</option>
-              </select>
-              <button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">📅</div>
-              <select class="popover-fila-editor__select">
-                <option>Última actividad</option>
-              </select>
-              <button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">☑</div>
-              <select class="popover-fila-editor__select">
-                <option>Propietario</option>
-              </select>
-              <button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">𝑓𝑥</div>
-              <select class="popover-fila-editor__select">
-                <option>Estado de la firma</option>
-              </select>
-              <button class="popover-fila-editor__remover">🗑</button>
-            </div>
-          </div>
+          <div class="contador-uso">Filtros rápidos usados: <span id="contador-filtros">0</span></div>
+          <div class="popover-fila-editor" id="lista-filtros-edit"></div>
           <div class="popover-fila-editor__acciones">
-            <button class="btn btn--blanco">+ Agregar filtro rápido</button>
-            <button class="btn btn--blanco">
-              🗑 Eliminar todos los filtros rápidos
+            <button class="btn btn--blanco" id="btn-agregar-filtro-rapido">+ Agregar filtro rápido</button>
+            <button class="btn btn--blanco" data-limpiar-valores>
+              <svg viewBox="0 0 24 24" width="12" height="12" style="margin-right:4px"><path fill="currentColor" d="M3 6h18v2H3V6Zm3 5h12v2H6v-2Zm3 5h6v2H9v-2Z"/></svg>
+              Limpiar valores de filtros
             </button>
           </div>
         </div>
@@ -2691,5 +2594,71 @@
     <script src="js/cotizaciones-email.js"></script>
 
     <script src="js/ui-interactions.js"></script>
+
+    <!-- Modal: Filtros avanzados -->
+    <div class="modal-overlay" id="modal-filtros-avanzados" hidden>
+      <div class="modal" style="max-width:520px">
+        <div class="modal__header">
+          <div class="modal__titulo">Filtros avanzados</div>
+          <button class="modal__cerrar" data-cerrar-modal>
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal__body" style="display:flex;flex-direction:column;gap:var(--esp-6)">
+          <!-- Estado -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Estado</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="publicado"/> Publicado</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="aprobado"/> Aprobado</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="vencido"/> Vencido</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="borrador"/> Borrador</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="en_revision"/> En revisión</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="rechazado"/> Rechazado</label>
+            </div>
+          </div>
+          <!-- Propietario -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Propietario</div>
+            <div id="avanzados-propietarios" style="display:flex;flex-wrap:wrap;gap:var(--esp-2)"></div>
+          </div>
+          <!-- Estado de firma -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Estado de firma</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="firmado"/> Firmado</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="pendiente"/> Pendiente</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="expirado"/> Expirado</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="rechazado"/> Rechazado</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="firma" data-avanzado-val="no_aplica"/> No aplicable</label>
+            </div>
+          </div>
+          <!-- Moneda -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Moneda</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="moneda" data-avanzado-val="COP"/> COP</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="moneda" data-avanzado-val="USD"/> USD</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="moneda" data-avanzado-val="EUR"/> EUR</label>
+            </div>
+          </div>
+          <!-- Última actividad -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Última actividad (rango)</div>
+            <div style="display:flex;align-items:center;gap:var(--esp-3)">
+              <input type="date" data-avanzado-fecha="desde" class="form-input form-input--sm" aria-label="Desde"/>
+              <span style="color:var(--color-texto-suave)">→</span>
+              <input type="date" data-avanzado-fecha="hasta" class="form-input form-input--sm" aria-label="Hasta"/>
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--naranja" data-avanzados-aplicar>Aplicar filtros</button>
+          <button class="btn btn--blanco" data-avanzados-limpiar>Limpiar todo</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

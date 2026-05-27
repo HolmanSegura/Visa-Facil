@@ -68,6 +68,11 @@
     obtener: (id) => request("GET", "/usuarios.php", undefined, { id }),
   };
 
+  // ── Categorías de Caja ────────────────────────────────────
+  const categorias = {
+    listar: () => request("GET", "/categorias-caja.php"),
+  };
+
   // ── Comisiones ────────────────────────────────────────────
   const comisiones = {
     obtenerConfig: ()      => request("GET", "/comisiones.php"),
@@ -112,7 +117,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    window.Api = { cotizaciones, caja, productos, comisiones, usuarios, subirAdjunto };
+    window.Api = { cotizaciones, caja, productos, comisiones, usuarios, categorias, subirAdjunto };
     console.info("[API Client] Listo. Endpoints base:", BASE);
     cargarEnvConfig();
   });

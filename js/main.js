@@ -61,6 +61,7 @@ const estadoApp = {
     actividad: null,
     propietario: [],
     firma: [],
+    moneda: [],
   },
   vistas: vistasIniciales,
   vistaActivaId: "todas",

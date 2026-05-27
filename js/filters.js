@@ -169,6 +169,11 @@
         resultado = resultado.filter(it => est.filtros.firma.includes(it.estadoFirma));
       }
 
+      // Filtro: moneda
+      if (est.filtros.moneda && est.filtros.moneda.length > 0) {
+        resultado = resultado.filter(it => est.filtros.moneda.includes(it.moneda));
+      }
+
       est.datosVisibles = resultado;
       est.paginaActual = 1;
 
@@ -188,6 +193,7 @@
         if (tipo === "estado")      count = est.filtros.estado.length;
         if (tipo === "propietario") count = est.filtros.propietario.length;
         if (tipo === "firma")       count = est.filtros.firma.length;
+        if (tipo === "moneda")      count = (est.filtros.moneda || []).length;
         if (tipo === "actividad") {
           etiqueta = etiquetaFecha(est.filtros.actividad);
           count = etiqueta ? 1 : 0;
@@ -228,6 +234,7 @@
       est.filtros.actividad = null;
       est.filtros.propietario = [];
       est.filtros.firma = [];
+      est.filtros.moneda = [];
       if (this.inputBusqueda) this.inputBusqueda.value = "";
       this.aplicarFiltros();
     }

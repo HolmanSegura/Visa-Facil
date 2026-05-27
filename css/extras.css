@@ -1560,3 +1560,62 @@
   background: var(--color-acento);
   flex-shrink: 0;
 }
+
+/* ============================================================
+   MODAL FILTROS ACTIVOS (lápiz) y MODAL FILTROS AVANZADOS
+   ============================================================ */
+.filtros-activos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-2);
+  min-height: 60px;
+}
+
+.filtros-activos-vacios {
+  color: var(--color-texto-suave);
+  font-size: var(--font-tam-md);
+  padding: var(--esp-4) 0;
+  text-align: center;
+}
+
+.filtro-activo-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo-secundario);
+}
+
+.filtro-activo-fila__nombre {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto-suave);
+  min-width: 120px;
+}
+
+.filtro-activo-fila__valor {
+  flex: 1;
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filtro-activo-fila__remover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--color-texto-suave);
+  transition: background-color var(--trans-rapida), color var(--trans-rapida);
+  flex-shrink: 0;
+}
+
+.filtro-activo-fila__remover:hover {
+  background-color: var(--color-borde);
+  color: var(--color-texto);
+}

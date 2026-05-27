@@ -85,7 +85,8 @@ const estadoApp = {
     categoria:  [],
     fecha:      null,
     asesor:     [],
-    estado:     []
+    estado:     [],
+    metodoPago: [],
   },
   vistas: vistasIniciales,
   vistaActivaId: "todos",
@@ -291,6 +292,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   } catch (e) {
     console.warn("[Caja] No se pudieron cargar usuarios desde la API:", e.message);
+  }
+
+  // Carga categorías desde BD y puebla los selects de categoría
+  try {
+    const resC = await window.Api.categorias.listar();
+    if (resC.ok && Array.isArray(resC.data) && resC.data.length > 0) {
+      window.categoriasCatalogo = resC.data;
+      const opsCat = resC.data
+        .map(c => `<option value="${c.valor}">${c.icono ? c.icono + ' ' : ''}${c.nombre}</option>`)
+        .join("");
+      // Poblar el select del modal de edición (el de gasto/ingreso se puebla en abrirComo())
+      const selEditar = document.getElementById("editar-categoria");
+      if (selEditar) selEditar.innerHTML = opsCat;
+    }
+  } catch (e) {
+    console.warn("[Caja] No se pudieron cargar categorías desde la API:", e.message);
   }
 
   try {

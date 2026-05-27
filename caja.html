@@ -491,6 +491,18 @@
               <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
+          <!-- Pills opcionales (ocultas hasta que se agregan con el botón +) -->
+          <button
+            class="filtro-pill"
+            data-popover="popover-filtro-metodo"
+            data-filtro="metodoPago"
+            style="display:none"
+          >
+            Método de pago
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+            </svg>
+          </button>
           <div class="toolbar-tabla__sep"></div>
           <button
             class="filtro-icon"
@@ -1134,40 +1146,26 @@
     <!-- + agregar filtro -->
     <div class="popover" id="popover-filtro-add" hidden style="width: 280px">
       <div class="popover__buscar">
-        <input
-          type="search"
-          class="popover__buscar-input"
-          placeholder="Buscar"
-        />
-        <svg
-          class="popover__buscar-icono"
-          viewBox="0 0 24 24"
-          width="14"
-          height="14"
-        >
-          <path
-            fill="currentColor"
-            d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z"
-          />
+        <input type="search" class="popover__buscar-input" id="filtro-add-buscar" placeholder="Buscar" autocomplete="off"/>
+        <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+          <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/>
         </svg>
       </div>
+      <div class="popover__lista" id="filtro-add-lista">
+        <div class="popover__grupo-titulo">Filtros de movimientos</div>
+        <button class="popover__item" data-pill-id="metodoPago">
+          <span class="tipo-icono">💳</span>Método de pago
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtro: Método de pago (opcional) -->
+    <div class="popover" id="popover-filtro-metodo" hidden style="width: 220px">
       <div class="popover__lista">
-        <div class="popover__grupo-titulo">Información del movimiento</div>
-        <button class="popover__item">
-          <span class="tipo-icono">#</span>Valor
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">📅</span>Fecha de creación
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">Abc</span>Método de pago
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">Abc</span>Referencia
-        </button>
-        <button class="popover__item">
-          <span class="tipo-icono">Abc</span>Cliente relacionado
-        </button>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="efectivo"/> Efectivo</label>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="transferencia"/> Transferencia</label>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="tarjeta"/> Tarjeta</label>
+        <label class="check-lista__item"><input type="checkbox" data-filtro-val="cheque"/> Cheque</label>
       </div>
     </div>
 
@@ -1252,14 +1250,7 @@
                   >Categoría</label
                 >
                 <select id="g-categoria" class="form-select">
-                  <option value="alimentacion">Alimentación</option>
-                  <option value="transporte">Transporte</option>
-                  <option value="papeleria">Papelería</option>
-                  <option value="publicidad">Publicidad</option>
-                  <option value="comisiones">Comisiones</option>
-                  <option value="servicios">Servicios públicos</option>
-                  <option value="tramites">Trámites</option>
-                  <option value="otros">Otros</option>
+                  <option value="otros">Cargando…</option>
                 </select>
               </div>
               <div>
@@ -1317,11 +1308,7 @@
                   >Responsable</label
                 >
                 <select id="g-responsable" class="form-select">
-                  <option>Néstor Goyes</option>
-                  <option>Maria González</option>
-                  <option>Carlos Ramírez</option>
-                  <option>Lizeth Carrillo</option>
-                  <option>Jennifer Acosta</option>
+                  <option value="">Cargando…</option>
                 </select>
               </div>
               <div>
@@ -1418,14 +1405,7 @@
             <div>
               <label class="form-label form-label--req" for="editar-categoria">Categoría</label>
               <select id="editar-categoria" class="form-select">
-                <option value="alimentacion">Alimentación</option>
-                <option value="transporte">Transporte</option>
-                <option value="papeleria">Papelería</option>
-                <option value="publicidad">Publicidad</option>
-                <option value="comisiones">Comisiones</option>
-                <option value="servicios">Servicios públicos</option>
-                <option value="tramites">Trámites</option>
-                <option value="otros">Otros</option>
+                <option value="otros">Cargando…</option>
               </select>
             </div>
             <div>
@@ -1450,11 +1430,7 @@
             <div>
               <label class="form-label" for="editar-responsable">Responsable</label>
               <select id="editar-responsable" class="form-select">
-                <option>Néstor Goyes</option>
-                <option>Maria González</option>
-                <option>Carlos Ramírez</option>
-                <option>Lizeth Carrillo</option>
-                <option>Jennifer Acosta</option>
+                <option value="">Cargando…</option>
               </select>
             </div>
             <div>
@@ -1673,57 +1649,24 @@
 
     <!-- Modal: Editar filtros rápidos -->
     <div class="modal-overlay" id="modal-editar-filtros" hidden>
-      <div class="modal">
+      <div class="modal" style="max-width:460px">
         <div class="modal__header">
           <div class="modal__titulo">Editar filtros rápidos</div>
           <button class="modal__cerrar" data-cerrar-modal>
             <svg viewBox="0 0 24 24" width="16" height="16">
-              <path
-                fill="currentColor"
-                d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
-              />
+              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
             </svg>
           </button>
         </div>
         <div class="modal__body">
-          <div class="contador-uso">
-            Filtros rápidos usados: <span id="contador-filtros">5</span>/10
-          </div>
-          <div class="popover-fila-editor">
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">📊</div>
-              <select class="popover-fila-editor__select">
-                <option>Tipo</option></select
-              ><button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">🏷</div>
-              <select class="popover-fila-editor__select">
-                <option>Categoría</option></select
-              ><button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">📅</div>
-              <select class="popover-fila-editor__select">
-                <option>Fecha</option></select
-              ><button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">👤</div>
-              <select class="popover-fila-editor__select">
-                <option>Responsable</option></select
-              ><button class="popover-fila-editor__remover">🗑</button>
-            </div>
-            <div class="popover-fila-editor__item">
-              <div class="popover-fila-editor__icono">𝑓𝑥</div>
-              <select class="popover-fila-editor__select">
-                <option>Estado</option></select
-              ><button class="popover-fila-editor__remover">🗑</button>
-            </div>
-          </div>
+          <div class="contador-uso">Filtros rápidos usados: <span id="contador-filtros">0</span></div>
+          <div class="popover-fila-editor" id="lista-filtros-edit"></div>
           <div class="popover-fila-editor__acciones">
-            <button class="btn btn--blanco">+ Agregar filtro rápido</button>
-            <button class="btn btn--blanco">🗑 Eliminar todos</button>
+            <button class="btn btn--blanco" id="btn-agregar-filtro-rapido">+ Agregar filtro rápido</button>
+            <button class="btn btn--blanco" data-limpiar-valores>
+              <svg viewBox="0 0 24 24" width="12" height="12" style="margin-right:4px"><path fill="currentColor" d="M3 6h18v2H3V6Zm3 5h12v2H6v-2Zm3 5h6v2H9v-2Z"/></svg>
+              Limpiar valores de filtros
+            </button>
           </div>
         </div>
         <div class="modal__footer">
@@ -2160,5 +2103,71 @@
     <script src="js/caja-export.js"></script>
     <script src="js/caja-comisiones.js"></script>
     <script src="js/caja-interactions.js"></script>
+
+    <!-- Modal: Filtros avanzados -->
+    <div class="modal-overlay" id="modal-filtros-avanzados" hidden>
+      <div class="modal" style="max-width:520px">
+        <div class="modal__header">
+          <div class="modal__titulo">Filtros avanzados</div>
+          <button class="modal__cerrar" data-cerrar-modal>
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal__body" style="display:flex;flex-direction:column;gap:var(--esp-6)">
+          <!-- Tipo -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Tipo</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="tipo" data-avanzado-val="ingreso"/> Ingreso</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="tipo" data-avanzado-val="gasto"/> Gasto</label>
+            </div>
+          </div>
+          <!-- Estado -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Estado</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="pagado"/> Pagado</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="pendiente"/> Pendiente</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="estado" data-avanzado-val="anulado"/> Anulado</label>
+            </div>
+          </div>
+          <!-- Categoría -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Categoría</div>
+            <div id="avanzados-categorias" style="display:flex;flex-wrap:wrap;gap:var(--esp-2)"></div>
+          </div>
+          <!-- Responsable -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Responsable</div>
+            <div id="avanzados-asesores" style="display:flex;flex-wrap:wrap;gap:var(--esp-2)"></div>
+          </div>
+          <!-- Método de pago -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Método de pago</div>
+            <div style="display:flex;flex-wrap:wrap;gap:var(--esp-2)">
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="metodoPago" data-avanzado-val="efectivo"/> Efectivo</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="metodoPago" data-avanzado-val="transferencia"/> Transferencia</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="metodoPago" data-avanzado-val="tarjeta"/> Tarjeta</label>
+              <label class="check-lista__item"><input type="checkbox" data-avanzado-grupo="metodoPago" data-avanzado-val="cheque"/> Cheque</label>
+            </div>
+          </div>
+          <!-- Fecha (rango) -->
+          <div>
+            <div class="form-label" style="margin-bottom:var(--esp-2)">Fecha (rango)</div>
+            <div style="display:flex;align-items:center;gap:var(--esp-3)">
+              <input type="date" data-avanzado-fecha="desde" class="form-input form-input--sm" aria-label="Desde"/>
+              <span style="color:var(--color-texto-suave)">→</span>
+              <input type="date" data-avanzado-fecha="hasta" class="form-input form-input--sm" aria-label="Hasta"/>
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--naranja" data-avanzados-aplicar>Aplicar filtros</button>
+          <button class="btn btn--blanco" data-avanzados-limpiar>Limpiar todo</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

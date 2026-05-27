@@ -1284,45 +1284,36 @@
     if (!popover) return;
 
     const select = popover.querySelector("#select-orden");
+    const dirBtns = popover.querySelectorAll(".popover-ordenar__dir button");
+
+    function sincronizarUI() {
+      const est = window.estadoApp;
+      if (select) select.value = est.ordenColumna;
+      dirBtns.forEach(b => b.classList.toggle("activo", b.dataset.dir === est.ordenDireccion));
+    }
+
     if (select) {
       select.addEventListener("change", (e) => {
         if (window.tablaInstance) {
           window.estadoApp.ordenColumna = e.target.value;
-          window.tablaInstance.ordenarPorColumna(e.target.value);
-          window.tablaInstance.ordenarPorColumna(e.target.value); // doble para mantener dir
+          window.tablaInstance.aplicarOrden();
         }
       });
     }
 
-    popover.querySelectorAll(".popover-ordenar__dir button").forEach(btn => {
+    dirBtns.forEach(btn => {
       btn.addEventListener("click", () => {
-        popover.querySelectorAll(".popover-ordenar__dir button").forEach(b => b.classList.remove("activo"));
+        dirBtns.forEach(b => b.classList.remove("activo"));
         btn.classList.add("activo");
         window.estadoApp.ordenDireccion = btn.dataset.dir;
-        if (window.tablaInstance) window.tablaInstance.renderizar();
+        if (window.tablaInstance) window.tablaInstance.aplicarOrden();
       });
     });
 
-    // Buscador dentro del popover: filtra los items de la lista (propiedades)
-    const inputBuscar = popover.querySelector(".popover__buscar-input");
-    if (inputBuscar) {
-      inputBuscar.addEventListener("input", (e) => {
-        const q = e.target.value.toLowerCase();
-        popover.querySelectorAll(".popover__lista .popover__item").forEach(item => {
-          item.style.display = item.textContent.toLowerCase().includes(q) ? "" : "none";
-        });
-      });
-    }
-
-    // Click en un item de la lista: marca como seleccionado y aplica ese campo
-    popover.querySelectorAll(".popover__lista .popover__item").forEach(it => {
-      it.addEventListener("click", () => {
-        popover.querySelectorAll(".popover__lista .popover__item")
-          .forEach(i => i.classList.remove("popover__item--seleccionado"));
-        it.classList.add("popover__item--seleccionado");
-        window.mostrarToast(`Ordenando por: ${it.textContent.trim()}`);
-      });
-    });
+    // Sincronizar UI al abrir el popover
+    new MutationObserver(() => {
+      if (!popover.hasAttribute("hidden")) sincronizarUI();
+    }).observe(popover, { attributes: true, attributeFilter: ["hidden"] });
   }
 
   /* ----------------------------------------------------------
@@ -1434,29 +1425,214 @@
         });
       });
     }
+
+    // MONEDA (pill opcional)
+    const popMoneda = document.getElementById("popover-filtro-moneda");
+    if (popMoneda) {
+      popMoneda.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener("change", () => {
+          const valores = [...popMoneda.querySelectorAll('input[type="checkbox"]:checked')]
+            .map(c => c.dataset.filtroVal);
+          window.estadoApp.filtros.moneda = valores;
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        });
+      });
+    }
   }
 
   /* ----------------------------------------------------------
-     12. EDITAR FILTROS RÁPIDOS (lápiz)
+     12. AGREGAR FILTRO RÁPIDO (botón +)
+     ---------------------------------------------------------- */
+  function initFiltroAdd() {
+    const pop = document.getElementById("popover-filtro-add");
+    if (!pop) return;
+    pop.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
+      item.addEventListener("click", () => {
+        const pillId = item.dataset.pillId;
+        const pill = document.querySelector(`.filtro-pill[data-filtro="${pillId}"]`);
+        if (!pill) return;
+        const oculta = pill.style.display === "none";
+        if (oculta) {
+          pill.style.display = "";
+          item.classList.add("popover__item--seleccionado");
+        } else {
+          pill.style.display = "none";
+          item.classList.remove("popover__item--seleccionado");
+          // Limpiar el filtro al ocultar la pill
+          const est = window.estadoApp;
+          if (pillId === "moneda") est.filtros.moneda = [];
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        }
+        Popovers.cerrar();
+      });
+    });
+    // Sincronizar estado visual al abrir el popover
+    new MutationObserver(() => {
+      if (!pop.hasAttribute("hidden")) {
+        pop.querySelectorAll(".popover__item[data-pill-id]").forEach(item => {
+          const pillId = item.dataset.pillId;
+          const pill = document.querySelector(`.filtro-pill[data-filtro="${pillId}"]`);
+          const visible = pill && pill.style.display !== "none";
+          item.classList.toggle("popover__item--seleccionado", visible);
+        });
+      }
+    }).observe(pop, { attributes: true, attributeFilter: ["hidden"] });
+  }
+
+  /* ----------------------------------------------------------
+     12b. EDITAR FILTROS RÁPIDOS (lápiz) — muestra filtros activos
      ---------------------------------------------------------- */
   function initEditarFiltros() {
     const btn = document.getElementById("btn-edit-filtros");
-    if (btn) btn.addEventListener("click", () => Modales.abrir("modal-editar-filtros"));
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      _poblarModalEditarFiltros();
+      Modales.abrir("modal-editar-filtros");
+    });
 
     const modal = document.getElementById("modal-editar-filtros");
     if (!modal) return;
 
     modal.addEventListener("click", (e) => {
-      const remover = e.target.closest(".popover-fila-editor__remover");
+      const remover = e.target.closest("[data-limpiar-filtro]");
       if (remover) {
         e.stopPropagation();
-        const row = remover.closest(".popover-fila-editor__item");
-        if (row) row.remove();
-        const total = modal.querySelectorAll(".popover-fila-editor__item").length;
-        const cont = document.getElementById("contador-filtros");
-        if (cont) cont.textContent = total;
+        const clave = remover.dataset.limpiarFiltro;
+        const est = window.estadoApp;
+        if (clave === "estado")      est.filtros.estado = [];
+        if (clave === "actividad")   est.filtros.actividad = null;
+        if (clave === "propietario") est.filtros.propietario = [];
+        if (clave === "firma")       est.filtros.firma = [];
+        if (clave === "moneda")      est.filtros.moneda = [];
+        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        _poblarModalEditarFiltros();
+      }
+      const limpiarTodo = e.target.closest("[data-limpiar-todos]");
+      if (limpiarTodo) {
+        if (window.filtrosInstance) window.filtrosInstance.limpiarFiltros();
+        _poblarModalEditarFiltros();
       }
     });
+  }
+
+  function _poblarModalEditarFiltros() {
+    const modal = document.getElementById("modal-editar-filtros");
+    if (!modal) return;
+    const lista = modal.querySelector(".filtros-activos-lista");
+    if (!lista) return;
+    const est = window.estadoApp;
+
+    const ETIQUETAS = {
+      estado:      { nombre: "Estado",           val: (v) => v.join(", ") },
+      actividad:   { nombre: "Última actividad", val: (v) => window.etiquetaFecha ? window.etiquetaFecha(v) : String(v) },
+      propietario: { nombre: "Propietario",      val: (v) => v.join(", ") },
+      firma:       { nombre: "Estado de firma",  val: (v) => v.join(", ") },
+      moneda:      { nombre: "Moneda",           val: (v) => v.join(", ") },
+    };
+
+    const activos = Object.entries(ETIQUETAS).filter(([clave]) => {
+      const v = est.filtros[clave];
+      return Array.isArray(v) ? v.length > 0 : !!v;
+    });
+
+    if (activos.length === 0) {
+      lista.innerHTML = '<p class="filtros-activos-vacios">No hay filtros activos.</p>';
+    } else {
+      lista.innerHTML = activos.map(([clave, def]) => {
+        const v = est.filtros[clave];
+        return `
+          <div class="filtro-activo-fila">
+            <span class="filtro-activo-fila__nombre">${def.nombre}</span>
+            <span class="filtro-activo-fila__valor">${def.val(v)}</span>
+            <button class="filtro-activo-fila__remover" data-limpiar-filtro="${clave}" aria-label="Eliminar filtro">
+              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
+            </button>
+          </div>`;
+      }).join("");
+    }
+
+    const sinFiltros = activos.length === 0;
+    const btnLimpiar = modal.querySelector("[data-limpiar-todos]");
+    if (btnLimpiar) btnLimpiar.disabled = sinFiltros;
+  }
+
+  /* ----------------------------------------------------------
+     12c. FILTROS AVANZADOS
+     ---------------------------------------------------------- */
+  function initFiltrosAvanzados() {
+    document.querySelectorAll(".filtro-avanzados").forEach(btn => {
+      btn.addEventListener("click", () => {
+        _sincronizarFiltrosAvanzados();
+        Modales.abrir("modal-filtros-avanzados");
+      });
+    });
+
+    const modal = document.getElementById("modal-filtros-avanzados");
+    if (!modal) return;
+
+    // Aplicar desde el modal
+    const btnAplicar = modal.querySelector("[data-avanzados-aplicar]");
+    if (btnAplicar) {
+      btnAplicar.addEventListener("click", () => {
+        _leerFiltrosAvanzados();
+        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        Modales.cerrar();
+      });
+    }
+
+    // Limpiar todo desde el modal
+    const btnLimpiar = modal.querySelector("[data-avanzados-limpiar]");
+    if (btnLimpiar) {
+      btnLimpiar.addEventListener("click", () => {
+        modal.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+        modal.querySelectorAll('input[type="date"]').forEach(inp => { inp.value = ""; });
+        if (window.filtrosInstance) window.filtrosInstance.limpiarFiltros();
+        Modales.cerrar();
+      });
+    }
+  }
+
+  function _sincronizarFiltrosAvanzados() {
+    const modal = document.getElementById("modal-filtros-avanzados");
+    if (!modal) return;
+    const est = window.estadoApp;
+
+    // Poblar propietarios dinámicamente si aún no están
+    const listaP = modal.querySelector("#avanzados-propietarios");
+    if (listaP && !listaP.hasChildNodes()) {
+      const propietarios = [...new Set(est.datosOriginales.map(c => c.responsable))].filter(Boolean).sort();
+      listaP.innerHTML = propietarios.map(n => `
+        <label class="check-lista__item">
+          <input type="checkbox" data-avanzado-grupo="propietario" data-avanzado-val="${n}"/>
+          ${n}
+        </label>`).join("");
+    }
+
+    modal.querySelectorAll('input[type="checkbox"][data-avanzado-grupo][data-avanzado-val]').forEach(cb => {
+      const grupo = cb.dataset.avanzadoGrupo;
+      const val   = cb.dataset.avanzadoVal;
+      const filtro = est.filtros[grupo];
+      cb.checked = Array.isArray(filtro) ? filtro.includes(val) : false;
+    });
+  }
+
+  function _leerFiltrosAvanzados() {
+    const modal = document.getElementById("modal-filtros-avanzados");
+    if (!modal) return;
+    const est = window.estadoApp;
+    ["estado", "propietario", "firma", "moneda"].forEach(grupo => {
+      const cbs = modal.querySelectorAll(`input[type="checkbox"][data-avanzado-grupo="${grupo}"]:checked`);
+      est.filtros[grupo] = [...cbs].map(cb => cb.dataset.avanzadoVal);
+    });
+    // Fecha (actividad)
+    const desde = modal.querySelector('[data-avanzado-fecha="desde"]');
+    const hasta = modal.querySelector('[data-avanzado-fecha="hasta"]');
+    if (desde || hasta) {
+      const d = desde ? desde.value : "";
+      const h = hasta ? hasta.value : "";
+      est.filtros.actividad = (d || h) ? { desde: d || null, hasta: h || null } : null;
+    }
   }
 
   /* ----------------------------------------------------------
@@ -1616,7 +1792,9 @@
     initEditarColumnas();
     initOrdenar();
     initFiltrosPill();
+    initFiltroAdd();
     initEditarFiltros();
+    initFiltrosAvanzados();
     initConfigTabla();
     initTamanoPagina();
 

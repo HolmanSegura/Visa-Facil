@@ -72,8 +72,6 @@
 
   async function cargarProductos({ forzar = false } = {}) {
     if (cargando) {
-      // Llamada concurrente mientras la carga ya está en curso.
-      // Muestra el indicador y espera a que el finally renderice.
       const lista = document.getElementById("productos-lista");
       if (lista && catalogo.length === 0) {
         lista.innerHTML = '<li class="productos-lista__vacio">Cargando catálogo…</li>';
@@ -81,19 +79,37 @@
       return catalogo;
     }
 
-    if (!forzar) {
-      const cached = leerCache();
-      if (cached) {
-        catalogo = cached;
-        renderizarResultadosBusqueda(); // asegurar que el catálogo se pinta
-        return catalogo;
-      }
-    }
-
     cargando = true;
     actualizarUIBotonesCarga(true);
 
     try {
+      // 1. BD local — fuente primaria siempre
+      if (window.Api?.productos) {
+        const res = await window.Api.productos.listar();
+        if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+          catalogo = res.data.map(p => ({
+            id:          p.hubspot_product_id || String(p.id),
+            nombre:      p.nombre,
+            descripcion: p.descripcion || "",
+            precio:      parseFloat(p.precio) || 0,
+            sku:         p.sku || ""
+          }));
+          console.log(`[Productos] ${catalogo.length} producto(s) cargados desde BD.`);
+          return catalogo;
+        }
+      }
+
+      // 2. Caché localStorage (BD no disponible)
+      if (!forzar) {
+        const cached = leerCache();
+        if (cached) {
+          catalogo = cached;
+          console.log(`[Productos] ${catalogo.length} producto(s) desde caché.`);
+          return catalogo;
+        }
+      }
+
+      // 3. HubSpot API
       const resultado = await window.HubSpotAPI.obtenerTodosLosProductos();
       catalogo = Array.isArray(resultado) && resultado.length > 0 ? resultado : datosEjemplo();
       if (Array.isArray(resultado) && resultado.length > 0) {
@@ -103,13 +119,20 @@
         console.warn("[Productos] HubSpot devolvió 0 productos. Usando datos de ejemplo.");
       }
     } catch (e) {
-      console.error("[Productos] Fallo al cargar catálogo (¿CORS habilitado?):", e);
-      window.mostrarToast?.("⚠ No se pudo cargar el catálogo — usando datos de ejemplo");
-      catalogo = datosEjemplo(); // garantizar fallback siempre
+      // BD y HubSpot fallaron — intentar caché como último recurso
+      const cached = leerCache();
+      if (cached) {
+        catalogo = cached;
+        console.warn("[Productos] BD/HubSpot no disponibles, usando caché.");
+      } else {
+        console.error("[Productos] Fallo al cargar catálogo:", e);
+        window.mostrarToast?.("⚠ No se pudo cargar el catálogo — usando datos de ejemplo");
+        catalogo = datosEjemplo();
+      }
     } finally {
       cargando = false;
       actualizarUIBotonesCarga(false);
-      renderizarResultadosBusqueda(); // pintar catálogo (éxito o fallback)
+      renderizarResultadosBusqueda();
     }
 
     return catalogo;
@@ -386,7 +409,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initEventos();
-    // Carga inicial silenciosa (usa caché si disponible)
     cargarProductos();
 
     window.ProductosCotizacion = {
