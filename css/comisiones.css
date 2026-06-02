@@ -1,0 +1,225 @@
+/* ============================================================
+   COMISIONES.CSS
+   Estilos específicos del módulo de Comisiones.
+   Depende de caja.css (cargado antes) para los estilos base
+   de dashboard, panel detalle, badges y config modal.
+   ============================================================ */
+
+/* ── Avatar de comisión en panel detalle ── */
+.panel-detalle__avatar--comision {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+}
+
+/* ── Estado "parcial" (commissions partially paid) ── */
+.estado-dot--parcial {
+  background-color: #f59e0b;
+}
+
+/* ── Valor diferencia: positivo / negativo / neutro ── */
+.valor-celda--pos {
+  color: #059669;
+  font-weight: var(--font-peso-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.valor-celda--neg {
+  color: #dc2626;
+  font-weight: var(--font-peso-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.valor-celda--cero {
+  color: var(--color-texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Badge de porcentaje de comisión ── */
+.pct-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radio-pill);
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-medio);
+  background: #ede9fe;
+  color: #4c1d95;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Filas de la tabla de comisiones: hover y activa ── */
+.tabla-comisiones tbody tr {
+  cursor: default;
+  transition: background-color var(--trans-rapida);
+}
+
+.tabla-comisiones tbody tr:hover {
+  background-color: var(--color-fondo-suave);
+}
+
+.tabla-comisiones tbody tr.fila-activa {
+  background-color: var(--color-acento-claro);
+}
+
+/* ── Dashboard de comisiones (alias de dashboard-caja) ── */
+.dashboard-comisiones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--esp-3);
+  padding: var(--esp-6) var(--esp-6) 0;
+}
+
+/* ── Monto teórico en panel detalle ── */
+.panel-detalle__monto--comision {
+  color: #6366f1;
+}
+
+/* ── Panel detalle: campos en grid para comisiones ── */
+.panel-detalle__campo-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--color-borde);
+  font-size: var(--font-tam-md);
+}
+
+.panel-detalle__campo-stacked:last-child {
+  border-bottom: none;
+}
+
+.panel-detalle__campo-label {
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: var(--font-peso-semibold);
+}
+
+.panel-detalle__campo-valor {
+  color: var(--color-texto);
+  font-weight: var(--font-peso-medio);
+}
+
+/* ── Botones de acción circular en panel detalle ── */
+.panel-detalle__accion-circ {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: var(--esp-2);
+  background: none;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  color: var(--color-texto-suave);
+  font-size: var(--font-tam-xs);
+  cursor: pointer;
+  transition: all var(--trans-rapida);
+  min-width: 56px;
+}
+
+.panel-detalle__accion-circ:hover {
+  background: var(--color-fondo-hover);
+  color: var(--color-texto);
+  border-color: var(--color-borde-fuerte);
+}
+
+.panel-detalle__accion-icono {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-fondo-suave);
+  border-radius: 50%;
+}
+
+/* ── Header del panel detalle con flex ── */
+.panel-detalle__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  flex-shrink: 0;
+}
+
+.panel-detalle__vp-label {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto-suave);
+}
+
+/* ── Highlight del panel (avatar + título + monto + acciones) ── */
+.panel-detalle__highlight {
+  padding: var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.panel-detalle__highlight-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--esp-3);
+}
+
+.panel-detalle__acciones--cot {
+  display: flex;
+  gap: var(--esp-2);
+  flex-wrap: wrap;
+  margin-top: var(--esp-3);
+}
+
+/* ── Secciones colapsables en panel ── */
+.panel-detalle__seccion--colapsable .panel-detalle__seccion-cuerpo {
+  display: block;
+}
+
+.panel-detalle__seccion--colapsable.colapsado .panel-detalle__seccion-cuerpo {
+  display: none;
+}
+
+.panel-detalle__seccion--colapsable.colapsado .chevron-seccion {
+  transform: rotate(-90deg);
+}
+
+.chevron-seccion {
+  transition: transform var(--trans-rapida);
+}
+
+.panel-detalle__seccion-titulo {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.panel-detalle__seccion-titulo [data-toggle-seccion] {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.panel-detalle__seccion-cuerpo {
+  padding: var(--esp-3) var(--esp-4);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1280px) {
+  .dashboard-comisiones {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-comisiones {
+    grid-template-columns: 1fr;
+    padding: var(--esp-3);
+  }
+}

@@ -51,7 +51,8 @@
 
       <button
         class="toolbar__profile"
-        aria-label="Ver perfil de la cuenta Oblicua"
+        aria-label="Ver perfil de usuario"
+        data-popover="popover-usuario"
       >
         <span class="toolbar__avatar" aria-hidden="true">
           <svg viewBox="0 0 32 32" width="20" height="20">
@@ -60,7 +61,7 @@
             <path fill="#fff" d="M6 28a10 10 0 0 1 20 0v2H6v-2Z" />
           </svg>
         </span>
-        <span class="toolbar__profile-name">Oblicua</span>
+        <span class="toolbar__profile-name">…</span>
         <svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true">
           <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
         </svg>
@@ -112,6 +113,14 @@
                 />
               </svg>
               <span class="sidebar__label">Caja</span>
+            </a>
+          </li>
+          <li class="sidebar__item" role="menuitem">
+            <a href="comisiones.html" class="sidebar__btn" title="Comisiones">
+              <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
+                <path fill="currentColor" d="M16 2a14 14 0 1 0 0 28A14 14 0 0 0 16 2Zm0 2a12 12 0 1 1 0 24A12 12 0 0 1 16 4ZM11 9l12 14-1.5 1.3L9.5 10.3 11 9Zm.5 1a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Zm9 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z" />
+              </svg>
+              <span class="sidebar__label">Comisiones</span>
             </a>
           </li>
         </ul>
@@ -209,18 +218,6 @@
         </button>
 
         <div class="cabecera__acciones">
-          <div class="metodos-pago" aria-label="Métodos de pago aceptados">
-            <img
-              src="https://static.hsappstatic.net/commerce-shared-components-lib/static-1.12581/images/payment_methods.png"
-              alt="Métodos de pago aceptados"
-              class="metodos-pago__imagen"
-            />
-          </div>
-
-          <button class="btn btn--link" id="btn-config-pagos">
-            Configurar pagos online
-          </button>
-
           <button
             class="btn btn--icon btn--bordered"
             id="btn-cabecera-menu"
@@ -870,6 +867,25 @@
        POPOVERS (dropdowns flotantes)
        ============================================================ -->
 
+    <!-- Popover: Usuario activo -->
+    <div class="popover" id="popover-usuario" hidden style="width:260px">
+      <div style="padding:var(--esp-4);border-bottom:1px solid var(--color-borde);">
+        <div style="font-weight:var(--font-peso-semibold);font-size:var(--font-tam-md);margin-bottom:2px;" id="user-pop-nombre">—</div>
+        <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="user-pop-email">—</div>
+        <div style="font-size:var(--font-tam-xs);color:var(--color-texto-debil);margin-top:4px;" id="user-pop-rol">—</div>
+      </div>
+      <div class="popover__lista">
+        <button class="popover__item" id="btn-ir-hubspot">
+          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M14 3v2h4.6l-9.3 9.3 1.4 1.4L20 6.4V11h2V3h-8Zm-1 14H5V7h6V5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4h-2v4Z"/></svg>
+          Ir a HubSpot
+        </button>
+        <button class="popover__item" id="btn-logout" style="color:#dc2626">
+          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M5 3h7v2H5v14h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm11 4 1.4 1.4L14.8 11H21v2h-6.2l2.6 2.6L16 17l-5-5 5-5Z"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+
     <!-- 1. Selector de tipo de objeto (solo Cotizaciones y Caja) -->
     <div class="popover" id="popover-objetos" hidden style="width: 240px">
       <div class="popover__lista" data-lista="objetos">
@@ -892,6 +908,10 @@
               /></svg></span
           >Caja</a
         >
+        <a href="comisiones.html" class="popover__item" style="text-decoration:none">
+          <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4ZM8 9l8 10-1.5 1.2L6.5 10.2 8 9Z"/></svg></span>
+          Comisiones
+        </a>
       </div>
     </div>
 
@@ -911,26 +931,6 @@
               /></svg
           ></span>
           Vista de tabla
-        </button>
-        <button class="popover__item" data-vista-tipo="tablero">
-          <span class="tipo-icono"
-            ><svg viewBox="0 0 24 24" width="14" height="14">
-              <path
-                fill="currentColor"
-                d="M3 3h6v18H3V3Zm8 0h6v12h-6V3Zm8 0h2v18h-2V3Z"
-              /></svg
-          ></span>
-          Vista de tablero
-        </button>
-        <button class="popover__item" data-vista-tipo="lista">
-          <span class="tipo-icono"
-            ><svg viewBox="0 0 24 24" width="14" height="14">
-              <path
-                fill="currentColor"
-                d="M3 5h2v2H3V5Zm0 6h2v2H3v-2Zm0 6h2v2H3v-2Zm4-12h14v2H7V5Zm0 6h14v2H7v-2Zm0 6h14v2H7v-2Z"
-              /></svg
-          ></span>
-          Vista de lista
         </button>
       </div>
     </div>
@@ -2262,89 +2262,6 @@
     </div>
 
     <!-- ============================================================
-       MODAL: Configurar pagos online
-       ============================================================ -->
-    <div class="modal-overlay" id="modal-config-pagos" hidden>
-      <div class="modal">
-        <div class="modal__header">
-          <div class="modal__titulo">Configurar pagos online</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16">
-              <path
-                fill="currentColor"
-                d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
-              />
-            </svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <p class="modal__intro">
-            Habilita pagos en línea para que tus clientes paguen las
-            cotizaciones aprobadas directamente desde el link público.
-            Selecciona los métodos que quieres aceptar.
-          </p>
-          <div class="form-grupo">
-            <label class="form-label" for="cfg-pagos-pasarela"
-              >Pasarela de pagos</label
-            >
-            <select id="cfg-pagos-pasarela" class="form-select">
-              <option value="stripe">Stripe</option>
-              <option value="wompi">Wompi (Colombia)</option>
-              <option value="payu">PayU Latam</option>
-              <option value="mercadopago">Mercado Pago</option>
-            </select>
-          </div>
-          <div class="form-grupo">
-            <label class="form-label">Métodos aceptados</label>
-            <label class="check-lista__item"
-              ><input type="checkbox" checked /> Visa</label
-            >
-            <label class="check-lista__item"
-              ><input type="checkbox" checked /> Mastercard</label
-            >
-            <label class="check-lista__item"
-              ><input type="checkbox" checked /> American Express</label
-            >
-            <label class="check-lista__item"
-              ><input type="checkbox" /> ACH / Transferencia bancaria</label
-            >
-            <label class="check-lista__item"
-              ><input type="checkbox" /> PSE</label
-            >
-          </div>
-          <div class="form-grupo form-grupo--fila">
-            <div>
-              <label class="form-label" for="cfg-pagos-api"
-                >API Key (público)</label
-              >
-              <input
-                type="text"
-                id="cfg-pagos-api"
-                class="form-input"
-                placeholder="pk_live_..."
-              />
-            </div>
-            <div>
-              <label class="form-label" for="cfg-pagos-moneda"
-                >Moneda por defecto</label
-              >
-              <select id="cfg-pagos-moneda" class="form-select">
-                <option value="COP">COP</option>
-                <option value="USD">USD</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
-          <button class="btn btn--naranja" id="btn-guardar-config-pagos">
-            Guardar configuración
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================
        MODAL: Informes de cotizaciones
        ============================================================ -->
     <div class="modal-overlay" id="modal-informes" hidden>
@@ -2747,6 +2664,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
     <!-- Scripts principales -->
+    <script src="js/app-session.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/main.js"></script>
     <script src="js/sidebar.js"></script>

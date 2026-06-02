@@ -9,7 +9,12 @@
    ============================================================ */
 (function () {
 
-  const BASE = (document.querySelector('base')?.getAttribute('href') || '/').replace(/\/$/, '') + '/api';
+  // Deriva la ruta base de la URL actual de la página, no del root del servidor.
+  // Así funciona tanto en http://localhost/Visa-Facil/ como en http://localhost/
+  const BASE = (
+    document.querySelector('base')?.getAttribute('href') ||
+    window.location.pathname.replace(/\/[^/]*$/, '')
+  ).replace(/\/$/, '') + '/api';
 
   // Convierte un objeto de parámetros a query string
   function toQS(params = {}) {

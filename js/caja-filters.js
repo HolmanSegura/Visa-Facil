@@ -11,9 +11,7 @@
    ============================================================ */
 (function () {
 
-  // Fecha de referencia: en producción debería ser new Date().
-  // Se mantiene fija para que la demo refleje datos visibles.
-  const HOY_REF = new Date("2026-05-20");
+  const HOY_REF = new Date();
 
   function debounce(fn, wait = 300) {
     let t;

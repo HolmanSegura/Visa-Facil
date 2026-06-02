@@ -406,12 +406,12 @@
 
     if (inDesde && !inDesde.value) {
       // Default: año actual hasta hoy
-      const hoy = new Date("2026-05-20");
+      const hoy = new Date();
       const ini = new Date(hoy.getFullYear(), 0, 1);
       inDesde.value = fechaIso(ini);
     }
     if (inHasta && !inHasta.value) {
-      inHasta.value = fechaIso(new Date("2026-05-20"));
+      inHasta.value = fechaIso(new Date());
     }
 
     if (select && window.estadoApp) {

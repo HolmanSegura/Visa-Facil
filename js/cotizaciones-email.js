@@ -296,17 +296,17 @@
   }
 
   /**
-   * Envía el payload al webhook de Dapta vía fetch POST.
-   * Lanza Error si el servidor responde con status !== 2xx.
+   * Envía el payload a través del backend PHP (/api/email.php),
+   * que a su vez llama a Dapta con cURL desde el servidor.
+   * Esto evita los problemas de CORS y mantiene la API key segura.
    */
   async function enviarPorDapta(payload) {
-    const res = await fetch(getDaptaUrl(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": getDaptaKey(),
-      },
-      body: JSON.stringify(payload),
+    const base = window.location.pathname.replace(/\/[^/]*$/, '').replace(/\/$/, '');
+    const res  = await fetch(base + '/api/email.php', {
+      method:      'POST',
+      credentials: 'same-origin',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify(payload),
     });
 
     if (!res.ok) {

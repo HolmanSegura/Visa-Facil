@@ -631,17 +631,22 @@
     if (btnG) btnG.addEventListener("click", () => abrirComo("gasto"));
     if (btnI) btnI.addEventListener("click", () => abrirComo("ingreso"));
 
-    // Cambio de categoría → toggle modo comisión
+    // Cambio de categoría → toggle modo comisión SOLO para gastos
+    // Para ingresos la categoría "comisiones" no activa el campo de producto
+    // (un ingreso de comisión no necesita calcular un valor automático)
     if (selectCat) {
       selectCat.addEventListener("change", () => {
-        modoComision(selectCat.value === "comisiones");
-        calcularComisionGasto();
+        const esGasto = tipoInput.value === "gasto";
+        modoComision(esGasto && selectCat.value === "comisiones");
+        if (esGasto) calcularComisionGasto();
       });
     }
 
-    // Responsable cambia mientras la categoría es "comisiones" → recalcular
+    // Responsable cambia mientras la categoría es "comisiones" (solo gastos)
     if (selectResp) {
-      selectResp.addEventListener("change", calcularComisionGasto);
+      selectResp.addEventListener("change", () => {
+        if (tipoInput.value === "gasto") calcularComisionGasto();
+      });
     }
 
     // Autocomplete seleccionó un producto → recalcular

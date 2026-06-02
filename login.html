@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar sesión | Visa Fácil</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/reset.css" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body {
+        font-family: Inter, system-ui, sans-serif;
+        background: var(--color-fondo, #f1f5f9);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        color: var(--color-texto, #1a202c);
+      }
+
+      .login-card {
+        background: #fff;
+        border: 1px solid var(--color-borde, #e2e8f0);
+        border-radius: 12px;
+        padding: 40px 36px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 24px rgba(0,0,0,.07);
+      }
+
+      .login-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
+      }
+
+      .login-logo img { height: 32px; }
+
+      .login-logo__texto {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--color-texto, #1a202c);
+      }
+
+      .login-titulo {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .login-subtitulo {
+        font-size: 13px;
+        color: var(--color-texto-suave, #64748b);
+        margin-bottom: 28px;
+      }
+
+      .form-grupo { margin-bottom: 16px; }
+
+      .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        color: var(--color-texto, #1a202c);
+      }
+
+      .form-input {
+        width: 100%;
+        height: 38px;
+        padding: 0 12px;
+        border: 1px solid var(--color-borde, #e2e8f0);
+        border-radius: 7px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--color-texto, #1a202c);
+        background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+        outline: none;
+      }
+
+      .form-input:focus {
+        border-color: var(--color-acento, #f97316);
+        box-shadow: 0 0 0 3px rgba(249,115,22,.12);
+      }
+
+      .form-input.error { border-color: #dc2626; }
+
+      .btn-login {
+        width: 100%;
+        height: 40px;
+        background: var(--color-acento, #f97316);
+        color: #fff;
+        border: none;
+        border-radius: 7px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s, opacity .15s;
+        margin-top: 8px;
+      }
+
+      .btn-login:hover { background: #ea7010; }
+      .btn-login:disabled { opacity: .55; cursor: not-allowed; }
+
+      .login-error {
+        margin-top: 14px;
+        padding: 10px 14px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 7px;
+        font-size: 13px;
+        color: #dc2626;
+        display: none;
+      }
+
+      .login-error.visible { display: block; }
+
+      .login-divider {
+        margin: 24px 0 16px;
+        border: none;
+        border-top: 1px solid var(--color-borde, #e2e8f0);
+      }
+
+      .login-nota {
+        font-size: 12px;
+        color: var(--color-texto-debil, #94a3b8);
+        line-height: 1.5;
+      }
+
+      .login-nota strong { color: var(--color-texto-suave, #64748b); }
+
+      .spinner {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin .6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="img/visafacil.png" alt="Visa Fácil" onerror="this.style.display='none'" />
+        <span class="login-logo__texto">Visa Fácil</span>
+      </div>
+
+      <div class="login-titulo">Iniciar sesión</div>
+      <div class="login-subtitulo">Ingresa con tu correo de Oblicua</div>
+
+      <form id="form-login" novalidate>
+        <div class="form-grupo">
+          <label class="form-label" for="login-email">Correo electrónico</label>
+          <input
+            type="email"
+            id="login-email"
+            class="form-input"
+            placeholder="nestor@oblicua.co"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="form-grupo">
+          <label class="form-label" for="login-password">Contraseña</label>
+          <input
+            type="password"
+            id="login-password"
+            class="form-input"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-login" id="btn-login">
+          Ingresar
+        </button>
+
+        <div class="login-error" id="login-error"></div>
+      </form>
+
+      <hr class="login-divider" />
+
+      <p class="login-nota">
+        <strong>Contraseña inicial:</strong> <code>Oblicua2026!</code><br />
+        Al ingresar por primera vez, tu contraseña se actualiza automáticamente.
+        Contacta al administrador si no puedes acceder.
+      </p>
+    </div>
+
+    <script>
+      (function () {
+        const BASE = window.location.pathname.replace(/\/[^/]*$/, '').replace(/\/$/, '');
+
+        // Si ya tiene sesión, redirigir al destino o al inicio
+        fetch(BASE + '/api/auth.php?action=check', { credentials: 'same-origin' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.ok) {
+              const params = new URLSearchParams(window.location.search);
+              window.location.href = params.get('next') || (BASE + '/index.html');
+            }
+          })
+          .catch(() => { /* sin sesión — mostrar formulario */ });
+
+        const form     = document.getElementById('form-login');
+        const btnLogin = document.getElementById('btn-login');
+        const errBox   = document.getElementById('login-error');
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          errBox.classList.remove('visible');
+
+          const email    = document.getElementById('login-email').value.trim();
+          const password = document.getElementById('login-password').value;
+
+          if (!email || !password) {
+            mostrarError('Por favor completa todos los campos.');
+            return;
+          }
+
+          btnLogin.disabled = true;
+          btnLogin.innerHTML = '<span class="spinner"></span>Ingresando…';
+
+          try {
+            const res  = await fetch(BASE + '/api/auth.php?action=login', {
+              method:      'POST',
+              credentials: 'same-origin',
+              headers:     { 'Content-Type': 'application/json' },
+              body:        JSON.stringify({ email, password }),
+            });
+
+            const data = await res.json();
+
+            if (data.ok) {
+              const params = new URLSearchParams(window.location.search);
+              window.location.href = params.get('next') || (BASE + '/index.html');
+            } else {
+              mostrarError(data.error || 'Credenciales incorrectas. Verifica tu correo y contraseña.');
+            }
+          } catch (err) {
+            mostrarError('Error de red. Verifica tu conexión e inténtalo de nuevo.');
+          } finally {
+            btnLogin.disabled = false;
+            btnLogin.innerHTML = 'Ingresar';
+          }
+        });
+
+        function mostrarError(msg) {
+          errBox.textContent = msg;
+          errBox.classList.add('visible');
+        }
+      })();
+    </script>
+  </body>
+</html>

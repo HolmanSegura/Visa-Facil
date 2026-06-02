@@ -1,58 +1,50 @@
 /* ============================================================
-   HUBSPOT-API.JS — Dev mode (llamadas directas + extensión CORS)
+   HUBSPOT-API.JS — Modo producción (proxy backend PHP)
    HubSpot CRM API v3  ·  Licencia Starter
 
-   Nota de licencia: sin objeto Quotes nativo → las cotizaciones
-   se persisten como Invoices asociadas a Contacts y Products.
+   Todas las llamadas pasan por /api/hubspot-proxy.php.
+   El token de Private App vive SOLO en el servidor (.env).
+   El navegador NUNCA recibe ni envía el token.
 
    Uso:
-     window.HubSpotAPI.configurar({ token: "pat-..." })
-     const productos = await window.HubSpotAPI.obtenerProductos()
+     window.HubSpotAPI.obtenerProductos()
+     window.HubSpotAPI.probarConexion()
    ============================================================ */
 (function () {
-  const API_BASE = "https://api.hubapi.com";
-
   const cfg = {
-    token: "", // Se configura desde .env vía window.AppConfig.hubspot_token
     portalId: "50772182",
   };
 
+  // Base del proxy — igual a api-client.js
+  const PROXY_BASE = window.location.pathname.replace(/\/[^/]*$/, '').replace(/\/$/, '') + '/api/hubspot-proxy.php';
+
   function configurar(opciones = {}) {
     Object.assign(cfg, opciones);
-    console.info(
-      "[HubSpot API] Config actualizada — token:",
-      cfg.token ? "***" + cfg.token.slice(-4) : "(vacío)",
-    );
+    console.info("[HubSpot API] Config actualizada (proxy backend activo)");
   }
 
-  function headers() {
-    const token = cfg.token || window.AppConfig?.hubspot_token || "";
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-  }
-
-  const CORS_PROXY = "https://corsproxy.io/?";
-
+  /**
+   * Llama al proxy PHP que reenvía a HubSpot con el token del servidor.
+   * @param {string} method  GET | POST | PATCH
+   * @param {string} path    Ruta completa de HubSpot, incluyendo query string
+   * @param {*}      body    Objeto para el body (POST/PATCH)
+   */
   async function req(method, path, body) {
-    const target = `${API_BASE}${path}`;
-    const url = `${CORS_PROXY}${encodeURIComponent(target)}`;
+    const url = `${PROXY_BASE}?path=${encodeURIComponent(path)}`;
 
-    const res = await fetch(url, {
+    const opts = {
       method,
-      headers: headers(),
-      ...(body !== undefined && { body: JSON.stringify(body) }),
-    });
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+    };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+
+    const res = await fetch(url, opts);
 
     if (!res.ok) {
       let detalle = "";
-      try {
-        detalle = await res.text();
-      } catch (_) {}
-      throw new Error(
-        `HTTP ${res.status} ${method} ${path}: ${detalle.slice(0, 200)}`,
-      );
+      try { detalle = await res.text(); } catch (_) {}
+      throw new Error(`HTTP ${res.status} ${method} ${path}: ${detalle.slice(0, 200)}`);
     }
     return res.json();
   }
