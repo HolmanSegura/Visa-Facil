@@ -27,13 +27,37 @@ require_once __DIR__ . '/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
     exit(0);
 }
 
+// ── GET: historial de envíos de una cotización ──────────────
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $cotizacionId = isset($_GET['cotizacion_id']) ? (int) $_GET['cotizacion_id'] : 0;
+    if (!$cotizacionId) {
+        errorResponse('Parámetro cotizacion_id requerido', 400);
+    }
+    try {
+        $db   = getDB();
+        $stmt = $db->prepare(
+            "SELECT id, destinatario, asunto, estado, error_detalle, enviado_at, created_at
+             FROM envios_email
+             WHERE cotizacion_id = ?
+             ORDER BY id DESC
+             LIMIT 20"
+        );
+        $stmt->execute([$cotizacionId]);
+        $rows = $stmt->fetchAll();
+        jsonResponse(['ok' => true, 'data' => $rows, 'total' => count($rows)]);
+    } catch (\PDOException $e) {
+        error_log('[email.php GET] ' . $e->getMessage());
+        errorResponse('Error de base de datos', 500);
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    errorResponse('Solo se acepta POST', 405);
+    errorResponse('Método no soportado', 405);
 }
 
 $body = getBody();

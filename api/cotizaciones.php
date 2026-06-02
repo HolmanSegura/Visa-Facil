@@ -261,11 +261,25 @@ function resolverClienteId(PDO $db, array $b): ?int {
 function resolverNegocioId(PDO $db, array $b, ?int $clienteId): ?int {
     if (!empty($b['negocio_id'])) return (int) $b['negocio_id'];
     if (!empty($b['negocio'])) {
+        $dealId = !empty($b['hubspot_deal_id']) ? $b['hubspot_deal_id'] : null;
+
+        // Buscar por nombre primero
         $s = $db->prepare("SELECT id FROM negocios WHERE nombre = ? LIMIT 1");
         $s->execute([$b['negocio']]);
         $row = $s->fetch();
-        if ($row) return (int) $row['id'];
-        $db->prepare("INSERT INTO negocios (nombre, cliente_id) VALUES (?, ?)")->execute([$b['negocio'], $clienteId]);
+
+        if ($row) {
+            // Actualizar hubspot_deal_id si viene informado y era NULL
+            if ($dealId) {
+                $db->prepare("UPDATE negocios SET hubspot_deal_id = ? WHERE id = ? AND (hubspot_deal_id IS NULL OR hubspot_deal_id = '')")
+                   ->execute([$dealId, (int) $row['id']]);
+            }
+            return (int) $row['id'];
+        }
+
+        // Crear nuevo negocio
+        $db->prepare("INSERT INTO negocios (nombre, hubspot_deal_id, cliente_id) VALUES (?, ?, ?)")
+           ->execute([$b['negocio'], $dealId, $clienteId]);
         return (int) $db->lastInsertId();
     }
     return null;

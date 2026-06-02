@@ -351,6 +351,12 @@
     await enviarPorDapta(payload);
 
     window.mostrarToast?.(`✓ Cotización enviada a ${destinatario}`);
+
+    // Notificar a otros módulos (ej: historial de emails en ui-interactions.js)
+    document.dispatchEvent(new CustomEvent("cotizacion:emailEnviado", {
+      detail: { cotizacionId: cot.id, destinatario }
+    }));
+
     return true;
   }
 

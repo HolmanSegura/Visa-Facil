@@ -1554,16 +1554,28 @@
                 <option value="">Cargando…</option>
               </select>
             </div>
-            <div class="form-grupo form-grupo--full">
-              <label class="form-label" for="cot-negocio"
-                >Nombre del negocio asociado (hs_deal_name)</label
-              >
-              <input
-                type="text"
-                id="cot-negocio"
-                class="form-input"
-                placeholder="Nombre del deal"
-              />
+            <div class="form-grupo form-grupo--full" id="negocio-autocomplete-wrap">
+              <label class="form-label" for="cot-negocio">Negocio / Deal de HubSpot</label>
+              <div class="contacto-autocomplete">
+                <input
+                  type="text"
+                  id="cot-negocio"
+                  class="form-input"
+                  placeholder="Escribe para buscar un deal…"
+                  autocomplete="off"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-controls="negocio-sugerencias"
+                />
+                <input type="hidden" id="cot-deal-id" />
+                <ul
+                  id="negocio-sugerencias"
+                  class="contacto-sugerencias"
+                  hidden
+                  role="listbox"
+                  aria-label="Deals sugeridos"
+                ></ul>
+              </div>
             </div>
             <div class="form-grupo form-grupo--full">
               <label class="form-label" for="cot-comentarios"
@@ -1825,9 +1837,19 @@
               </button>
             </div>
             <p class="form-help" style="margin-top: 6px">
-              Remitente: <strong>soporte@oblicua.co</strong>. Si la integración
-              con HubSpot no está configurada, se abrirá tu cliente de correo.
+              Remitente: <strong>soporte@oblicua.co</strong>. El correo se envía a través de Dapta.
             </p>
+
+            <!-- Historial de envíos de esta cotización -->
+            <div id="email-historial-wrap" style="margin-top:12px;display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:var(--font-tam-sm);font-weight:var(--font-peso-semibold);color:var(--color-texto-suave)">Historial de envíos</span>
+                <button class="btn btn--ghost btn--sm" id="btn-recargar-historial" style="font-size:11px">Actualizar</button>
+              </div>
+              <div id="email-historial-lista" style="font-size:var(--font-tam-sm)">
+                <span style="color:var(--color-texto-debil)">Sin envíos registrados.</span>
+              </div>
+            </div>
           </div>
         </div>
         <!-- /.modal__body -->
@@ -2679,6 +2701,7 @@
     <script src="js/cotizaciones-contactos.js"></script>
     <script src="js/cotizaciones-productos.js"></script>
     <script src="js/cotizaciones-descuentos.js"></script>
+    <script src="js/cotizaciones-deals.js"></script>
     <script src="js/cotizaciones-email.js"></script>
 
     <script src="js/ui-interactions.js"></script>

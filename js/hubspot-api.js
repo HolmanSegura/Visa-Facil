@@ -167,6 +167,70 @@
   }
 
   // -----------------------------------------------------------------
+  // DEALS (Negocios)
+  // -----------------------------------------------------------------
+
+  const PROPS_DEAL = "dealname,amount,pipeline,dealstage,closedate,hubspot_owner_id";
+
+  async function buscarDeals(termino) {
+    const body = {
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: "dealname",
+              operator: "CONTAINS_TOKEN",
+              value: termino,
+            },
+          ],
+        },
+      ],
+      properties: PROPS_DEAL.split(","),
+      limit: 20,
+      sorts: [{ propertyName: "closedate", direction: "DESCENDING" }],
+    };
+    const data = await req("POST", "/crm/v3/objects/deals/search", body);
+    console.log("[HubSpot] Respuesta búsqueda deals:", data);
+    return (data.results || []).map(normalizarDeal);
+  }
+
+  async function obtenerDeals({ limite = 50 } = {}) {
+    const data = await req(
+      "GET",
+      `/crm/v3/objects/deals?limit=${limite}&properties=${PROPS_DEAL}&archived=false`,
+    );
+    return (data.results || []).map(normalizarDeal);
+  }
+
+  function normalizarDeal(r) {
+    const p = r.properties || {};
+    return {
+      id:          r.id,
+      nombre:      p.dealname || "",
+      monto:       parseFloat(p.amount) || 0,
+      etapa:       p.dealstage || "",
+      pipeline:    p.pipeline || "",
+      fechaCierre: p.closedate || "",
+      propietarioId: p.hubspot_owner_id || "",
+    };
+  }
+
+  // -----------------------------------------------------------------
+  // OWNERS (propietarios / asesores de HubSpot)
+  // -----------------------------------------------------------------
+
+  async function obtenerOwners() {
+    const data = await req("GET", "/crm/v3/owners?archived=false&limit=100");
+    console.log("[HubSpot] Respuesta owners:", data);
+    return (data.results || []).map(r => ({
+      id:          r.id,
+      nombre:      `${r.firstName || ""} ${r.lastName || ""}`.trim() || r.email || "",
+      email:       r.email || "",
+      hubspotId:   r.id,
+    }));
+  }
+
+  // -----------------------------------------------------------------
   // FACTURAS (proxy de Cotizaciones)
   //
   // Mapa de estados:
@@ -294,6 +358,13 @@
       obtenerContactos,
       buscarContactos,
       obtenerContactoPorId,
+
+      // Deals / Negocios
+      buscarDeals,
+      obtenerDeals,
+
+      // Owners / Asesores
+      obtenerOwners,
 
       // Facturas / Cotizaciones
       guardarCotizacionComoFactura,

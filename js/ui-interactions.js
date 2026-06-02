@@ -1062,16 +1062,23 @@
           return;
         }
 
+        const negocio    = document.getElementById("cot-negocio")?.value.trim() || "";
+        const dealId     = document.getElementById("cot-deal-id")?.value.trim() || "";
+        const comentarios = document.getElementById("cot-comentarios")?.value.trim() || "";
+
         const nueva = {
           titulo,
-          estado: estado || "borrador",
+          estado:           estado || "borrador",
           cantidad,
           moneda,
-          estadoFirma: "no_aplica",
+          estadoFirma:      "no_aplica",
           fechaCreacion,
           fechaVencimiento,
-          responsable: propietario || "Néstor Goyes",
-          cliente: cliente || "—"
+          responsable:      propietario || "Néstor Goyes",
+          cliente:          cliente || "—",
+          negocio:          negocio || "",
+          hubspot_deal_id:  dealId  || null,
+          observaciones:    comentarios || "",
         };
 
         if (window.Api) {
@@ -1096,6 +1103,9 @@
         // Reset form
         document.getElementById("form-cotizacion").reset();
         document.getElementById("cot-cantidad").value = "0";
+        // Limpiar autocompletes
+        if (window.DealsAutocomplete) window.DealsAutocomplete.limpiar();
+        if (window.ContactosAutocomplete) window.ContactosAutocomplete.limpiar();
 
         // Cerrar modal
         Modales.cerrar(document.getElementById("modal-crear-cotizacion"));
@@ -1822,6 +1832,85 @@
          (Funcionalidad integrada en initModalAgregarVista)
      ---------------------------------------------------------- */
   function initModalVistasExtras() {}
+  /* ----------------------------------------------------------
+     HISTORIAL DE EMAILS — Sección inline en el modal de cotización
+     Carga los últimos envíos de la cotización activa desde
+     GET /api/email.php?cotizacion_id=N
+     ---------------------------------------------------------- */
+  function initHistorialEmails() {
+    const modal = document.getElementById("modal-crear-cotizacion");
+    if (!modal) return;
+
+    const BASE = window.location.pathname.replace(/\/[^/]*$/, "").replace(/\/$/, "");
+
+    function escHtml(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function estadoBadge(estado) {
+      const col = { enviado: "#059669", pendiente: "#f59e0b", error: "#dc2626" }[estado] || "#6b7280";
+      const txt = { enviado: "Enviado", pendiente: "Pendiente", error: "Error" }[estado] || estado;
+      return `<span style="display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;background:${col}22;color:${col}">${txt}</span>`;
+    }
+
+    async function cargarHistorial(cotizacionId) {
+      const wrap  = document.getElementById("email-historial-wrap");
+      const lista = document.getElementById("email-historial-lista");
+      if (!wrap || !lista) return;
+      if (!cotizacionId) { wrap.style.display = "none"; return; }
+
+      wrap.style.display = "block";
+      lista.innerHTML = `<span style="color:var(--color-texto-debil)">Cargando…</span>`;
+
+      try {
+        const res  = await fetch(`${BASE}/api/email.php?cotizacion_id=${cotizacionId}`, { credentials: "same-origin" });
+        const data = await res.json();
+        if (!data.ok || !data.data?.length) {
+          lista.innerHTML = `<span style="color:var(--color-texto-debil)">Sin envíos registrados.</span>`;
+          return;
+        }
+        lista.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:var(--font-tam-sm)">
+          <thead>
+            <tr style="border-bottom:1px solid var(--color-borde)">
+              <th style="text-align:left;padding:3px 6px;color:var(--color-texto-suave)">Destinatario</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--color-texto-suave)">Estado</th>
+              <th style="text-align:left;padding:3px 6px;color:var(--color-texto-suave)">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>${data.data.slice(0,8).map(e => `
+            <tr style="border-bottom:1px solid var(--color-borde)">
+              <td style="padding:4px 6px;color:var(--color-texto)">${escHtml(e.destinatario)}</td>
+              <td style="padding:4px 6px">${estadoBadge(e.estado)}</td>
+              <td style="padding:4px 6px;color:var(--color-texto-suave)">${e.enviado_at ? e.enviado_at.slice(0,16) : e.created_at?.slice(0,16) || "—"}</td>
+            </tr>`).join("")}
+          </tbody></table>`;
+      } catch (e) {
+        lista.innerHTML = `<span style="color:var(--color-texto-debil)">No se pudo cargar el historial.</span>`;
+        console.warn("[Historial emails] Error:", e.message);
+      }
+    }
+
+    // Recargar historial al abrir el modal con una cotización existente
+    new MutationObserver(() => {
+      if (!modal.hasAttribute("hidden")) {
+        const cotId = parseInt(modal.dataset.cotizacionId, 10) || 0;
+        cargarHistorial(cotId);
+      }
+    }).observe(modal, { attributes: true, attributeFilter: ["hidden"] });
+
+    // Botón "Actualizar" dentro del modal
+    document.getElementById("btn-recargar-historial")?.addEventListener("click", () => {
+      const cotId = parseInt(modal.dataset.cotizacionId, 10) || 0;
+      cargarHistorial(cotId);
+    });
+
+    // También cargar después de un envío exitoso
+    document.addEventListener("cotizacion:emailEnviado", (e) => {
+      const cotId = e.detail?.cotizacionId || parseInt(modal.dataset.cotizacionId, 10) || 0;
+      if (cotId) setTimeout(() => cargarHistorial(cotId), 1000);
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     Popovers.init();
     Modales.init();
@@ -1851,6 +1940,7 @@
     initDuplicarVista();
     initModalVistasExtras();
     initClickFilas();
+    initHistorialEmails();
 
     // Exponer para debug
     window.Popovers = Popovers;
