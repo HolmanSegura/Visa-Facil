@@ -254,7 +254,7 @@
         fecha, tipo: "gasto", categoria: "comisiones",
         descripcion: desc, responsable: asesor,
         valor, moneda: "COP", estado: "pagado",
-        metodoPago: metodo
+        metodo_pago: metodo
       };
 
       if (window.Api) {
@@ -354,9 +354,10 @@
       if (!raw) return clonarDefault();
       const parsed = JSON.parse(raw);
       if (!parsed || !Array.isArray(parsed.porAsesor)) return clonarDefault();
-      parsed.porAsesor = (parsed.porAsesor || []).map(a =>
-        a.activo === undefined ? { ...a, activo: true } : a
-      );
+      parsed.porAsesor = (parsed.porAsesor || []).map(a => ({
+        ...a,
+        activo: a.activo === undefined ? true : !!a.activo
+      }));
       return Object.assign(clonarDefault(), parsed);
     } catch (e) {
       return clonarDefault();
@@ -1288,6 +1289,18 @@
       window.Api.comisiones.obtenerConfig()
         .then(resp => {
           if (resp && Array.isArray(resp.porAsesor)) {
+            // Normalizar formato de API → formato JS antes de guardar en localStorage
+            resp.porAsesor = resp.porAsesor.map(a => ({
+              ...a,
+              activo: !!a.activo
+            }));
+            if (Array.isArray(resp.porProducto)) {
+              resp.porProducto = resp.porProducto.map(p => ({
+                productoId: p.productoId ?? p.producto_id ?? null,
+                producto:   p.producto   ?? p.nombre_producto ?? '',
+                porcentaje: parseFloat(p.porcentaje) || 5
+              }));
+            }
             try { localStorage.setItem(KEY_LS, JSON.stringify(Object.assign(clonarDefault(), resp))); } catch (_) { /**/ }
           }
         })
