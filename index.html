@@ -1862,6 +1862,70 @@
       </div>
     </div>
 
+    <!-- Modal: Editar cotización -->
+    <div class="modal-overlay" id="modal-editar-cotizacion" hidden>
+      <div class="modal">
+        <div class="modal__header">
+          <div class="modal__titulo">Editar cotización</div>
+          <button class="modal__cerrar" data-cerrar-modal>
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal__body">
+          <input type="hidden" id="editar-cot-id"/>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-cot-nombre">Título</label>
+            <input type="text" id="editar-cot-nombre" class="form-input" placeholder="Título de la cotización"/>
+          </div>
+          <div class="cot-form-grid">
+            <div class="form-grupo">
+              <label class="form-label" for="editar-cot-estado">Estado</label>
+              <select id="editar-cot-estado" class="form-select">
+                <option value="borrador">Borrador</option>
+                <option value="en_revision">En revisión</option>
+                <option value="publicado">Enviado</option>
+                <option value="aprobado">Aprobado ✓</option>
+                <option value="rechazado">Rechazado</option>
+                <option value="vencido">Vencido</option>
+              </select>
+            </div>
+            <div class="form-grupo">
+              <label class="form-label" for="editar-cot-moneda">Moneda</label>
+              <select id="editar-cot-moneda" class="form-select">
+                <option value="COP">COP — Peso colombiano</option>
+                <option value="USD">USD — Dólar americano</option>
+              </select>
+            </div>
+          </div>
+          <div class="cot-form-grid">
+            <div class="form-grupo">
+              <label class="form-label" for="editar-cot-propietario">Propietario</label>
+              <select id="editar-cot-propietario" class="form-select">
+                <option value="">— Seleccionar —</option>
+              </select>
+            </div>
+            <div class="form-grupo">
+              <label class="form-label" for="editar-cot-fvencimiento">Fecha de vencimiento</label>
+              <input type="date" id="editar-cot-fvencimiento" class="form-input"/>
+            </div>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-cot-cliente">Cliente</label>
+            <input type="text" id="editar-cot-cliente" class="form-input" placeholder="Nombre del cliente"/>
+          </div>
+          <p class="modal__ayuda" id="editar-cot-aprobacion-nota" hidden>
+            Al cambiar a <strong>Aprobado</strong> se generará automáticamente la factura en HubSpot y se registrará la comisión pendiente del propietario en Caja.
+          </p>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--naranja" id="guardar-editar-cotizacion">Guardar cambios</button>
+          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Editar columnas -->
     <div class="modal-overlay" id="modal-editar-columnas" hidden>
       <div class="modal modal--ancho">

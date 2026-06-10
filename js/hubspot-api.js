@@ -157,12 +157,47 @@
     const p = r.properties || {};
     return {
       id: r.id,
+      tipo: "contacto",
       nombre:
         `${p.firstname || ""} ${p.lastname || ""}`.trim() || p.email || "",
       email: p.email || "",
       empresa: p.company || "",
       telefono: p.phone || "",
       cargo: p.jobtitle || "",
+    };
+  }
+
+  // -----------------------------------------------------------------
+  // EMPRESAS (Companies)
+  // -----------------------------------------------------------------
+
+  const PROPS_EMPRESA = "name,domain,phone,city,industry";
+
+  async function buscarEmpresas(termino) {
+    const body = {
+      filterGroups: [
+        { filters: [{ propertyName: "name",   operator: "CONTAINS_TOKEN", value: termino }] },
+        { filters: [{ propertyName: "domain", operator: "CONTAINS_TOKEN", value: termino }] },
+      ],
+      properties: PROPS_EMPRESA.split(","),
+      limit: 20,
+    };
+    const data = await req("POST", "/crm/v3/objects/companies/search", body);
+    console.log("[HubSpot] Respuesta búsqueda empresas:", data);
+    return (data.results || []).map(normalizarEmpresa);
+  }
+
+  function normalizarEmpresa(r) {
+    const p = r.properties || {};
+    return {
+      id: r.id,
+      tipo: "empresa",
+      nombre: p.name || "",
+      email: "",
+      empresa: p.name || "",
+      dominio: p.domain || "",
+      telefono: p.phone || "",
+      ciudad: p.city || "",
     };
   }
 
@@ -223,11 +258,94 @@
     const data = await req("GET", "/crm/v3/owners?archived=false&limit=100");
     console.log("[HubSpot] Respuesta owners:", data);
     return (data.results || []).map(r => ({
-      id:          r.id,
-      nombre:      `${r.firstName || ""} ${r.lastName || ""}`.trim() || r.email || "",
-      email:       r.email || "",
-      hubspotId:   r.id,
+      id:        r.id,
+      nombre:    `${r.firstName || ""} ${r.lastName || ""}`.trim() || r.email || "",
+      email:     r.email || "",
+      hubspotId: r.id,
     }));
+  }
+
+  // -----------------------------------------------------------------
+  // CARGA Y APLICACIÓN DE OWNERS EN EL DOM
+  // -----------------------------------------------------------------
+
+  const CACHE_OWNERS_KEY = "hubspot:owners:v1";
+  const CACHE_OWNERS_TTL = 15 * 60 * 1000; // 15 min
+
+  function _esc(s) {
+    return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function _ini(nombre) {
+    return (nombre || "?").split(" ").map(w => w[0] || "").join("").toUpperCase().slice(0, 2) || "?";
+  }
+
+  async function cargarYAplicarOwners() {
+    let owners = null;
+
+    // 1. Intentar desde caché
+    try {
+      const cached = JSON.parse(localStorage.getItem(CACHE_OWNERS_KEY) || "null");
+      if (cached && Date.now() - cached.ts < CACHE_OWNERS_TTL && Array.isArray(cached.data)) {
+        owners = cached.data;
+      }
+    } catch (_) {}
+
+    // 2. Si no hay caché válida, pedir a HubSpot
+    if (!owners) {
+      try {
+        owners = await obtenerOwners();
+        localStorage.setItem(CACHE_OWNERS_KEY, JSON.stringify({ ts: Date.now(), data: owners }));
+      } catch (e) {
+        console.warn("[HubSpot] No se pudieron cargar owners:", e.message);
+        return;
+      }
+    }
+
+    if (!Array.isArray(owners) || owners.length === 0) return;
+
+    window.ownersCatalogo = owners;
+
+    const opHtml = owners.map(o => `<option value="${_esc(o.nombre)}">${_esc(o.nombre)}</option>`).join("");
+
+    // Select propietario en modales "Crear cotización" y "Editar cotización"
+    ["cot-propietario", "editar-cot-propietario"].forEach(selId => {
+      const sel = document.getElementById(selId);
+      if (sel && (!sel.options.length || sel.options[0]?.text === "Cargando…" || sel.options[0]?.text === "— Seleccionar —")) {
+        sel.innerHTML = `<option value="">— Seleccionar —</option>` + opHtml;
+      }
+    });
+
+    // Select asesor en reporte de comisiones
+    const selAsesor = document.getElementById("rep-com-asesor");
+    if (selAsesor && selAsesor.options.length <= 1) {
+      selAsesor.innerHTML = `<option value="">Todos</option>` + opHtml;
+    }
+
+    // Lista de propietarios en el filtro pill (popover)
+    const listaProp = document.getElementById("lista-propietarios");
+    if (listaProp && !listaProp.hasChildNodes()) {
+      listaProp.innerHTML = owners.map(o => `
+        <label class="check-lista__item">
+          <input type="checkbox" data-prop="${_esc(o.nombre)}"/>
+          <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${_ini(o.nombre)}</span>
+          <span>${_esc(o.nombre)}</span>
+        </label>`).join("");
+    }
+
+    // Lista de propietarios en filtros avanzados
+    const listaAv = document.getElementById("avanzados-propietarios");
+    if (listaAv && !listaAv.hasChildNodes()) {
+      listaAv.innerHTML = owners.map(o => `
+        <label class="check-lista__item">
+          <input type="checkbox" data-avanzado-grupo="propietario" data-avanzado-val="${_esc(o.nombre)}"/>
+          ${_esc(o.nombre)}
+        </label>`).join("");
+    }
+
+    // Notificar a otros módulos que los owners están listos
+    document.dispatchEvent(new CustomEvent("hubspot:owners-loaded", { detail: { owners } }));
+    console.info(`[HubSpot] ${owners.length} owner(s) cargados y aplicados.`);
   }
 
   // -----------------------------------------------------------------
@@ -359,6 +477,9 @@
       buscarContactos,
       obtenerContactoPorId,
 
+      // Empresas
+      buscarEmpresas,
+
       // Deals / Negocios
       buscarDeals,
       obtenerDeals,
@@ -376,6 +497,9 @@
 
       _cfg: cfg,
     };
+
+    // Cargar owners async y poblar selects / filtros
+    cargarYAplicarOwners();
 
     console.info(
       "[HubSpot API] Listo. Para probar: await window.HubSpotAPI.probarConexion()",

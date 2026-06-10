@@ -194,10 +194,12 @@
       Modales.abrir("modal-editar-cotizacion");
     },
 
-    guardar() {
+    async guardar() {
       const id = parseInt(document.getElementById("editar-cot-id").value, 10);
       const cot = window.estadoApp.datosOriginales.find(c => c.id === id);
       if (!cot) return;
+
+      const estadoAnterior = cot.estado;
 
       cot.titulo           = document.getElementById("editar-cot-nombre").value.trim();
       cot.estado           = document.getElementById("editar-cot-estado").value;
@@ -206,17 +208,48 @@
       cot.fechaVencimiento = document.getElementById("editar-cot-fvencimiento").value;
       cot.cliente          = document.getElementById("editar-cot-cliente").value.trim();
 
+      // Persistir en BD
+      if (window.Api) {
+        try {
+          await window.Api.cotizaciones.actualizar(id, {
+            titulo:            cot.titulo,
+            estado:            cot.estado,
+            moneda:            cot.moneda,
+            responsable:       cot.responsable,
+            fecha_vencimiento: cot.fechaVencimiento || null,
+            cliente:           cot.cliente,
+          });
+        } catch (e) {
+          console.warn("[UI] API actualizar cotización falló:", e.message);
+          window.mostrarToast("⚠ No se pudo guardar en la base de datos");
+        }
+      }
+
       if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
       if (window.vistasInstance) window.vistasInstance.renderizar();
       if (PanelDetalleCotizacion.cotActual?.id === id) PanelDetalleCotizacion.renderizar(cot);
 
       Modales.cerrar(document.getElementById("modal-editar-cotizacion"));
       window.mostrarToast("✓ Cotización actualizada");
+
+      // Flujo automático al aprobar
+      if (cot.estado === "aprobado" && estadoAnterior !== "aprobado") {
+        dispararFlujoCotizacionAprobada(cot);
+      }
     },
 
     init() {
       const btn = document.getElementById("guardar-editar-cotizacion");
       if (btn) btn.addEventListener("click", () => this.guardar());
+
+      // Mostrar nota explicativa cuando el usuario selecciona "aprobado"
+      const selEstado = document.getElementById("editar-cot-estado");
+      const nota      = document.getElementById("editar-cot-aprobacion-nota");
+      if (selEstado && nota) {
+        selEstado.addEventListener("change", () => {
+          nota.hidden = selEstado.value !== "aprobado";
+        });
+      }
     }
   };
 
@@ -1909,6 +1942,80 @@
       const cotId = e.detail?.cotizacionId || parseInt(modal.dataset.cotizacionId, 10) || 0;
       if (cotId) setTimeout(() => cargarHistorial(cotId), 1000);
     });
+  }
+
+  /* ----------------------------------------------------------
+     FLUJO DE APROBACIÓN: factura HubSpot + comisión en Caja
+     Se dispara cuando una cotización pasa a estado "aprobado".
+     ---------------------------------------------------------- */
+  async function dispararFlujoCotizacionAprobada(cot) {
+    const resultados = [];
+    const errores    = [];
+
+    // 1. Crear factura en HubSpot (solo si no existe ya)
+    if (window.HubSpotAPI && !cot.hubspot_invoice_id) {
+      try {
+        const resp = await window.HubSpotAPI.guardarCotizacionComoFactura({
+          titulo:           cot.titulo,
+          estado:           "borrador",
+          fechaVencimiento: cot.fechaVencimiento || "",
+          moneda:           cot.moneda || "COP",
+          cantidad:         cot.cantidad || 0,
+          contactoId:       cot.hubspot_contact_id || null,
+        });
+        if (resp?.id) {
+          cot.hubspot_invoice_id = resp.id;
+          // Guardar el ID de la factura de vuelta en BD
+          window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: resp.id })
+            .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
+          resultados.push(`factura HubSpot #${resp.id}`);
+        }
+      } catch (e) {
+        console.warn("[Aprobación] Crear factura HubSpot falló:", e.message);
+        errores.push("factura HubSpot no creada");
+      }
+    }
+
+    // 2. Registrar comisión pendiente en Caja
+    if (window.Api && window.configComisionesAPI) {
+      try {
+        const cfg       = window.configComisionesAPI.cargarConfig();
+        const cfgAsesor = cfg.porAsesor.find(a => a.responsable === cot.responsable);
+        const pct       = cfgAsesor?.porcentaje || 0;
+
+        if (pct > 0 && cot.cantidad > 0) {
+          const comisionMonto = Math.round(cot.cantidad * pct / 100);
+          const fmt = window.formatearMoneda ?? ((v, m) => `${m} ${v}`);
+
+          await window.Api.caja.crear({
+            tipo:          "gasto",
+            categoria:     "comisiones",
+            descripcion:   `Comisión — ${cot.titulo}`,
+            valor:         comisionMonto,
+            moneda:        cot.moneda || "COP",
+            estado:        "pendiente",
+            responsable:   cot.responsable,
+            cotizacion_id: cot.id,
+            fecha:         new Date().toISOString().split("T")[0],
+            observaciones: `${pct}% sobre ${fmt(cot.cantidad, cot.moneda || "COP")} · Cotización #${cot.id}`,
+          });
+
+          resultados.push(`comisión ${fmt(comisionMonto, cot.moneda || "COP")} pendiente para ${cot.responsable}`);
+        }
+      } catch (e) {
+        console.warn("[Aprobación] Registrar comisión falló:", e.message);
+        errores.push("comisión no registrada");
+      }
+    }
+
+    // Mostrar resultado consolidado
+    if (resultados.length || errores.length) {
+      const partes = [
+        resultados.length ? `✓ ${resultados.join(" · ")}` : "",
+        errores.length    ? `⚠ ${errores.join(", ")}`     : "",
+      ].filter(Boolean);
+      window.mostrarToast(partes.join("  "), 5000);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {

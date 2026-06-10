@@ -27,6 +27,53 @@
     porProducto: []
   };
 
+  // Catálogo de productos HubSpot en memoria
+  const CACHE_KEY_PROD = "hubspot:productos:v1";
+  const CACHE_TTL_PROD = 15 * 60 * 1000;
+  let catalogoProductos = [];
+
+  function escHtml(s) {
+    return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  async function cargarCatalogoProductos() {
+    if (catalogoProductos.length > 0) return catalogoProductos;
+
+    // 1. Reutilizar catálogo del módulo de cotizaciones si ya está en memoria
+    const enMemoria = window.ProductosCotizacion?.getCatalogo?.();
+    if (Array.isArray(enMemoria) && enMemoria.length > 0) {
+      catalogoProductos = enMemoria;
+      return catalogoProductos;
+    }
+
+    // 2. localStorage cache
+    try {
+      const raw = localStorage.getItem(CACHE_KEY_PROD);
+      if (raw) {
+        const { ts, data } = JSON.parse(raw);
+        if (Date.now() - ts < CACHE_TTL_PROD && Array.isArray(data) && data.length > 0) {
+          catalogoProductos = data;
+          return catalogoProductos;
+        }
+      }
+    } catch (_) {}
+
+    // 3. HubSpot API
+    try {
+      if (window.HubSpotAPI) {
+        const prods = await window.HubSpotAPI.obtenerTodosLosProductos();
+        if (Array.isArray(prods) && prods.length > 0) {
+          catalogoProductos = prods;
+          return catalogoProductos;
+        }
+      }
+    } catch (e) {
+      console.warn("[Comisiones-Cot] No se pudo cargar catálogo HubSpot:", e.message);
+    }
+
+    return catalogoProductos;
+  }
+
   // -----------------------------------------------------------------
   // PERSISTENCIA
   // -----------------------------------------------------------------
@@ -94,41 +141,58 @@
   // -----------------------------------------------------------------
   // MODAL: CONFIGURAR COMISIONES (Task 4)
   // -----------------------------------------------------------------
+  function filaAsesor(row, idx) {
+    const ini = (window.obtenerIniciales || (n => (n||"?")[0]))(row.responsable);
+    return `
+      <tr data-row-asesor="${idx}">
+        <td>
+          <div class="celda-avatar">
+            <span class="celda-avatar__circulo" style="width:24px;height:24px;font-size:10px;">${ini}</span>
+            ${escHtml(row.responsable)}
+          </div>
+        </td>
+        <td>
+          <div class="input-pct">
+            <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
+                   value="${row.porcentaje}" data-field="porcentaje" />
+            <span class="input-pct__suffix">%</span>
+          </div>
+        </td>
+        <td>
+          <select class="form-select form-select--sm" data-field="base">
+            <option value="ventas_cerradas" ${row.base === "ventas_cerradas" ? "selected" : ""}>Ventas cerradas</option>
+            <option value="ingresos"        ${row.base === "ingresos"        ? "selected" : ""}>Ingresos cobrados</option>
+            <option value="por_venta"       ${row.base === "por_venta"       ? "selected" : ""}>Por venta cerrada</option>
+          </select>
+        </td>
+        <td>
+          <button class="btn-icono-mini" data-accion-asesor="quitar" title="Quitar">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
+          </button>
+        </td>
+      </tr>`;
+  }
+
   function renderConfigComisiones() {
     const cfg = cargarConfig();
 
-    // Tab Asesor
+    // Tab Asesor — mezclar config guardada con owners de HubSpot
     const tbodyA = document.getElementById("config-comisiones-tbody-asesor");
     if (tbodyA) {
-      tbodyA.innerHTML = cfg.porAsesor.map((row, idx) => `
-        <tr data-row-asesor="${idx}">
-          <td>
-            <div class="celda-avatar">
-              <span class="celda-avatar__circulo" style="width:24px;height:24px;font-size:10px;">${window.obtenerIniciales(row.responsable)}</span>
-              ${row.responsable}
-            </div>
-          </td>
-          <td>
-            <div class="input-pct">
-              <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
-                     value="${row.porcentaje}" data-field="porcentaje" />
-              <span class="input-pct__suffix">%</span>
-            </div>
-          </td>
-          <td>
-            <select class="form-select form-select--sm" data-field="base">
-              <option value="ventas_cerradas" ${row.base === "ventas_cerradas" ? "selected" : ""}>Ventas cerradas</option>
-              <option value="ingresos"        ${row.base === "ingresos"        ? "selected" : ""}>Ingresos cobrados</option>
-              <option value="por_venta"       ${row.base === "por_venta"       ? "selected" : ""}>Por venta cerrada</option>
-            </select>
-          </td>
-          <td>
-            <button class="btn-icono-mini" data-accion-asesor="quitar" title="Quitar">
-              <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
-            </button>
-          </td>
-        </tr>
-      `).join("");
+      let asesores = cfg.porAsesor.map(r => ({ ...r }));
+
+      // Agregar owners de HubSpot que aún no estén en la config
+      if (Array.isArray(window.ownersCatalogo)) {
+        window.ownersCatalogo.forEach(owner => {
+          if (!asesores.find(a => a.responsable === owner.nombre)) {
+            asesores.push({ responsable: owner.nombre, porcentaje: 0, base: "ventas_cerradas" });
+          }
+        });
+      }
+
+      tbodyA.innerHTML = asesores.length
+        ? asesores.map(filaAsesor).join("")
+        : `<tr><td colspan="4" class="tabla-config-comisiones__vacio">No hay asesores configurados. Los owners de HubSpot aparecerán aquí cuando se carguen.</td></tr>`;
     }
 
     // Tab Producto
@@ -140,7 +204,8 @@
         tbodyP.innerHTML = cfg.porProducto.map((row, idx) => `
           <tr data-row-producto="${idx}">
             <td>
-              <input type="text" class="form-input form-input--sm" value="${row.producto}" data-field="producto" placeholder="Ej: Implementación Shopify"/>
+              <input type="text" class="form-input form-input--sm" value="${escHtml(row.producto)}"
+                     data-field="producto" data-autocomplete-prod placeholder="Buscar producto HubSpot…"/>
             </td>
             <td>
               <div class="input-pct">
@@ -154,10 +219,12 @@
                 <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
               </button>
             </td>
-          </tr>
-        `).join("");
+          </tr>`).join("");
       }
     }
+
+    // Cargar catálogo de productos en background si no está listo
+    cargarCatalogoProductos();
   }
 
   function leerConfigDesdeUI() {
@@ -215,7 +282,7 @@
       }
     });
 
-    // Agregar producto
+    // Agregar producto (con autocomplete de HubSpot)
     const btnAdd = document.getElementById("btn-agregar-producto-comision");
     if (btnAdd) {
       btnAdd.addEventListener("click", () => {
@@ -227,7 +294,7 @@
         const tr = document.createElement("tr");
         tr.dataset.rowProducto = idx;
         tr.innerHTML = `
-          <td><input type="text" class="form-input form-input--sm" data-field="producto" placeholder="Nombre del producto"/></td>
+          <td><input type="text" class="form-input form-input--sm" data-field="producto" data-autocomplete-prod placeholder="Buscar producto HubSpot…"/></td>
           <td>
             <div class="input-pct">
               <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1" value="5" data-field="porcentaje"/>
@@ -244,6 +311,9 @@
       });
     }
 
+    // Autocomplete de productos en el tab "Por producto"
+    initAutocompletoProd(modal);
+
     // Guardar
     const btnGuardar = document.getElementById("btn-guardar-config-comisiones");
     if (btnGuardar) {
@@ -254,6 +324,102 @@
         if (window.Modales) window.Modales.cerrar(modal);
       });
     }
+  }
+
+  // -----------------------------------------------------------------
+  // AUTOCOMPLETE DE PRODUCTOS EN TAB "POR PRODUCTO"
+  // -----------------------------------------------------------------
+
+  function initAutocompletoProd(containerEl) {
+    if (!containerEl) return;
+    let dropdown = null, inputActivo = null;
+
+    function obtenerCat() {
+      return catalogoProductos.length ? catalogoProductos : [];
+    }
+
+    function cerrarDrop() { dropdown?.remove(); dropdown = null; inputActivo = null; }
+
+    function mostrarDrop(input, termino) {
+      cerrarDrop();
+      const cat = obtenerCat();
+      if (!cat.length) return;
+      const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      const q = norm(termino);
+      const filtrados = q.length < 1 ? cat.slice(0, 10) : cat.filter(p => norm(p.nombre || "").includes(q) || norm(p.sku || "").includes(q)).slice(0, 10);
+      if (!filtrados.length) return;
+
+      const ul = document.createElement("ul");
+      ul.className = "prod-autocomplete__lista";
+      ul._datos = filtrados;
+      filtrados.forEach((p, i) => {
+        const li = document.createElement("li");
+        li.className = "prod-autocomplete__item";
+        li.setAttribute("role", "option");
+        li.setAttribute("tabindex", "-1");
+        li.dataset.prodIdx = i;
+        const precio = p.precio ? (window.formatearMoneda ? window.formatearMoneda(p.precio, "COP") : `COP ${p.precio}`) : "";
+        li.innerHTML = `<span class="prod-ac__nombre">${escHtml(p.nombre)}</span>${precio ? `<span class="prod-ac__precio">${escHtml(precio)}</span>` : ""}`;
+        ul.appendChild(li);
+      });
+
+      const rect = input.getBoundingClientRect();
+      ul.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;`;
+      document.body.appendChild(ul);
+      dropdown = ul;
+      inputActivo = input;
+    }
+
+    function seleccionarProd(prod) {
+      if (!prod || !inputActivo) return;
+      inputActivo.value = prod.nombre;
+      inputActivo.dataset.prodId = prod.id || "";
+      const cap = inputActivo;
+      cerrarDrop();
+      cap.dispatchEvent(new CustomEvent("autocomplete:seleccionado", { bubbles: true, detail: prod }));
+    }
+
+    containerEl.addEventListener("input", e => {
+      const inp = e.target.closest("[data-autocomplete-prod]");
+      if (!inp) return;
+      clearTimeout(inp._acT);
+      inp._acT = setTimeout(async () => {
+        await cargarCatalogoProductos();
+        mostrarDrop(inp, inp.value.trim());
+      }, 200);
+    });
+
+    containerEl.addEventListener("focusin", e => {
+      const inp = e.target.closest("[data-autocomplete-prod]");
+      if (!inp) return;
+      cargarCatalogoProductos().then(() => {
+        if (inp.value.trim().length >= 0) mostrarDrop(inp, inp.value.trim());
+      });
+    });
+
+    containerEl.addEventListener("keydown", e => {
+      const inp = e.target.closest("[data-autocomplete-prod]");
+      if (inp) {
+        if (e.key === "Escape") { cerrarDrop(); return; }
+        if (e.key === "ArrowDown" && dropdown) { e.preventDefault(); dropdown.querySelector("[role='option']")?.focus(); return; }
+      }
+      if (!dropdown) return;
+      const li = e.target.closest("[role='option']");
+      if (!li) return;
+      const items = [...dropdown.querySelectorAll("[role='option']")];
+      const idx = items.indexOf(li);
+      if      (e.key === "ArrowDown")              { e.preventDefault(); items[idx + 1]?.focus(); }
+      else if (e.key === "ArrowUp")                { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
+      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); }
+      else if (e.key === "Escape")                 { cerrarDrop(); inputActivo?.focus(); }
+    });
+
+    document.addEventListener("click", e => {
+      if (!dropdown) return;
+      const li = e.target.closest(".prod-autocomplete__item");
+      if (li && dropdown.contains(li)) { seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); return; }
+      if (!dropdown.contains(e.target) && !containerEl.contains(e.target)) cerrarDrop();
+    });
   }
 
   // -----------------------------------------------------------------
@@ -473,5 +639,19 @@
     initModalConfigComisiones();
     initModalReporteComisiones();
     window.configComisionesAPI = { cargarConfig, guardarConfig };
+  });
+
+  // Cuando HubSpot owners lleguen, actualizar el modal si está abierto
+  document.addEventListener("hubspot:owners-loaded", ({ detail }) => {
+    const modal = document.getElementById("modal-config-comisiones");
+    if (modal && !modal.hasAttribute("hidden")) {
+      renderConfigComisiones();
+    }
+    // También actualizar el select de asesor en el reporte si está vacío
+    const selAsesor = document.getElementById("rep-com-asesor");
+    if (selAsesor && selAsesor.options.length <= 1 && Array.isArray(detail?.owners)) {
+      selAsesor.innerHTML = `<option value="">Todos</option>` +
+        detail.owners.map(o => `<option value="${escHtml(o.nombre)}">${escHtml(o.nombre)}</option>`).join("");
+    }
   });
 })();

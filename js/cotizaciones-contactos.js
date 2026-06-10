@@ -22,21 +22,31 @@
   let contactoSeleccionado = null;
   let timerBusqueda        = null;
 
-  // Contactos de prueba usados cuando la API no responde (CORS, sin token, etc.)
+  // Datos de prueba usados cuando la API no responde (CORS, sin token, etc.)
   const CONTACTOS_MOCK = [
-    { id: "mock-1", nombre: "Néstor Goyes",   empresa: "Oblicua Digital", email: "nestor@oblicua.co",       telefono: "", cargo: "CEO" },
-    { id: "mock-2", nombre: "María González", empresa: "Tech Solutions",  email: "maria@techsolutions.co",  telefono: "", cargo: "Gerente" },
-    { id: "mock-3", nombre: "Carlos Ramírez", empresa: "Startup Labs",    email: "carlos@startuplabs.co",   telefono: "", cargo: "Fundador" }
+    { id: "mock-1", tipo: "contacto", nombre: "Néstor Goyes",   empresa: "Oblicua Digital", email: "nestor@oblicua.co",      telefono: "", cargo: "CEO" },
+    { id: "mock-2", tipo: "contacto", nombre: "María González", empresa: "Tech Solutions",  email: "maria@techsolutions.co", telefono: "", cargo: "Gerente" },
+    { id: "mock-3", tipo: "contacto", nombre: "Carlos Ramírez", empresa: "Startup Labs",    email: "carlos@startuplabs.co",  telefono: "", cargo: "Fundador" },
+  ];
+
+  const EMPRESAS_MOCK = [
+    { id: "mock-e1", tipo: "empresa", nombre: "Oblicua Digital",  empresa: "Oblicua Digital",  email: "", dominio: "oblicua.co",      telefono: "" },
+    { id: "mock-e2", tipo: "empresa", nombre: "Tech Solutions",   empresa: "Tech Solutions",   email: "", dominio: "techsolutions.co", telefono: "" },
   ];
 
   function mocksFiltrados(termino) {
     const q = termino.toLowerCase();
-    const coinciden = CONTACTOS_MOCK.filter(c =>
+    const cMatch = CONTACTOS_MOCK.filter(c =>
       c.nombre.toLowerCase().includes(q)  ||
       c.empresa.toLowerCase().includes(q) ||
       c.email.toLowerCase().includes(q)
     );
-    return coinciden.length > 0 ? coinciden : CONTACTOS_MOCK;
+    const eMatch = EMPRESAS_MOCK.filter(e =>
+      e.nombre.toLowerCase().includes(q) ||
+      (e.dominio || "").toLowerCase().includes(q)
+    );
+    const resultados = [...cMatch, ...eMatch];
+    return resultados.length > 0 ? resultados : [...CONTACTOS_MOCK, ...EMPRESAS_MOCK];
   }
 
   function escHtml(s) {
@@ -59,16 +69,22 @@
       return;
     }
 
-    lista.innerHTML = resultados.map((c, i) => `
-      <li class="contacto-sugerencias__item"
-          role="option"
-          tabindex="-1"
-          data-contacto-idx="${i}">
-        <span class="contacto-sug__nombre">${escHtml(c.nombre || c.email)}</span>
-        ${c.empresa ? `<span class="contacto-sug__empresa">${escHtml(c.empresa)}</span>` : ""}
-        ${c.email   ? `<span class="contacto-sug__email">${escHtml(c.email)}</span>`     : ""}
-      </li>
-    `).join("");
+    lista.innerHTML = resultados.map((c, i) => {
+      const esEmpresa = c.tipo === "empresa";
+      const badge = `<span class="contacto-sug__tipo contacto-sug__tipo--${esEmpresa ? "empresa" : "contacto"}">${esEmpresa ? "Empresa" : "Contacto"}</span>`;
+      const sub = esEmpresa
+        ? (c.dominio ? `<span class="contacto-sug__email">${escHtml(c.dominio)}</span>` : "")
+        : `${c.empresa ? `<span class="contacto-sug__empresa">${escHtml(c.empresa)}</span>` : ""}${c.email ? `<span class="contacto-sug__email">${escHtml(c.email)}</span>` : ""}`;
+      return `
+        <li class="contacto-sugerencias__item"
+            role="option"
+            tabindex="-1"
+            data-contacto-idx="${i}">
+          <span class="contacto-sug__nombre">${escHtml(c.nombre || c.email)}</span>
+          ${badge}
+          ${sub}
+        </li>`;
+    }).join("");
 
     lista._resultados    = resultados;
     lista.hidden         = false;
@@ -115,23 +131,31 @@
 
     // Sin API disponible → mostrar mocks directamente
     if (!window.HubSpotAPI) {
-      console.warn("[Contactos] HubSpotAPI no disponible — usando contactos de prueba.");
+      console.warn("[Contactos] HubSpotAPI no disponible — usando datos de prueba.");
       mostrarSugerencias(lista, mocksFiltrados(termino));
       return;
     }
 
     try {
-      const resultados = await window.HubSpotAPI.obtenerContactos(termino);
+      // Buscar contactos y empresas en paralelo
+      const [contactos, empresas] = await Promise.all([
+        window.HubSpotAPI.obtenerContactos(termino),
+        window.HubSpotAPI.buscarEmpresas(termino).catch(e => {
+          console.warn("[Contactos] Error buscando empresas:", e.message);
+          return [];
+        }),
+      ]);
 
-      if (!Array.isArray(resultados)) {
-        throw new Error("obtenerContactos devolvió un valor inesperado: " + JSON.stringify(resultados));
+      if (!Array.isArray(contactos)) {
+        throw new Error("obtenerContactos devolvió un valor inesperado");
       }
 
-      console.log(`[Contactos] ${resultados.length} resultado(s) para "${termino}":`, resultados);
+      // HubSpotAPI ya agrega tipo:'contacto' y tipo:'empresa' en sus normalizadores
+      const resultados = [...contactos, ...empresas];
+      console.log(`[Contactos] ${contactos.length} contacto(s) + ${empresas.length} empresa(s) para "${termino}"`);
       mostrarSugerencias(lista, resultados);
     } catch (e) {
-      // CORS, red caída, 401, etc. → siempre mostrar mocks para no romper el flujo
-      console.error("[Contactos] Error de API (fallback a mocks de prueba):", e);
+      console.error("[Contactos] Error de API (fallback a datos de prueba):", e);
       mostrarSugerencias(lista, mocksFiltrados(termino));
     }
   }

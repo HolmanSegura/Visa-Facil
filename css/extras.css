@@ -138,6 +138,18 @@
   line-height: 1.5;
 }
 
+/* Nota informativa en modales (ej: aviso de automatización al aprobar) */
+.modal__ayuda {
+  margin: var(--esp-3) 0 0;
+  padding: var(--esp-2) var(--esp-3);
+  background: #fff8e7;
+  border-left: 3px solid #f5a623;
+  border-radius: var(--radio-md);
+  font-size: var(--font-tam-sm);
+  color: #7a5c00;
+  line-height: 1.5;
+}
+
 .config-comisiones__tabs {
   display: flex;
   gap: var(--esp-2);
@@ -754,6 +766,68 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.contacto-sug__tipo {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: var(--font-peso-medio);
+  padding: 1px 6px;
+  border-radius: 99px;
+  line-height: 1.6;
+  align-self: flex-start;
+}
+.contacto-sug__tipo--contacto {
+  background: var(--color-fondo-hover);
+  color: var(--color-texto-suave);
+}
+.contacto-sug__tipo--empresa {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+/* ============================================================
+   AUTOCOMPLETE DE PRODUCTOS — cotizaciones (dropdown flotante)
+   ============================================================ */
+.prod-autocomplete__lista {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background: var(--color-fondo-panel, #fff);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  max-height: 260px;
+  overflow-y: auto;
+}
+.prod-autocomplete__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: background var(--trans-rapida);
+}
+.prod-autocomplete__item:hover,
+.prod-autocomplete__item:focus {
+  background: var(--color-fondo-hover);
+  outline: none;
+}
+.prod-ac__nombre {
+  flex: 1;
+  font-size: var(--font-tam-md);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prod-ac__precio {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-acento);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 /* ============================================================
