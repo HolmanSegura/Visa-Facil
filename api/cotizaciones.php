@@ -162,18 +162,18 @@ try {
         $stmt->execute([
             ':titulo'           => $b['titulo'],
             ':estado'           => $b['estado']          ?? 'borrador',
-            ':estado_firma'     => $b['estado_firma']     ?? 'no_aplica',
+            ':estado_firma'     => $b['estado_firma'] ?? $b['estadoFirma'] ?? 'no_aplica',
             ':moneda'           => $b['moneda']           ?? 'COP',
             ':cantidad'         => $b['cantidad']         ?? 0,
             ':desc_global'      => $b['descuento_global'] ?? 0,
             ':tipo_desc'        => $b['tipo_descuento_global'] ?? 'porcentaje',
             ':tasa_iva'         => $b['tasa_iva']         ?? 0.19,
-            ':fecha_creacion'   => $b['fecha_creacion']   ?? date('Y-m-d'),
-            ':fecha_vencimiento'=> $b['fecha_vencimiento'] ?? null,
+            ':fecha_creacion'   => $b['fecha_creacion'] ?? $b['fechaCreacion'] ?? date('Y-m-d'),
+            ':fecha_vencimiento'=> $b['fecha_vencimiento'] ?? ($b['fechaVencimiento'] ?: null),
             ':usuario_id'       => $usuarioId,
             ':cliente_id'       => $clienteId,
             ':negocio_id'       => $negocioId,
-            ':notas'            => $b['notas']            ?? null,
+            ':notas'            => $b['notas'] ?? $b['observaciones'] ?? null,
         ]);
         $newId = (int) $db->lastInsertId();
 
@@ -190,6 +190,17 @@ try {
         $b      = getBody();
         $campos = [];
         $vals   = [];
+
+        // Resolver nombres → IDs antes de procesar campos permitidos
+        if (!empty($b['responsable'])) {
+            $b['usuario_id'] = resolverUsuarioId($db, $b);
+        }
+        if (!empty($b['cliente'])) {
+            $b['cliente_id'] = resolverClienteId($db, $b);
+        }
+        if (!empty($b['negocio'])) {
+            $b['negocio_id'] = resolverNegocioId($db, $b, $b['cliente_id'] ?? null);
+        }
 
         $permitidos = [
             'titulo','estado','estado_firma','moneda','cantidad',

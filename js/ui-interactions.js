@@ -375,9 +375,14 @@
             EnviarCotizacion.abrir(c);
             break;
           case "eliminar":
-            if (c && confirm(`¿Eliminar la cotización "${c.titulo}"?`)) {
+            if (c && confirm(`¿Eliminar la cotización "${c.titulo}"? Esta acción no se puede deshacer.`)) {
               const idx = window.estadoApp.datosOriginales.findIndex(x => x.id === c.id);
               if (idx !== -1) window.estadoApp.datosOriginales.splice(idx, 1);
+              if (window.Api) {
+                window.Api.cotizaciones.eliminar(c.id).catch(e =>
+                  console.warn("[UI] API eliminar cotización falló:", e.message)
+                );
+              }
               if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
               if (window.vistasInstance) window.vistasInstance.renderizar();
               this.cerrar();

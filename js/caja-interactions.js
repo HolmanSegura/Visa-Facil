@@ -138,21 +138,41 @@
       Modales.abrir("modal-editar-movimiento");
     },
 
-    guardar() {
+    async guardar() {
       const id = parseInt(document.getElementById("editar-mov-id").value, 10);
       const mov = window.estadoApp.datosOriginales.find(m => m.id === id);
       if (!mov) return;
 
-      mov.categoria    = document.getElementById("editar-categoria").value;
-      mov.valor        = parseFloat(document.getElementById("editar-valor").value) || 0;
-      mov.moneda       = document.getElementById("editar-moneda").value;
-      mov.fecha        = document.getElementById("editar-fecha").value;
-      mov.responsable  = document.getElementById("editar-responsable").value;
-      mov.metodoPago   = document.getElementById("editar-metodo").value;
-      mov.descripcion  = document.getElementById("editar-descripcion").value.trim();
-      mov.estado       = document.getElementById("editar-estado").value;
-      mov.cliente      = document.getElementById("editar-cliente").value.trim();
+      mov.categoria     = document.getElementById("editar-categoria").value;
+      mov.valor         = parseFloat(document.getElementById("editar-valor").value) || 0;
+      mov.moneda        = document.getElementById("editar-moneda").value;
+      mov.fecha         = document.getElementById("editar-fecha").value;
+      mov.responsable   = document.getElementById("editar-responsable").value;
+      mov.metodoPago    = document.getElementById("editar-metodo").value;
+      mov.descripcion   = document.getElementById("editar-descripcion").value.trim();
+      mov.estado        = document.getElementById("editar-estado").value;
+      mov.cliente       = document.getElementById("editar-cliente").value.trim();
       mov.observaciones = document.getElementById("editar-observaciones").value.trim();
+
+      if (window.Api) {
+        try {
+          await window.Api.caja.actualizar(id, {
+            categoria:     mov.categoria,
+            valor:         mov.valor,
+            moneda:        mov.moneda,
+            fecha:         mov.fecha,
+            responsable:   mov.responsable,
+            metodo_pago:   mov.metodoPago,
+            descripcion:   mov.descripcion,
+            estado:        mov.estado,
+            cliente:       mov.cliente,
+            observaciones: mov.observaciones,
+          });
+        } catch (e) {
+          console.warn("[Caja] API actualizar movimiento falló:", e.message);
+          window.mostrarToast("⚠ No se pudo guardar en la base de datos");
+        }
+      }
 
       if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
       if (window.actualizarDashboard) window.actualizarDashboard();
@@ -243,7 +263,7 @@
       $("actividad-creacion").textContent = window.formatearFecha(m.fecha);
       $("actividad-actualizacion").textContent = window.formatearFecha(m.fecha);
     },
-    ejecutarAccion(accion) {
+    async ejecutarAccion(accion) {
       const m = this.movimientoActual;
       if (!m) return;
       switch (accion) {
@@ -252,13 +272,33 @@
           break;
 
         case "duplicar": {
-          const nuevoId = Math.max(...window.estadoApp.datosOriginales.map(x => x.id)) + 1;
-          const copia = { ...m, id: nuevoId, descripcion: m.descripcion + " (copia)", estado: "pendiente" };
+          const copia = {
+            ...m,
+            descripcion: m.descripcion + " (copia)",
+            estado: "pendiente",
+          };
+          delete copia.id;
+          delete copia.referencia;
+
+          if (window.Api) {
+            try {
+              const resp = await window.Api.caja.crear(copia);
+              copia.id        = resp.id;
+              copia.referencia = resp.referencia ?? ("REF-" + new Date(copia.fecha).getFullYear() + "-" + String(resp.id).padStart(4, "0"));
+            } catch (e) {
+              console.warn("[Caja] API duplicar movimiento falló, usando ID local:", e.message);
+            }
+          }
+          if (!copia.id) {
+            copia.id = Math.max(...window.estadoApp.datosOriginales.map(x => x.id)) + 1;
+            copia.referencia = "REF-" + new Date(copia.fecha).getFullYear() + "-" + String(copia.id).padStart(4, "0");
+          }
+
           window.estadoApp.datosOriginales.unshift(copia);
           if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
           if (window.actualizarDashboard) window.actualizarDashboard();
           if (window.vistasInstance) window.vistasInstance.renderizar();
-          window.mostrarToast(`✓ Movimiento duplicado`);
+          window.mostrarToast("✓ Movimiento duplicado");
           break;
         }
 
@@ -269,15 +309,32 @@
         case "anular":
           if (confirm(`¿Anular el movimiento "${m.descripcion}"?`)) {
             m.estado = "anulado";
-              if (window.Api) {
-                window.Api.caja.actualizar(this.movimientoActual.id, { estado: "anulado" }).catch(e =>
-                  console.warn("[Caja] API anular movimiento falló:", e.message)
-                );
-              }
+            if (window.Api) {
+              window.Api.caja.actualizar(m.id, { estado: "anulado" }).catch(e =>
+                console.warn("[Caja] API anular movimiento falló:", e.message)
+              );
+            }
             if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
             if (window.actualizarDashboard) window.actualizarDashboard();
             if (window.vistasInstance) window.vistasInstance.renderizar();
             window.mostrarToast("✓ Movimiento anulado");
+            this.cerrar();
+          }
+          break;
+
+        case "eliminar":
+          if (confirm(`¿Eliminar el movimiento "${m.descripcion}"? Esta acción no se puede deshacer.`)) {
+            const idx = window.estadoApp.datosOriginales.findIndex(x => x.id === m.id);
+            if (idx !== -1) window.estadoApp.datosOriginales.splice(idx, 1);
+            if (window.Api) {
+              window.Api.caja.eliminar(m.id).catch(e =>
+                console.warn("[Caja] API eliminar movimiento falló:", e.message)
+              );
+            }
+            if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+            if (window.actualizarDashboard) window.actualizarDashboard();
+            if (window.vistasInstance) window.vistasInstance.renderizar();
+            window.mostrarToast("✓ Movimiento eliminado");
             this.cerrar();
           }
           break;
@@ -699,6 +756,21 @@
         }
 
         window.estadoApp.datosOriginales.unshift(nuevo);
+
+        // Subir adjunto si el usuario seleccionó un archivo
+        const fileInput = document.getElementById("g-soporte");
+        if (fileInput?.files?.length && nuevo.id && window.Api?.subirAdjunto) {
+          window.Api.subirAdjunto(fileInput.files[0], { movimiento_caja_id: nuevo.id })
+            .then(resp => {
+              if (resp.nombre_archivo) {
+                nuevo.adjunto = resp.nombre_archivo;
+                const movEnArr = window.estadoApp.datosOriginales.find(m => m.id === nuevo.id);
+                if (movEnArr) movEnArr.adjunto = resp.nombre_archivo;
+                if (PanelDetalle.movimientoActual?.id === nuevo.id) PanelDetalle.renderizar(nuevo);
+              }
+            })
+            .catch(e => console.warn("[Caja] Subir adjunto falló:", e.message));
+        }
 
         document.getElementById("form-gasto").reset();
         modoComision(false);  // limpiar modo comisión tras guardar

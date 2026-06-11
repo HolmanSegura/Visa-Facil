@@ -43,7 +43,7 @@ const vistasIniciales = [
     id: "borradores_propios",
     nombre: "Mis borradores",
     filtro: (it) =>
-      it.estado === "borrador" && it.responsable === "Néstor Goyes",
+      it.estado === "borrador" && it.responsable === (window.usuarioActualNombre || ""),
     activa: false,
   },
 ];
@@ -170,6 +170,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const selAsesor = document.getElementById("rep-com-asesor");
       if (selAsesor) {
         selAsesor.innerHTML = `<option value="">Todos</option>` + opciones;
+      }
+      // Establecer usuario actual para la vista "Mis borradores"
+      if (!window.usuarioActualNombre) {
+        window.usuarioActualNombre =
+          localStorage.getItem("usuario_actual_nombre") || resU.data[0]?.nombre || "";
       }
     }
   } catch (e) {

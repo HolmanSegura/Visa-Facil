@@ -206,6 +206,12 @@ try {
         if (!empty($b['categoria'])) {
             $b['categoria_id'] = resolverCategoriaId($db, $b);
         }
+        if (!empty($b['responsable'])) {
+            $b['responsable_id'] = resolverUsuarioId($db, $b);
+        }
+        if (!empty($b['cliente'])) {
+            $b['cliente_id'] = resolverClienteId($db, $b);
+        }
         foreach ($permitidos as $c) {
             if (array_key_exists($c, $b)) {
                 $campos[] = "`$c` = ?";
