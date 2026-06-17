@@ -1104,6 +1104,8 @@
         const dealId     = document.getElementById("cot-deal-id")?.value.trim() || "";
         const comentarios = document.getElementById("cot-comentarios")?.value.trim() || "";
 
+        const lineas = window.ProductosCotizacion?.getLineas?.() || [];
+
         const nueva = {
           titulo,
           estado:           estado || "borrador",
@@ -1112,20 +1114,32 @@
           estadoFirma:      "no_aplica",
           fechaCreacion,
           fechaVencimiento,
-          responsable:      propietario || "Néstor Goyes",
+          responsable:      propietario || "",
           cliente:          cliente || "—",
           negocio:          negocio || "",
           hubspot_deal_id:  dealId  || null,
           observaciones:    comentarios || "",
+          lineas:           lineas.map(l => ({
+            productoId:     l.productoId || null,
+            nombre:         l.nombre,
+            descripcion:    l.descripcion || "",
+            precioUnitario: l.precioUnitario,
+            cantidad:       l.cantidad,
+            descuento:      l.descuento || 0,
+            tipoDescuento:  l.tipoDescuento || "porcentaje",
+          })),
         };
 
+        let guardadoEnServidor = false;
         if (window.Api) {
           try {
             btnGuardar.disabled = true;
             const resp = await window.Api.cotizaciones.crear(nueva);
             nueva.id = resp.id;
+            guardadoEnServidor = true;
           } catch (e) {
-            console.warn("[UI] API crear cotización falló, usando ID local:", e.message);
+            console.error("[UI] API crear cotización falló:", e.message);
+            window.mostrarToast("⚠ No se pudo guardar en el servidor. Revisa la consola.", 4500);
           } finally {
             btnGuardar.disabled = false;
           }
@@ -1141,6 +1155,8 @@
         // Reset form
         document.getElementById("form-cotizacion").reset();
         document.getElementById("cot-cantidad").value = "0";
+        // Limpiar líneas de productos
+        if (window.ProductosCotizacion?.limpiarLineas) window.ProductosCotizacion.limpiarLineas();
         // Limpiar autocompletes
         if (window.DealsAutocomplete) window.DealsAutocomplete.limpiar();
         if (window.ContactosAutocomplete) window.ContactosAutocomplete.limpiar();
@@ -1152,7 +1168,9 @@
         if (window.vistasInstance) window.vistasInstance.renderizar();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
 
-        window.mostrarToast(`✓ Cotización "${titulo}" creada`);
+        if (guardadoEnServidor || !window.Api) {
+          window.mostrarToast(`✓ Cotización "${titulo}" creada`);
+        }
       });
     }
   }
@@ -1957,27 +1975,35 @@
     const resultados = [];
     const errores    = [];
 
-    // 1. Crear factura en HubSpot (solo si no existe ya)
-    if (window.HubSpotAPI && !cot.hubspot_invoice_id) {
+    // 1. Crear factura draft (modo simulado — sin llamar a HubSpot por ahora)
+    // TODO: cuando se active HubSpot, descomentar el bloque real y eliminar el dummy
+    if (!cot.hubspot_invoice_id) {
       try {
-        const resp = await window.HubSpotAPI.guardarCotizacionComoFactura({
-          titulo:           cot.titulo,
-          estado:           "borrador",
-          fechaVencimiento: cot.fechaVencimiento || "",
-          moneda:           cot.moneda || "COP",
-          cantidad:         cot.cantidad || 0,
-          contactoId:       cot.hubspot_contact_id || null,
-        });
-        if (resp?.id) {
-          cot.hubspot_invoice_id = resp.id;
-          // Guardar el ID de la factura de vuelta en BD
-          window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: resp.id })
-            .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
-          resultados.push(`factura HubSpot #${resp.id}`);
-        }
+        // ── MODO DUMMY ────────────────────────────────────────────────
+        const draftId = `DRAFT-${new Date().getFullYear()}-${String(cot.id).padStart(4, "0")}`;
+        cot.hubspot_invoice_id = draftId;
+        window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: draftId })
+          .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
+        resultados.push(`factura draft #${draftId}`);
+
+        // ── REAL (HubSpot) — descomentar cuando esté listo ────────────
+        // const resp = await window.HubSpotAPI.guardarCotizacionComoFactura({
+        //   titulo:           cot.titulo,
+        //   estado:           "borrador",
+        //   fechaVencimiento: cot.fechaVencimiento || "",
+        //   moneda:           cot.moneda || "COP",
+        //   cantidad:         cot.cantidad || 0,
+        //   contactoId:       cot.hubspot_contact_id || null,
+        // });
+        // if (resp?.id) {
+        //   cot.hubspot_invoice_id = resp.id;
+        //   window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: resp.id })
+        //     .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
+        //   resultados.push(`factura HubSpot #${resp.id}`);
+        // }
       } catch (e) {
-        console.warn("[Aprobación] Crear factura HubSpot falló:", e.message);
-        errores.push("factura HubSpot no creada");
+        console.warn("[Aprobación] Crear factura draft falló:", e.message);
+        errores.push("factura no generada");
       }
     }
 

@@ -282,6 +282,42 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /* ============================================================
+   MERGE HUBSPOT OWNERS → tabla principal
+   Cuando lleguen los owners de HubSpot, agregar los que no
+   tienen actividad en BD para que aparezcan en el listado.
+   ============================================================ */
+document.addEventListener("hubspot:owners-loaded", ({ detail }) => {
+  const owners = detail?.owners;
+  if (!Array.isArray(owners) || owners.length === 0) return;
+
+  let modificado = false;
+  owners.forEach(owner => {
+    const existe = estadoApp.datosOriginales.find(
+      r => r.responsable === owner.nombre
+    );
+    if (!existe) {
+      estadoApp.datosOriginales.push(normalizarFilaCom({
+        responsable: owner.nombre,
+        ingresos:    0,
+        porcentaje:  0,
+        teorico:     0,
+        registrado:  0,
+        pagos:       0,
+        activo:      true
+      }, estadoApp.datosOriginales.length));
+      modificado = true;
+    }
+  });
+
+  if (modificado) {
+    if (window.vistasInstance)  window.vistasInstance.renderizar();
+    if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+    actualizarDashboard();
+    console.info(`[Comisiones] Owners HubSpot fusionados: ${estadoApp.datosOriginales.length} total.`);
+  }
+});
+
+/* ============================================================
    API PÚBLICA: recargar con nuevo período
    ============================================================ */
 window.recargarComisiones = async function (desde, hasta) {
@@ -291,7 +327,18 @@ window.recargarComisiones = async function (desde, hasta) {
       const res = await window.Api.comisiones.reporte({ desde, hasta });
       if (res && res.ok && Array.isArray(res.filas)) {
         estadoApp.datosOriginales = res.filas.map(normalizarFilaCom);
-        estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
+        // Preservar owners de HubSpot sin actividad en el período
+        if (Array.isArray(window.ownersCatalogo)) {
+          window.ownersCatalogo.forEach((owner, i) => {
+            if (!estadoApp.datosOriginales.find(r => r.responsable === owner.nombre)) {
+              estadoApp.datosOriginales.push(normalizarFilaCom(
+                { responsable: owner.nombre, ingresos: 0, porcentaje: 0, teorico: 0, registrado: 0, pagos: 0, activo: true },
+                estadoApp.datosOriginales.length + i
+              ));
+            }
+          });
+        }
+        estadoApp.datosVisibles = [...estadoApp.datosOriginales];
         if (window.vistasInstance)  window.vistasInstance.renderizar();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
         actualizarDashboard();

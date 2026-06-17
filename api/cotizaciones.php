@@ -303,7 +303,32 @@ function insertarLineas(PDO $db, int $cotId, array $lineas): void {
            precio_unitario, cantidad, descuento, tipo_descuento, subtotal, orden)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
+
+    // Caché local para evitar N consultas iguales en el mismo request
+    static $resolvedIds = [];
+
     foreach ($lineas as $i => $l) {
+        $rawId = $l['productoId'] ?? $l['producto_id'] ?? null;
+        $localProdId = null;
+
+        if ($rawId !== null && $rawId !== '') {
+            $key = (string) $rawId;
+            if (!array_key_exists($key, $resolvedIds)) {
+                // Buscar primero por hubspot_product_id (IDs de HubSpot son strings largos)
+                $sp = $db->prepare("SELECT id FROM productos WHERE hubspot_product_id = ? LIMIT 1");
+                $sp->execute([$key]);
+                $pr = $sp->fetch();
+                // Si no encontró, intentar como ID entero local
+                if (!$pr && ctype_digit($key)) {
+                    $sp2 = $db->prepare("SELECT id FROM productos WHERE id = ? LIMIT 1");
+                    $sp2->execute([$key]);
+                    $pr = $sp2->fetch();
+                }
+                $resolvedIds[$key] = $pr ? (int) $pr['id'] : null;
+            }
+            $localProdId = $resolvedIds[$key];
+        }
+
         $pu  = (float) ($l['precioUnitario'] ?? $l['precio_unitario'] ?? 0);
         $qty = (float) ($l['cantidad'] ?? 1);
         $dsc = (float) ($l['descuento'] ?? 0);
@@ -313,7 +338,7 @@ function insertarLineas(PDO $db, int $cotId, array $lineas): void {
             : $pu * $qty - $dsc;
         $stmt->execute([
             $cotId,
-            $l['productoId'] ?? $l['producto_id'] ?? null,
+            $localProdId,
             $l['nombre'] ?? $l['nombre_producto'] ?? 'Servicio',
             $l['descripcion'] ?? null,
             $pu, $qty, $dsc, $td,

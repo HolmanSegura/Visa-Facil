@@ -83,8 +83,8 @@
     actualizarUIBotonesCarga(true);
 
     try {
-      // 1. BD local — fuente primaria siempre
-      if (window.Api?.productos) {
+      // 1. BD local — fuente primaria (omitir cuando se fuerza recarga desde HubSpot)
+      if (!forzar && window.Api?.productos) {
         const res = await window.Api.productos.listar();
         if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
           catalogo = res.data.map(p => ({
@@ -99,7 +99,7 @@
         }
       }
 
-      // 2. Caché localStorage (BD no disponible)
+      // 2. Caché localStorage (BD no disponible y sin forzar)
       if (!forzar) {
         const cached = leerCache();
         if (cached) {
@@ -115,6 +115,9 @@
       if (Array.isArray(resultado) && resultado.length > 0) {
         escribirCache(catalogo);
         console.log(`[Productos] ${catalogo.length} producto(s) cargados desde HubSpot.`);
+        // Sincronizar catálogo HubSpot con BD local
+        window.Api?.productos?.sincronizar?.(catalogo)
+          .catch(e => console.warn("[Productos] Sync BD falló:", e.message));
       } else {
         console.warn("[Productos] HubSpot devolvió 0 productos. Usando datos de ejemplo.");
       }

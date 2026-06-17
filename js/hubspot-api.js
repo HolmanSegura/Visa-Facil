@@ -280,6 +280,105 @@
     return (nombre || "?").split(" ").map(w => w[0] || "").join("").toUpperCase().slice(0, 2) || "?";
   }
 
+  function _initOwnerAutocomplete({ inputId, hiddenId, listId }) {
+    const input  = document.getElementById(inputId);
+    const hidden = document.getElementById(hiddenId);
+    const lista  = document.getElementById(listId);
+    if (!input || !lista) {
+      console.warn(`[Propietario] Elemento no encontrado: #${inputId} o #${listId}`);
+      return;
+    }
+
+    // Lee el catálogo en tiempo de búsqueda: HubSpot owners si ya cargaron,
+    // si no, usa usuarios de BD (window.usuariosCatalogo)
+    function getCatalogo() {
+      if (Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0) {
+        return window.ownersCatalogo;
+      }
+      if (Array.isArray(window.usuariosCatalogo) && window.usuariosCatalogo.length > 0) {
+        return window.usuariosCatalogo.map(u => ({
+          id:     String(u.id),
+          nombre: u.nombre,
+          email:  u.email || ""
+        }));
+      }
+      return [];
+    }
+
+    function posicionarLista() {
+      const rect = input.getBoundingClientRect();
+      lista.style.position  = "fixed";
+      lista.style.top       = (rect.bottom + 4) + "px";
+      lista.style.left      = rect.left + "px";
+      lista.style.width     = rect.width + "px";
+      lista.style.zIndex    = "9999";
+      lista.style.maxHeight = "220px";
+      lista.style.overflowY = "auto";
+    }
+
+    function mostrar(q) {
+      const catalogo = getCatalogo();
+      if (!catalogo.length) { lista.hidden = true; return; }
+      const q2 = q.toLowerCase();
+      const res = q.length < 1
+        ? catalogo.slice(0, 20)
+        : catalogo.filter(o =>
+            o.nombre.toLowerCase().includes(q2) ||
+            (o.email || "").toLowerCase().includes(q2)
+          );
+      if (!res.length) { lista.hidden = true; return; }
+      lista.innerHTML = res.map((o, i) => `
+        <li class="contacto-sugerencias__item" role="option" tabindex="-1" data-owner-idx="${i}">
+          <span class="contacto-sug__nombre">${_esc(o.nombre)}</span>
+          ${o.email ? `<span class="contacto-sug__email">${_esc(o.email)}</span>` : ""}
+        </li>`).join("");
+      lista._resultados = res;
+      posicionarLista();
+      lista.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function cerrar() {
+      lista.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+    }
+
+    function seleccionar(owner) {
+      input.value = owner.nombre;
+      if (hidden) hidden.value = owner.id || "";
+      cerrar();
+    }
+
+    input.addEventListener("input",   () => mostrar(input.value.trim()));
+    input.addEventListener("focus",   () => { if (!input.value.trim()) mostrar(""); });
+
+    lista.addEventListener("click", e => {
+      const item = e.target.closest("[data-owner-idx]");
+      if (item && lista._resultados) seleccionar(lista._resultados[+item.dataset.ownerIdx]);
+    });
+    lista.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        const item = e.target.closest("[data-owner-idx]");
+        if (item && lista._resultados) seleccionar(lista._resultados[+item.dataset.ownerIdx]);
+      }
+      if (e.key === "Escape") { cerrar(); input.focus(); }
+    });
+
+    input.addEventListener("keydown", e => {
+      if (e.key === "Escape") cerrar();
+      if (e.key === "ArrowDown" && !lista.hidden) {
+        e.preventDefault();
+        lista.querySelector("[data-owner-idx='0']")?.focus();
+      }
+    });
+
+    document.addEventListener("click", e => {
+      if (!input.contains(e.target) && !lista.contains(e.target)) cerrar();
+    }, true);
+
+    console.log(`[Propietario] Autocomplete iniciado en #${inputId}`);
+  }
+
   async function cargarYAplicarOwners() {
     let owners = null;
 
@@ -306,20 +405,13 @@
 
     window.ownersCatalogo = owners;
 
+    // Select asesor en reporte de comisiones — siempre desde HubSpot owners
     const opHtml = owners.map(o => `<option value="${_esc(o.nombre)}">${_esc(o.nombre)}</option>`).join("");
-
-    // Select propietario en modales "Crear cotización" y "Editar cotización"
-    ["cot-propietario", "editar-cot-propietario"].forEach(selId => {
-      const sel = document.getElementById(selId);
-      if (sel && (!sel.options.length || sel.options[0]?.text === "Cargando…" || sel.options[0]?.text === "— Seleccionar —")) {
-        sel.innerHTML = `<option value="">— Seleccionar —</option>` + opHtml;
-      }
-    });
-
-    // Select asesor en reporte de comisiones
     const selAsesor = document.getElementById("rep-com-asesor");
-    if (selAsesor && selAsesor.options.length <= 1) {
+    if (selAsesor) {
+      const previo = selAsesor.value;
       selAsesor.innerHTML = `<option value="">Todos</option>` + opHtml;
+      selAsesor.value = previo; // restaurar selección previa si aplica
     }
 
     // Lista de propietarios en el filtro pill (popover)
@@ -498,7 +590,13 @@
       _cfg: cfg,
     };
 
-    // Cargar owners async y poblar selects / filtros
+    // Autocomplete propietario — siempre, independiente de si HubSpot responde
+    [
+      { inputId: "cot-propietario",        hiddenId: "cot-propietario-id",        listId: "propietario-create-sugerencias" },
+      { inputId: "editar-cot-propietario", hiddenId: "editar-cot-propietario-id", listId: "propietario-edit-sugerencias"   },
+    ].forEach(cfg => _initOwnerAutocomplete(cfg));
+
+    // Cargar owners desde HubSpot async (puebla window.ownersCatalogo para el autocomplete)
     cargarYAplicarOwners();
 
     console.info(

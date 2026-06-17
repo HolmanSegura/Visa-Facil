@@ -23,7 +23,7 @@
 (function () {
 
   const KEY_LS         = "caja:configComisiones";
-  const DEFAULT        = { version: 2, porAsesor: [], porProducto: [] };
+  const DEFAULT        = { version: 2, porAsesor: [], porProducto: [], generalProductoPorcentaje: 5 };
   const CACHE_KEY_PROD = "hubspot:productos:v1";   // clave compartida con cotizaciones-productos.js
   const CACHE_TTL_PROD = 15 * 60 * 1000;           // 15 minutos
 
@@ -260,38 +260,31 @@
         const montoBase = Number(linea.subtotal ?? linea.monto ?? linea.valor ?? 0);
         if (montoBase <= 0) return;
 
-        // ── Prioridad 1: regla por producto específico ──────────────
+        // ── Prioridad 1: excepción por producto específico ───────────
         const configProducto = cfg.porProducto.find(p =>
           (p.productoId && p.productoId === linea.productoId) ||
           p.producto.toLowerCase() === (linea.nombre || "").toLowerCase()
         );
 
-        if (configProducto) {
-          resultado.push({
-            facturaId:     factura.id,
-            facturaTitulo: factura.etiqueta || factura.titulo || factura.descripcion || "",
-            responsable,
-            producto:      linea.nombre,
-            fuente:        "producto",
-            porcentaje:    configProducto.porcentaje,
-            base:          montoBase,
-            comision:      Math.round(montoBase * configProducto.porcentaje / 100),
-            fecha:         factura.creado || factura.fechaCreacion || factura.fecha || ""
-          });
-          return; // no aplicar también la regla de asesor
-        }
+        // ── Prioridad 2: tasa general de productos ───────────────────
+        const pctGeneral = cfg.generalProductoPorcentaje ?? 0;
 
-        // ── Prioridad 2: comisión global del asesor ─────────────────
-        if (configAsesor) {
+        // ── Prioridad 3: tasa global del asesor ──────────────────────
+        const pctAsesor = configAsesor?.porcentaje ?? 0;
+
+        const pct  = configProducto ? configProducto.porcentaje : (pctGeneral > 0 ? pctGeneral : pctAsesor);
+        const fuente = configProducto ? "producto" : (pctGeneral > 0 ? "producto_general" : "asesor");
+
+        if (pct > 0) {
           resultado.push({
             facturaId:     factura.id,
             facturaTitulo: factura.etiqueta || factura.titulo || factura.descripcion || "",
             responsable,
             producto:      linea.nombre,
-            fuente:        "asesor",
-            porcentaje:    configAsesor.porcentaje,
+            fuente,
+            porcentaje:    pct,
             base:          montoBase,
-            comision:      Math.round(montoBase * configAsesor.porcentaje / 100),
+            comision:      Math.round(montoBase * pct / 100),
             fecha:         factura.creado || factura.fechaCreacion || factura.fecha || ""
           });
         }
@@ -316,8 +309,19 @@
     const tbody = document.getElementById("config-comisiones-tbody-asesor");
     if (!tbody) return;
 
+    // Mezclar config guardada con owners de HubSpot que aún no estén configurados
+    let asesores = cfg.porAsesor.map(r => ({ ...r }));
+    if (Array.isArray(window.ownersCatalogo)) {
+      window.ownersCatalogo.forEach(owner => {
+        if (!asesores.find(a => a.responsable === owner.nombre)) {
+          asesores.push({ responsable: owner.nombre, porcentaje: 0, base: "ingresos", activo: true });
+        }
+      });
+    }
+    cfg = { ...cfg, porAsesor: asesores };
+
     if (cfg.porAsesor.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="tabla-config-comisiones__vacio">Sin asesores. Se generan automáticamente al guardar movimientos.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="tabla-config-comisiones__vacio">Sin asesores. Los owners de HubSpot aparecerán aquí cuando se carguen.</td></tr>`;
       return;
     }
 
@@ -369,8 +373,11 @@
     const tbody = document.getElementById("config-comisiones-tbody-producto");
     if (!tbody) return;
 
+    const inputGen = document.getElementById("config-com-general-pct");
+    if (inputGen) inputGen.value = cfg.generalProductoPorcentaje ?? 5;
+
     if (cfg.porProducto.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin productos configurados todavía. Usa "+ Agregar producto".</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin excepciones configuradas. Todos los productos usan la tasa general.</td></tr>`;
       return;
     }
 
@@ -415,6 +422,8 @@
       const base   = tr.querySelector('[data-field="base"]')?.value || "ingresos";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
+
+    cfg.generalProductoPorcentaje = parseFloat(document.getElementById("config-com-general-pct")?.value) || 5;
 
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
       const inputEl = tr.querySelector('[data-field="producto-texto"]');
@@ -857,17 +866,7 @@
       inHasta.value = fechaIso(new Date());
     }
 
-    if (select && window.estadoApp) {
-      const previo = select.value;
-      const cfg    = cargarConfig();
-      const unicos = [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable))].sort();
-      select.innerHTML = `<option value="">Todos</option>` +
-        unicos.map(n => {
-          const inactivo = cfg.porAsesor.find(a => a.responsable === n && a.activo === false);
-          return `<option value="${escHtml(n)}">${escHtml(n)}${inactivo ? " (inactivo)" : ""}</option>`;
-        }).join("");
-      select.value = previo;
-    }
+    // #rep-com-asesor ya viene poblado desde HubSpot owners (hubspot-api.js)
   }
 
   function exportarReporteCSV(reporte) {
@@ -920,6 +919,22 @@
     };
 
     console.info("[Comisiones] Módulo listo. Motor: window.configComisionesAPI.calcularComisionesAutomaticas(facturas)");
+  });
+
+  // Cuando HubSpot owners lleguen, re-renderizar el config si el modal está abierto
+  document.addEventListener("hubspot:owners-loaded", ({ detail }) => {
+    const modal = document.getElementById("modal-config-comisiones");
+    if (modal && !modal.hasAttribute("hidden")) {
+      renderConfigComisiones();
+    }
+    // Actualizar select de asesor del reporte con owners de HubSpot
+    const selAsesor = document.getElementById("rep-com-asesor");
+    if (selAsesor && Array.isArray(detail?.owners)) {
+      const previo = selAsesor.value;
+      selAsesor.innerHTML = `<option value="">Todos</option>` +
+        detail.owners.map(o => `<option value="${escHtml(o.nombre)}">${escHtml(o.nombre)}</option>`).join("");
+      selAsesor.value = previo;
+    }
   });
 
 })();

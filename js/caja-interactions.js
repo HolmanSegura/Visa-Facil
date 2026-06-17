@@ -640,20 +640,24 @@
       const prodId      = inputProd?.dataset?.prodId || "";
       if (!precio || !responsable || !producto) return;
 
-      let cfg = { porAsesor: [], porProducto: [] };
+      let cfg = { porAsesor: [], porProducto: [], generalProductoPorcentaje: 5 };
       try { cfg = JSON.parse(localStorage.getItem("caja:configComisiones")) || cfg; } catch (_) {}
 
-      // Prioridad 1: regla por producto
+      // Prioridad 1: excepción por producto específico
       const reglaProd = (cfg.porProducto || []).find(p =>
         (p.productoId && p.productoId === prodId) ||
         (p.producto || "").toLowerCase() === producto.toLowerCase()
       );
-      // Prioridad 2: regla del asesor activo
+      // Prioridad 2: tasa general de productos
+      const pctGeneral = cfg.generalProductoPorcentaje ?? 0;
+      // Prioridad 3: tasa del asesor activo
       const reglaAsesor = (cfg.porAsesor || [])
         .filter(a => a.activo !== false)
         .find(a => (a.responsable || "").toLowerCase() === responsable.toLowerCase());
 
-      const regla = reglaProd || reglaAsesor;
+      const regla = reglaProd
+        || (pctGeneral > 0 ? { porcentaje: pctGeneral } : null)
+        || reglaAsesor;
       if (!regla) {
         window.mostrarToast?.("⚠ Sin regla de comisión para ese producto/asesor");
         return;

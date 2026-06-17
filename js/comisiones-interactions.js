@@ -232,11 +232,13 @@
     const btnGuar = document.getElementById("guardar-pago-com");
     if (!modal || !btnGuar) return;
 
-    // Poblar select de asesores
+    // Poblar select de asesores desde HubSpot owners (fallback: reporte BD)
     const selAsesor = document.getElementById("pago-com-asesor");
-    if (selAsesor && window.estadoApp) {
-      const nombres = [...new Set(window.estadoApp.datosOriginales.map(r => r.responsable))].sort();
-      selAsesor.innerHTML = nombres.map(n => `<option value="${n}">${n}</option>`).join("");
+    if (selAsesor) {
+      const nombres = Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0
+        ? window.ownersCatalogo.map(o => o.nombre).sort()
+        : [...new Set(window.estadoApp?.datosOriginales.map(r => r.responsable) || [])].sort();
+      selAsesor.innerHTML = nombres.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");
     }
 
     btnGuar.addEventListener("click", async () => {
@@ -346,7 +348,7 @@
      CONFIG COMISIONES — PERSISTENCIA
      ================================================================ */
   const KEY_LS  = "caja:configComisiones";
-  const DEFAULT_CFG = { version: 2, porAsesor: [], porProducto: [] };
+  const DEFAULT_CFG = { version: 2, porAsesor: [], porProducto: [], generalProductoPorcentaje: 5 };
 
   function cargarConfig() {
     try {
@@ -407,8 +409,20 @@
   function renderTabAsesor(cfg) {
     const tbody = document.getElementById("config-comisiones-tbody-asesor");
     if (!tbody) return;
+
+    // Mezclar config guardada con owners de HubSpot que aún no estén configurados
+    let asesores = cfg.porAsesor.map(r => ({ ...r }));
+    if (Array.isArray(window.ownersCatalogo)) {
+      window.ownersCatalogo.forEach(owner => {
+        if (!asesores.find(a => a.responsable === owner.nombre)) {
+          asesores.push({ responsable: owner.nombre, porcentaje: 0, base: "ingresos", activo: true });
+        }
+      });
+    }
+    cfg = { ...cfg, porAsesor: asesores };
+
     if (cfg.porAsesor.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="tabla-config-comisiones__vacio">Sin asesores configurados todavía.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="tabla-config-comisiones__vacio">Los owners de HubSpot aparecerán aquí cuando se carguen.</td></tr>`;
       return;
     }
     tbody.innerHTML = cfg.porAsesor.map((row, idx) => {
@@ -438,8 +452,12 @@
   function renderTabProducto(cfg) {
     const tbody = document.getElementById("config-comisiones-tbody-producto");
     if (!tbody) return;
+
+    const inputGen = document.getElementById("config-com-general-pct");
+    if (inputGen) inputGen.value = cfg.generalProductoPorcentaje ?? 5;
+
     if (cfg.porProducto.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin productos configurados. Usa "+ Agregar producto".</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin excepciones configuradas. Todos los productos usan la tasa general.</td></tr>`;
       return;
     }
     tbody.innerHTML = cfg.porProducto.map((row, idx) => `
@@ -460,6 +478,8 @@
       const base   = tr.querySelector('[data-field="base"]')?.value || "ingresos";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
+    cfg.generalProductoPorcentaje = parseFloat(document.getElementById("config-com-general-pct")?.value) || 5;
+
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
       const inputEl = tr.querySelector('[data-field="producto-texto"]');
       const prod    = inputEl?.value?.trim() || "";
@@ -734,17 +754,27 @@
   /* ================================================================
      FILTROS PILL: Asesor, Estado, Fecha
      ================================================================ */
+  function poblarListaAsesores() {
+    const listaAse = document.getElementById("lista-asesores");
+    if (!listaAse) return;
+    // Usar HubSpot owners si ya cargaron; de lo contrario, usar los del reporte
+    const fuente = Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0
+      ? window.ownersCatalogo.map(o => o.nombre)
+      : [...new Set(window.estadoApp.datosOriginales.map(r => r.responsable))];
+    const previos = new Set([...listaAse.querySelectorAll("input:checked")].map(c => c.dataset.ase));
+    listaAse.innerHTML = fuente.sort().map(n => `
+      <label class="check-lista__item">
+        <input type="checkbox" data-ase="${escHtml(n)}" ${previos.has(n) ? "checked" : ""}/>
+        <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${window.obtenerIniciales(n)}</span>
+        ${escHtml(n)}
+      </label>`).join("");
+  }
+
   function initFiltrosPill() {
-    // Poblar asesores
+    // Poblar asesores desde HubSpot owners (o BD como fallback)
     const listaAse = document.getElementById("lista-asesores");
     if (listaAse) {
-      const unicos = [...new Set(window.estadoApp.datosOriginales.map(r => r.responsable))].sort();
-      listaAse.innerHTML = unicos.map(n => `
-        <label class="check-lista__item">
-          <input type="checkbox" data-ase="${n}"/>
-          <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${window.obtenerIniciales(n)}</span>
-          ${n}
-        </label>`).join("");
+      poblarListaAsesores();
       listaAse.addEventListener("change", e => {
         if (e.target.matches('input[type="checkbox"]')) {
           window.estadoApp.filtros.asesor = [...listaAse.querySelectorAll("input:checked")].map(c => c.dataset.ase);
@@ -1333,5 +1363,27 @@
     window.PanelDetalle = PanelDetalle;
 
     console.log("[Comisiones] UI interactions inicializadas");
+  });
+
+  // Cuando HubSpot owners lleguen, actualizar listas de asesores
+  document.addEventListener("hubspot:owners-loaded", ({ detail }) => {
+    // Lista del filtro pill
+    poblarListaAsesores();
+
+    // Config modal — re-renderizar si está abierto
+    const modalCfg = document.getElementById("modal-config-comisiones");
+    if (modalCfg && !modalCfg.hasAttribute("hidden")) {
+      renderConfigComisiones();
+    }
+
+    // Select del modal "Registrar pago" — re-poblar si está abierto
+    const selAsesor = document.getElementById("pago-com-asesor");
+    if (selAsesor && Array.isArray(detail?.owners)) {
+      const previo = selAsesor.value;
+      selAsesor.innerHTML = detail.owners
+        .map(o => o.nombre).sort()
+        .map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");
+      selAsesor.value = previo;
+    }
   });
 })();

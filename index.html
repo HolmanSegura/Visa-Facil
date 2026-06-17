@@ -1547,12 +1547,14 @@
               </select>
             </div>
             <div class="form-grupo">
-              <label class="form-label" for="cot-propietario"
-                >Propietario (hubspot_owner_id)</label
-              >
-              <select id="cot-propietario" class="form-select">
-                <option value="">Cargando…</option>
-              </select>
+              <label class="form-label" for="cot-propietario">Propietario</label>
+              <div style="position:relative" id="propietario-create-wrap">
+                <input type="text" id="cot-propietario" class="form-input"
+                  placeholder="Buscar propietario…" autocomplete="off"
+                  aria-autocomplete="list" aria-expanded="false"/>
+                <input type="hidden" id="cot-propietario-id"/>
+                <ul id="propietario-create-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
+              </div>
             </div>
             <div class="form-grupo form-grupo--full" id="negocio-autocomplete-wrap">
               <label class="form-label" for="cot-negocio">Negocio / Deal de HubSpot</label>
@@ -1902,9 +1904,13 @@
           <div class="cot-form-grid">
             <div class="form-grupo">
               <label class="form-label" for="editar-cot-propietario">Propietario</label>
-              <select id="editar-cot-propietario" class="form-select">
-                <option value="">— Seleccionar —</option>
-              </select>
+              <div style="position:relative" id="propietario-edit-wrap">
+                <input type="text" id="editar-cot-propietario" class="form-input"
+                  placeholder="Buscar propietario…" autocomplete="off"
+                  aria-autocomplete="list" aria-expanded="false"/>
+                <input type="hidden" id="editar-cot-propietario-id"/>
+                <ul id="propietario-edit-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
+              </div>
             </div>
             <div class="form-grupo">
               <label class="form-label" for="editar-cot-fvencimiento">Fecha de vencimiento</label>
@@ -2190,10 +2196,18 @@
             data-panel-comisiones="producto"
             hidden
           >
+            <div style="display:flex;align-items:center;gap:var(--esp-3);padding:var(--esp-3) 0 var(--esp-4);border-bottom:1px solid var(--color-borde);margin-bottom:var(--esp-3);">
+              <span style="font-size:13px;font-weight:500;white-space:nowrap;">Comisión general de productos</span>
+              <div class="input-pct" style="width:90px;flex-shrink:0;">
+                <input type="number" id="config-com-general-pct" class="form-input form-input--sm" min="0" max="100" step="0.1" value="5"/>
+                <span class="input-pct__suffix">%</span>
+              </div>
+              <span style="font-size:12px;color:var(--color-texto-suave);">Aplica a todos los productos. Agrega excepciones abajo para productos con tasa diferente.</span>
+            </div>
             <table class="tabla-config-comisiones">
               <thead>
                 <tr>
-                  <th>Producto / Categoría</th>
+                  <th>Excepción por producto</th>
                   <th style="width: 140px">% Comisión</th>
                   <th style="width: 60px"></th>
                 </tr>
@@ -2205,7 +2219,7 @@
               id="btn-agregar-producto-comision"
               style="margin-top: 12px"
             >
-              + Agregar producto
+              + Agregar excepción
             </button>
           </div>
         </div>

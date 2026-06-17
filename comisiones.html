@@ -719,22 +719,30 @@
 
           <!-- Panel: Por producto -->
           <div data-panel-comisiones="productos" hidden>
+            <div style="display:flex;align-items:center;gap:var(--esp-3);padding:var(--esp-3) 0 var(--esp-4);border-bottom:1px solid var(--color-borde);margin-bottom:var(--esp-3);">
+              <span style="font-size:13px;font-weight:500;white-space:nowrap;">Comisión general de productos</span>
+              <div class="input-pct" style="width:90px;flex-shrink:0;">
+                <input type="number" id="config-com-general-pct" class="form-input form-input--sm" min="0" max="100" step="0.1" value="5"/>
+                <span class="input-pct__suffix">%</span>
+              </div>
+              <span style="font-size:12px;color:var(--color-texto-suave);">Aplica a todos los productos. Agrega excepciones abajo para productos con tasa diferente.</span>
+            </div>
             <table class="tabla-config-comisiones">
               <thead>
                 <tr>
-                  <th>Producto</th>
+                  <th>Excepción por producto</th>
                   <th>% Comisión</th>
                   <th style="width:40px"></th>
                 </tr>
               </thead>
               <tbody id="config-comisiones-tbody-producto">
-                <tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin productos configurados todavía.</td></tr>
+                <tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin excepciones configuradas. Todos los productos usan la tasa general.</td></tr>
               </tbody>
             </table>
             <div style="margin-top:var(--esp-3)">
               <button class="btn btn--ghost" id="btn-agregar-producto-comision">
                 <svg viewBox="0 0 12 12" width="10" height="10" style="margin-right:4px"><path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z"/></svg>
-                Agregar producto
+                Agregar excepción
               </button>
             </div>
           </div>
@@ -914,6 +922,7 @@
        ============================================================ -->
     <script src="js/app-session.js"></script>
     <script src="js/api-client.js"></script>
+    <script src="js/hubspot-api.js"></script>
     <script src="js/comisiones-main.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/comisiones-views.js"></script>

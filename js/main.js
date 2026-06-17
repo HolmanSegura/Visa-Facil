@@ -164,13 +164,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const opciones = resU.data
         .map(u => `<option value="${u.nombre}">${u.nombre}</option>`)
         .join("");
-      const selProp = document.getElementById("cot-propietario");
-      if (selProp) selProp.innerHTML = opciones;
-      // Reporte de comisiones: mantiene opción "Todos" al inicio
-      const selAsesor = document.getElementById("rep-com-asesor");
-      if (selAsesor) {
-        selAsesor.innerHTML = `<option value="">Todos</option>` + opciones;
-      }
+      // #cot-propietario y #rep-com-asesor los puebla HubSpot owners; no tocar aquí
       // Establecer usuario actual para la vista "Mis borradores"
       if (!window.usuarioActualNombre) {
         window.usuarioActualNombre =

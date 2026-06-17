@@ -72,14 +72,16 @@ CREATE TABLE IF NOT EXISTS `clientes` (
 --    Oportunidades / deals, agrupan una o más cotizaciones.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `negocios` (
-  `id`          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
-  `nombre`      VARCHAR(300)  NOT NULL,
-  `cliente_id`  INT UNSIGNED  NULL DEFAULT NULL,
-  `created_at`  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `deleted_at`  TIMESTAMP     NULL DEFAULT NULL,
+  `id`               INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+  `nombre`           VARCHAR(300)  NOT NULL,
+  `cliente_id`       INT UNSIGNED  NULL DEFAULT NULL,
+  `hubspot_deal_id`  VARCHAR(80)   NULL DEFAULT NULL,
+  `created_at`       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`       TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at`       TIMESTAMP     NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_negocios_cliente` (`cliente_id`),
+  KEY `idx_negocios_hubspot` (`hubspot_deal_id`),
   CONSTRAINT `fk_negocios_cliente` FOREIGN KEY (`cliente_id`)
     REFERENCES `clientes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
