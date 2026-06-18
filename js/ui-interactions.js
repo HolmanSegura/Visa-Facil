@@ -1975,32 +1975,23 @@
     const resultados = [];
     const errores    = [];
 
-    // 1. Crear factura draft (modo simulado — sin llamar a HubSpot por ahora)
-    // TODO: cuando se active HubSpot, descomentar el bloque real y eliminar el dummy
+    // 1. Crear factura draft en HubSpot
     if (!cot.hubspot_invoice_id) {
       try {
-        // ── MODO DUMMY ────────────────────────────────────────────────
-        const draftId = `DRAFT-${new Date().getFullYear()}-${String(cot.id).padStart(4, "0")}`;
-        cot.hubspot_invoice_id = draftId;
-        window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: draftId })
-          .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
-        resultados.push(`factura draft #${draftId}`);
-
-        // ── REAL (HubSpot) — descomentar cuando esté listo ────────────
-        // const resp = await window.HubSpotAPI.guardarCotizacionComoFactura({
-        //   titulo:           cot.titulo,
-        //   estado:           "borrador",
-        //   fechaVencimiento: cot.fechaVencimiento || "",
-        //   moneda:           cot.moneda || "COP",
-        //   cantidad:         cot.cantidad || 0,
-        //   contactoId:       cot.hubspot_contact_id || null,
-        // });
-        // if (resp?.id) {
-        //   cot.hubspot_invoice_id = resp.id;
-        //   window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: resp.id })
-        //     .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
-        //   resultados.push(`factura HubSpot #${resp.id}`);
-        // }
+        const resp = await window.HubSpotAPI.guardarCotizacionComoFactura({
+          titulo:           cot.titulo,
+          estado:           "borrador",
+          fechaVencimiento: cot.fechaVencimiento || "",
+          moneda:           cot.moneda || "COP",
+          cantidad:         cot.cantidad || 0,
+          contactoId:       cot.hubspot_contact_id || null,
+        });
+        if (resp?.id) {
+          cot.hubspot_invoice_id = resp.id;
+          window.Api?.cotizaciones.actualizar(cot.id, { hubspot_invoice_id: resp.id })
+            .catch(e => console.warn("[Aprobación] Guardar hubspot_invoice_id falló:", e.message));
+          resultados.push(`factura HubSpot #${resp.id}`);
+        }
       } catch (e) {
         console.warn("[Aprobación] Crear factura draft falló:", e.message);
         errores.push("factura no generada");
