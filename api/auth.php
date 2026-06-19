@@ -54,6 +54,10 @@ switch ($action) {
         handleLogout();
         break;
 
+    case 'cambiar_password':
+        handleCambiarPassword();
+        break;
+
     default:
         errorResponse('Acción no válida', 400);
 }
@@ -140,6 +144,68 @@ function handleLogin(): void {
     $_SESSION['user']    = $userData;
 
     jsonResponse(['ok' => true, 'user' => $userData]);
+}
+
+function handleCambiarPassword(): void {
+    if (empty($_SESSION['user_id'])) {
+        errorResponse('Sesión no activa', 401);
+    }
+
+    $body        = getBody();
+    $actual      = $body['password_actual']  ?? '';
+    $nueva       = $body['password_nueva']   ?? '';
+    $confirmacion = $body['password_confirma'] ?? '';
+
+    if (!$actual || !$nueva || !$confirmacion) {
+        errorResponse('Todos los campos son requeridos', 400);
+    }
+    if (strlen($nueva) < 8) {
+        errorResponse('La nueva contraseña debe tener al menos 8 caracteres', 400);
+    }
+    if ($nueva !== $confirmacion) {
+        errorResponse('Las contraseñas nuevas no coinciden', 400);
+    }
+
+    try {
+        $db   = getDB();
+        $stmt = $db->prepare(
+            "SELECT password_hash FROM usuarios WHERE id = ? AND activo = 1 AND deleted_at IS NULL LIMIT 1"
+        );
+        $stmt->execute([$_SESSION['user_id']]);
+        $row = $stmt->fetch();
+    } catch (\PDOException $e) {
+        error_log('[auth.php] cambiar_password DB error: ' . $e->getMessage());
+        errorResponse('Error interno del servidor', 500);
+        return;
+    }
+
+    if (!$row) {
+        errorResponse('Usuario no encontrado', 404);
+    }
+
+    $appPassword = $_ENV['APP_PASSWORD'] ?? 'Oblicua2026!';
+    $hashActual  = $row['password_hash'] ?? '';
+
+    $valido = (strpos($hashActual, '$2y$') === 0 && strpos($hashActual, 'placeholder') === false)
+        ? password_verify($actual, $hashActual)
+        : ($actual === $appPassword);
+
+    if (!$valido) {
+        usleep(300000);
+        errorResponse('La contraseña actual es incorrecta', 401);
+    }
+
+    $nuevoHash = password_hash($nueva, PASSWORD_BCRYPT, ['cost' => 12]);
+    try {
+        $db->prepare("UPDATE usuarios SET password_hash = ? WHERE id = ?")
+           ->execute([$nuevoHash, $_SESSION['user_id']]);
+    } catch (\PDOException $e) {
+        error_log('[auth.php] cambiar_password update error: ' . $e->getMessage());
+        errorResponse('No se pudo actualizar la contraseña', 500);
+        return;
+    }
+
+    jsonResponse(['ok' => true, 'message' => 'Contraseña actualizada correctamente']);
 }
 
 function handleLogout(): void {

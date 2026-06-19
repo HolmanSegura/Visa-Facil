@@ -132,7 +132,7 @@
       cfg.porAsesor = unicos.map(n => ({
         responsable: n,
         porcentaje:  5,
-        base:        "ventas_cerradas"
+        base:        "por_venta"
       }));
       guardarConfig(cfg);
     }
@@ -158,13 +158,6 @@
                    value="${row.porcentaje}" data-field="porcentaje" />
             <span class="input-pct__suffix">%</span>
           </div>
-        </td>
-        <td>
-          <select class="form-select form-select--sm" data-field="base">
-            <option value="ventas_cerradas" ${row.base === "ventas_cerradas" ? "selected" : ""}>Ventas cerradas</option>
-            <option value="ingresos"        ${row.base === "ingresos"        ? "selected" : ""}>Ingresos cobrados</option>
-            <option value="por_venta"       ${row.base === "por_venta"       ? "selected" : ""}>Por venta cerrada</option>
-          </select>
         </td>
         <td>
           <button class="btn-icono-mini" data-accion-asesor="quitar" title="Quitar">
@@ -237,7 +230,7 @@
     document.querySelectorAll("[data-row-asesor]").forEach(tr => {
       const nombre = tr.querySelector(".celda-avatar")?.textContent.trim() || "";
       const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]').value) || 0;
-      const base   = tr.querySelector('[data-field="base"]').value;
+      const base   = "por_venta";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base });
     });
 

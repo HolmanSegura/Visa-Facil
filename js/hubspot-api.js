@@ -280,7 +280,11 @@
     return (nombre || "?").split(" ").map(w => w[0] || "").join("").toUpperCase().slice(0, 2) || "?";
   }
 
-  function _initOwnerAutocomplete({ inputId, hiddenId, listId }) {
+  function _esSuperAdmin() {
+    return window.AppSession?.user?.rol === 'admin';
+  }
+
+  function _initOwnerAutocomplete({ inputId, hiddenId, listId, soloPropio }) {
     const input  = document.getElementById(inputId);
     const hidden = document.getElementById(hiddenId);
     const lista  = document.getElementById(listId);
@@ -290,19 +294,28 @@
     }
 
     // Lee el catálogo en tiempo de búsqueda: HubSpot owners si ya cargaron,
-    // si no, usa usuarios de BD (window.usuariosCatalogo)
+    // si no, usa usuarios de BD (window.usuariosCatalogo).
+    // Si soloPropio=true y el usuario NO es super_admin, filtra al usuario actual.
     function getCatalogo() {
+      let todos;
       if (Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0) {
-        return window.ownersCatalogo;
-      }
-      if (Array.isArray(window.usuariosCatalogo) && window.usuariosCatalogo.length > 0) {
-        return window.usuariosCatalogo.map(u => ({
+        todos = window.ownersCatalogo;
+      } else if (Array.isArray(window.usuariosCatalogo) && window.usuariosCatalogo.length > 0) {
+        todos = window.usuariosCatalogo.map(u => ({
           id:     String(u.id),
           nombre: u.nombre,
           email:  u.email || ""
         }));
+      } else {
+        return [];
       }
-      return [];
+
+      if (soloPropio && !_esSuperAdmin()) {
+        const emailActual = window.AppSession?.user?.email || '';
+        const propio = todos.find(o => o.email === emailActual);
+        return propio ? [propio] : todos;
+      }
+      return todos;
     }
 
     function posicionarLista() {
@@ -433,6 +446,23 @@
           <input type="checkbox" data-avanzado-grupo="propietario" data-avanzado-val="${_esc(o.nombre)}"/>
           ${_esc(o.nombre)}
         </label>`).join("");
+    }
+
+    // Pre-rellenar propietario en formulario de crear cotización para no-super-admin
+    if (!_esSuperAdmin()) {
+      const emailActual = window.AppSession?.user?.email || '';
+      const propio = owners.find(o => o.email === emailActual);
+      if (propio) {
+        const inputCreate = document.getElementById('cot-propietario');
+        const hiddenCreate = document.getElementById('cot-propietario-id');
+        if (inputCreate && !inputCreate.value) {
+          inputCreate.value    = propio.nombre;
+          inputCreate.readOnly = true;
+          inputCreate.style.background = 'var(--color-fondo-suave, #f8f9fa)';
+          inputCreate.style.cursor     = 'default';
+        }
+        if (hiddenCreate && !hiddenCreate.value) hiddenCreate.value = propio.id || '';
+      }
     }
 
     // Notificar a otros módulos que los owners están listos
@@ -592,7 +622,7 @@
 
     // Autocomplete propietario — siempre, independiente de si HubSpot responde
     [
-      { inputId: "cot-propietario",        hiddenId: "cot-propietario-id",        listId: "propietario-create-sugerencias" },
+      { inputId: "cot-propietario",        hiddenId: "cot-propietario-id",        listId: "propietario-create-sugerencias", soloPropio: true },
       { inputId: "editar-cot-propietario", hiddenId: "editar-cot-propietario-id", listId: "propietario-edit-sugerencias"   },
     ].forEach(cfg => _initOwnerAutocomplete(cfg));
 

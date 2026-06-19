@@ -5,15 +5,13 @@
 
    CORREO:
    ┌───────────────────────────────────────────────────────┐
-   │ Remitente fijo:  soporte@oblicua.co                   │
+   │ Remitente fijo:  contabilidadvisafacil@gmail.com      │
+   │ Reply-To:        email del asesor (HubSpot owner)     │
    │                                                       │
    │ Middleware: Dapta (webhook POST)                       │
    │   Envía un payload JSON estructurado a la URL         │
    │   configurada en DAPTA_WEBHOOK_URL. Dapta se encarga  │
    │   de construir y despachar el correo al destinatario. │
-   │                                                       │
-   │   Reemplaza el placeholder antes de deploy:           │
-   │   const DAPTA_WEBHOOK_URL = "TU_WEBHOOK_DAPTA_AQUI"  │
    └───────────────────────────────────────────────────────┘
 
    EXCEL:
@@ -28,7 +26,7 @@
    Expone: window.CotizacionEmail
    ============================================================ */
 (function () {
-  const REMITENTE = "soporte@oblicua.co";
+  const REMITENTE = "contabilidadvisafacil@gmail.com";
   // Valores por defecto — se sobreescriben desde .env vía window.AppConfig
   const DAPTA_WEBHOOK_URL_DEFAULT =
     "https://api.dapta.ai/api/9c9ae2b4d48889fa/envio-cotizaciones";
@@ -46,7 +44,14 @@
   // -----------------------------------------------------------------
 
   function construirAsunto(cot) {
-    return `Cotización: ${cot.titulo || "Sin título"} — Oblicua Digital`;
+    return `Cotización: ${cot.titulo || "Sin título"} — Visa Fácil Internacional`;
+  }
+
+  function obtenerEmailAsesor(cot) {
+    const owners = window.ownersCatalogo;
+    if (!Array.isArray(owners) || !cot.responsable) return "";
+    const owner = owners.find(o => o.nombre === cot.responsable);
+    return owner?.email || "";
   }
 
   function construirCuerpoTexto(cot, lineas, totales) {
@@ -67,6 +72,7 @@
       )
       .join("\n");
 
+    const emailAsesor = obtenerEmailAsesor(cot);
     return [
       `Cotización: ${cot.titulo}`,
       `Cliente:    ${cot.cliente || "—"}`,
@@ -83,12 +89,12 @@
       `IVA (${((totales ? (window.DescuentosEngine?.getTasaIva?.() ?? 0.19) : 0.19) * 100).toFixed(0)}%):  ${fmt(totales?.iva ?? 0)} COP`,
       `TOTAL:      ${fmt(totales?.total ?? cot.cantidad ?? 0)} COP`,
       "",
-      `Propietario: ${cot.responsable || "—"}`,
+      `Asesor: ${cot.responsable || "—"}${emailAsesor ? " · " + emailAsesor : ""}`,
       "",
-      "Para aceptar esta cotización o solicitar cambios, responde a este correo.",
+      "Para aceptar esta cotización o solicitar cambios, contacta directamente a tu asesor.",
       "",
       `—————`,
-      `Enviado por soporte@oblicua.co · Oblicua Digital`,
+      `Enviado por contabilidadvisafacil@gmail.com · Visa Fácil Internacional SAS`,
     ]
       .filter((l) => l !== null && l !== undefined)
       .join("\n");
@@ -129,90 +135,139 @@
     const descValor = totales?.descGlobalValor ?? 0;
     const montoIva = totales?.iva ?? 0;
 
+    const emailAsesor = obtenerEmailAsesor(cot);
+
     return `<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:20px;background:#f7fafc;font-family:Inter,Arial,sans-serif;color:#2d3748;">
-  <div style="max-width:640px;margin:0 auto;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cotización — Visa Fácil Internacional</title>
+</head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;color:#333333;">
 
-    <!-- Header -->
-    <div style="background:#1a202c;padding:22px 28px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="color:#fff;font-size:18px;font-weight:700;">Oblicua Digital</div>
-        <div style="color:#a0aec0;font-size:12px;margin-top:2px;">soporte@oblicua.co</div>
-      </div>
-      <div style="color:#fff;font-size:13px;text-align:right;">
-        <div style="font-weight:600;">${escHtml(cot.titulo)}</div>
-        <div style="color:#a0aec0;font-size:11px;margin-top:2px;">Válida hasta: ${fmtF(cot.fechaVencimiento)}</div>
-      </div>
-    </div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:30px 0;">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 4px 10px rgba(0,0,0,0.1);">
 
-    <!-- Body -->
-    <div style="background:#fff;padding:28px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;">
-      <p style="margin:0 0 16px;">Estimado/a <strong>${escHtml(cot.cliente || "cliente")}</strong>,</p>
-      <p style="margin:0 0 20px;color:#4a5568;">Compartimos la cotización <strong>${escHtml(cot.titulo)}</strong> para su revisión y aprobación.</p>
-
-      ${
-        lineas && lineas.length > 0
-          ? `
-      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
-        <thead>
-          <tr style="background:#f7fafc;">
-            <th style="padding:9px 10px;text-align:left;border-bottom:2px solid #e2e8f0;font-weight:600;color:#4a5568;">Descripción</th>
-            <th style="padding:9px 10px;text-align:right;border-bottom:2px solid #e2e8f0;font-weight:600;color:#4a5568;white-space:nowrap;">P. Unitario</th>
-            <th style="padding:9px 10px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;color:#4a5568;">Cant.</th>
-            <th style="padding:9px 10px;text-align:center;border-bottom:2px solid #e2e8f0;font-weight:600;color:#4a5568;">Dcto.</th>
-            <th style="padding:9px 10px;text-align:right;border-bottom:2px solid #e2e8f0;font-weight:600;color:#4a5568;">Total</th>
-          </tr>
-        </thead>
-        <tbody>${filasLineas}</tbody>
-      </table>`
-          : ""
-      }
-
-      <!-- Resumen de totales -->
-      <table style="width:260px;margin-left:auto;font-size:13px;border-collapse:collapse;">
+        <!-- HEADER -->
         <tr>
-          <td style="padding:5px 0;color:#718096;">Subtotal</td>
-          <td style="padding:5px 0;text-align:right;">${fmt(subtotalB)}</td>
+          <td style="background-color:#003366;padding:25px;text-align:center;">
+            <img src="https://50772182.fs1.hubspotusercontent-na1.net/hubfs/50772182/LOGO%20VISA%20FACIL%202025.jpeg"
+                 alt="Visa Fácil Logo" width="180"
+                 style="display:block;margin:0 auto;">
+          </td>
         </tr>
-        ${
-          descValor > 0
-            ? `
+
+        <!-- SALUDO -->
         <tr>
-          <td style="padding:5px 0;color:#718096;">Descuento</td>
-          <td style="padding:5px 0;text-align:right;color:#e53e3e;">- ${fmt(descValor)}</td>
-        </tr>`
-            : ""
-        }
+          <td style="padding:28px 28px 0;">
+            <h2 style="color:#003366;margin:0 0 12px;font-size:20px;">
+              Estimado/a <span style="text-transform:capitalize;">${escHtml(cot.cliente || "cliente")}</span>,
+            </h2>
+            <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#444;">
+              Adjunto encontrará la cotización <strong>${escHtml(cot.titulo)}</strong> elaborada por su asesor.
+              Quedo atento/a a sus comentarios.
+            </p>
+            <p style="margin:0 0 8px;font-size:13px;color:#777;">
+              Válida hasta: <strong>${fmtF(cot.fechaVencimiento)}</strong>
+              &nbsp;·&nbsp; Moneda: <strong>${escHtml(cot.moneda || "COP")}</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- TABLA DE PRODUCTOS -->
+        ${lineas && lineas.length > 0 ? `
         <tr>
-          <td style="padding:5px 0;color:#718096;">IVA (${(iva * 100).toFixed(0)}%)</td>
-          <td style="padding:5px 0;text-align:right;">${fmt(montoIva)}</td>
+          <td style="padding:20px 28px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="background-color:#f8f9fa;">
+                  <th style="padding:9px 10px;text-align:left;border-bottom:2px solid #003366;color:#003366;font-weight:700;">Descripción</th>
+                  <th style="padding:9px 10px;text-align:right;border-bottom:2px solid #003366;color:#003366;font-weight:700;white-space:nowrap;">P. Unitario</th>
+                  <th style="padding:9px 10px;text-align:center;border-bottom:2px solid #003366;color:#003366;font-weight:700;">Cant.</th>
+                  <th style="padding:9px 10px;text-align:center;border-bottom:2px solid #003366;color:#003366;font-weight:700;">Dcto.</th>
+                  <th style="padding:9px 10px;text-align:right;border-bottom:2px solid #003366;color:#003366;font-weight:700;">Total</th>
+                </tr>
+              </thead>
+              <tbody>${filasLineas}</tbody>
+            </table>
+          </td>
+        </tr>` : ""}
+
+        <!-- TOTALES -->
+        <tr>
+          <td style="padding:16px 28px 0;">
+            <table width="280" cellpadding="0" cellspacing="0"
+                   style="margin-left:auto;font-size:13px;border-collapse:collapse;">
+              <tr>
+                <td style="padding:5px 0;color:#777;">Subtotal</td>
+                <td style="padding:5px 0;text-align:right;">${fmt(subtotalB)}</td>
+              </tr>
+              ${descValor > 0 ? `
+              <tr>
+                <td style="padding:5px 0;color:#777;">Descuento</td>
+                <td style="padding:5px 0;text-align:right;color:#cc0000;">− ${fmt(descValor)}</td>
+              </tr>` : ""}
+              <tr>
+                <td style="padding:5px 0;color:#777;">IVA (${(iva * 100).toFixed(0)}%)</td>
+                <td style="padding:5px 0;text-align:right;">${fmt(montoIva)}</td>
+              </tr>
+              <tr>
+                <td colspan="2"><hr style="border:none;border-top:2px solid #003366;margin:8px 0;"></td>
+              </tr>
+              <tr>
+                <td style="padding:4px 0;font-weight:700;font-size:15px;color:#003366;">TOTAL</td>
+                <td style="padding:4px 0;text-align:right;font-weight:700;font-size:15px;color:#003366;">${fmt(totalFinal)}</td>
+              </tr>
+            </table>
+          </td>
         </tr>
-        <tr style="border-top:2px solid #2d3748;">
-          <td style="padding:10px 0 5px;font-weight:700;font-size:15px;">Total</td>
-          <td style="padding:10px 0 5px;text-align:right;font-weight:700;font-size:15px;">${fmt(totalFinal)}</td>
+
+        <!-- TIP -->
+        <tr>
+          <td style="padding:20px 28px;">
+            <p style="margin:0;background-color:#fff8e1;padding:12px 14px;font-size:13px;
+                       color:#8a6d3b;border-radius:4px;border-left:3px solid #f5c6cb;line-height:1.5;">
+              💡 <strong>Tip:</strong> Agrega nuestro correo y número de WhatsApp a tus contactos
+              para recibir todas las notificaciones de tu proceso a tiempo.
+            </p>
+          </td>
         </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="background-color:#f8f9fa;padding:20px 28px;text-align:center;border-top:3px solid #003366;">
+            <p style="margin:0 0 6px;font-size:14px;font-weight:bold;color:#003366;">
+              Tu asesor de contacto
+            </p>
+            <p style="margin:0 0 4px;font-size:14px;color:#333;">
+              ${escHtml(cot.responsable || "Visa Fácil")}
+            </p>
+            ${emailAsesor ? `
+            <p style="margin:0 0 10px;font-size:13px;">
+              <a href="mailto:${escHtml(emailAsesor)}" style="color:#003366;">
+                ${escHtml(emailAsesor)}
+              </a>
+            </p>` : ""}
+            <p style="margin:10px 0 4px;font-size:13px;color:#555;">
+              📞 (+57) 302 261 1777 &nbsp;|&nbsp; (+57) 300 587 7788
+            </p>
+            <p style="margin:12px 0 0;font-size:12px;color:#999;line-height:1.6;">
+              <strong>Visa Fácil Internacional SAS</strong><br>
+              Carrera 50 # 24 - 60, Bogotá, D.C.<br>
+              Facilitadores expertos en procesos migratorios desde 1999.
+            </p>
+          </td>
+        </tr>
+
       </table>
+    </td>
+  </tr>
+</table>
 
-      <hr style="margin:24px 0;border:none;border-top:1px solid #e2e8f0;">
-
-      <table style="font-size:12px;color:#718096;width:100%;">
-        <tr><td>Propietario:</td><td>${escHtml(cot.responsable || "—")}</td></tr>
-        <tr><td>Moneda:</td><td>${cot.moneda || "COP"}</td></tr>
-        <tr><td>Negocio:</td><td>${escHtml(cot.negocio || "—")}</td></tr>
-      </table>
-
-      <div style="margin-top:24px;padding:14px 18px;background:#f7fafc;border-radius:6px;border-left:3px solid #4299e1;font-size:13px;color:#4a5568;">
-        Para aceptar esta cotización o solicitar modificaciones, responde directamente a este correo.
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <p style="text-align:center;font-size:11px;color:#a0aec0;margin-top:16px;">
-      Enviado desde <strong>soporte@oblicua.co</strong> · Oblicua Digital
-    </p>
-  </div>
 </body>
 </html>`;
   }
@@ -239,21 +294,24 @@
    * @param {Object} totales      - Resultado de DescuentosEngine.recalcular().
    */
   function construirPayloadDapta(cot, destinatario, lineas, totales) {
-    const tasaIva = window.DescuentosEngine?.getTasaIva?.() ?? 0.19;
+    const tasaIva     = window.DescuentosEngine?.getTasaIva?.() ?? 0.19;
+    const emailAsesor = obtenerEmailAsesor(cot);
 
     return {
       // Metadatos del envío
-      remitente: REMITENTE,
+      remitente:   REMITENTE,
+      replyTo:     emailAsesor || REMITENTE,
       destinatario,
       asunto: construirAsunto(cot),
       fechaEnvio: new Date().toISOString(),
 
       // Datos del cliente / negocio
       cliente: {
-        nombre: cot.cliente || "",
-        empresa: cot.cliente || "",
-        negocio: cot.negocio || "",
+        nombre:      cot.cliente || "",
+        empresa:     cot.cliente || "",
+        negocio:     cot.negocio || "",
         responsable: cot.responsable || "",
+        emailAsesor,
       },
 
       // Cabecera de la cotización
@@ -719,10 +777,9 @@
     };
 
     console.info(
-      "[CotizacionEmail] Módulo listo. Remitente:",
-      REMITENTE,
-      "| Webhook Dapta:",
-      getDaptaUrl(),
+      "[CotizacionEmail] Módulo listo. Remitente:", REMITENTE,
+      "| Reply-To: email asesor (window.ownersCatalogo)",
+      "| Webhook Dapta:", getDaptaUrl(),
     );
   });
 })();

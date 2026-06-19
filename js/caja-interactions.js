@@ -539,7 +539,7 @@
           return;
         }
         if (accion === "cab-cierre")              window.mostrarToast("🔒 Iniciando cierre diario de caja...");
-        if (accion === "cab-config-comisiones")   Modales.abrir("modal-config-comisiones");
+        if (accion === "cab-config-comisiones")   { if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones"); }
         if (accion === "cab-reporte-comisiones")  Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
       });
@@ -1092,7 +1092,6 @@
       listaCat.innerHTML = window.categoriasCatalogo.map(c => `
         <label class="check-lista__item">
           <input type="checkbox" data-cat="${c.valor}"/>
-          <span>${c.icono}</span>
           ${c.nombre}
         </label>
       `).join("");

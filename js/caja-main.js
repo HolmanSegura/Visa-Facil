@@ -62,14 +62,18 @@ const vistasIniciales = [
 
 // Categorías del catálogo
 const categoriasCatalogo = [
-  { valor: "alimentacion", nombre: "Alimentación",        icono: "🍔" },
-  { valor: "transporte",   nombre: "Transporte",          icono: "🚕" },
-  { valor: "papeleria",    nombre: "Papelería",           icono: "📎" },
-  { valor: "publicidad",   nombre: "Publicidad",          icono: "📣" },
-  { valor: "comisiones",   nombre: "Comisiones",          icono: "💼" },
-  { valor: "servicios",    nombre: "Servicios públicos",  icono: "💡" },
-  { valor: "tramites",     nombre: "Trámites",            icono: "📋" },
-  { valor: "otros",        nombre: "Otros",               icono: "📦" }
+  { valor: "alimentacion",       nombre: "Alimentación"       },
+  { valor: "transporte",         nombre: "Transporte"         },
+  { valor: "papeleria",          nombre: "Papelería"          },
+  { valor: "publicidad",         nombre: "Publicidad"         },
+  { valor: "comisiones",         nombre: "Comisiones"         },
+  { valor: "servicios",          nombre: "Servicios públicos" },
+  { valor: "tramites",           nombre: "Trámites"           },
+  { valor: "pagos_financieros",  nombre: "Pagos financieros"  },
+  { valor: "bonos",              nombre: "Bonos"              },
+  { valor: "pago_proveedores",   nombre: "Pago a proveedores" },
+  { valor: "pago_nomina",        nombre: "Pago nómina"        },
+  { valor: "otros",              nombre: "Otros"              }
 ];
 
 const estadoApp = {

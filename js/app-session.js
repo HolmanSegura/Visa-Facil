@@ -75,6 +75,19 @@
       if (avatar) {
         avatar.textContent = u.nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
       }
+
+      // Pre-rellenar datos en el modal de perfil (si existe en la página)
+      const pNombre = document.getElementById('perfil-nombre');
+      const pEmail  = document.getElementById('perfil-email');
+      if (pNombre) pNombre.textContent = u.nombre;
+      if (pEmail)  pEmail.textContent  = u.email;
+
+      // Ocultar controles de configuración de comisiones para no-admin
+      if (u.rol !== 'admin') {
+        document.querySelectorAll(
+          '[data-accion="cab-config-comisiones"], #btn-configurar-comisiones'
+        ).forEach(el => { el.hidden = true; });
+      }
     }
   };
 

@@ -905,7 +905,7 @@
           Popovers.cerrar();
           return;
         }
-        if (accion === "cab-config-comisiones") Modales.abrir("modal-config-comisiones");
+        if (accion === "cab-config-comisiones") { if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones"); }
         if (accion === "cab-reporte-comisiones") Modales.abrir("modal-reporte-comisiones");
         Popovers.cerrar();
       });

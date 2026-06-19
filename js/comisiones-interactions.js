@@ -175,7 +175,7 @@
       if (!r) return;
       switch (accion) {
         case "config":
-          Modales.abrir("modal-config-comisiones");
+          if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones");
           break;
         case "pago":
           abrirModalRegistrarPago(r);
@@ -386,7 +386,7 @@
         window.estadoApp.datosOriginales.map(r => r.responsable).filter(Boolean)
       )].sort();
       cfg.porAsesor = unicos.map(n => ({
-        responsable: n, porcentaje: 5, base: "ingresos", activo: true
+        responsable: n, porcentaje: 5, base: "por_venta", activo: true
       }));
       guardarConfig(cfg);
     }
@@ -440,10 +440,6 @@
             </div>
           </td>
           <td><div class="input-pct"><input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1" value="${row.porcentaje}" data-field="porcentaje" ${activo ? "" : "disabled"}/><span class="input-pct__suffix">%</span></div></td>
-          <td><select class="form-select form-select--sm" data-field="base" ${activo ? "" : "disabled"}>
-            <option value="ingresos"  ${row.base === "ingresos"  ? "selected" : ""}>Ingresos del asesor</option>
-            <option value="por_venta" ${row.base === "por_venta" ? "selected" : ""}>Por venta cerrada</option>
-          </select></td>
           <td><button class="btn-icono-mini ${activo ? "btn-activo--on" : "btn-activo--off"}" data-accion-asesor="toggle-activo" title="${activo ? "Inactivar" : "Reactivar"}">${iconToggle}</button></td>
         </tr>`;
     }).join("");
@@ -475,7 +471,7 @@
       const nombre = tr.dataset.responsable || "";
       const activo = tr.dataset.activo !== "false";
       const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
-      const base   = tr.querySelector('[data-field="base"]')?.value || "ingresos";
+      const base   = "por_venta";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
     cfg.generalProductoPorcentaje = parseFloat(document.getElementById("config-com-general-pct")?.value) || 5;
@@ -739,7 +735,7 @@
       popover.addEventListener("click", e => {
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
         if (!accion) return;
-        if (accion === "cab-config-comisiones") { Modales.abrir("modal-config-comisiones"); Popovers.cerrar(); return; }
+        if (accion === "cab-config-comisiones") { if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones"); Popovers.cerrar(); return; }
         if (accion === "cab-exportar-todos")    { exportarTodosCSV("todos"); Popovers.cerrar(); return; }
         if (accion === "cab-exportar-visibles") { exportarTodosCSV("visibles"); Popovers.cerrar(); return; }
         Popovers.cerrar();
@@ -747,7 +743,7 @@
     }
     // Botón principal "Configurar"
     document.getElementById("btn-configurar-comisiones")?.addEventListener("click", () => {
-      Modales.abrir("modal-config-comisiones");
+      if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones");
     });
   }
 

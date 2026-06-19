@@ -119,7 +119,7 @@
       cfg.porAsesor = unicos.map(n => ({
         responsable: n,
         porcentaje:  5,
-        base:        "ingresos",
+        base:        "por_venta",
         activo:      true
       }));
       guardarConfig(cfg);
@@ -353,12 +353,6 @@
             </div>
           </td>
           <td>
-            <select class="form-select form-select--sm" data-field="base" ${activo ? "" : "disabled"}>
-              <option value="ingresos"  ${row.base === "ingresos"  ? "selected" : ""}>Ingresos del asesor</option>
-              <option value="por_venta" ${row.base === "por_venta" ? "selected" : ""}>Por venta cerrada</option>
-            </select>
-          </td>
-          <td>
             <button class="btn-icono-mini ${activo ? "btn-activo--on" : "btn-activo--off"}"
                     data-accion-asesor="toggle-activo"
                     title="${activo ? "Inactivar asesor (soft-delete)" : "Reactivar asesor"}">
@@ -419,7 +413,7 @@
       const nombre = tr.dataset.responsable || "";
       const activo = tr.dataset.activo !== "false";
       const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
-      const base   = tr.querySelector('[data-field="base"]')?.value || "ingresos";
+      const base   = "por_venta";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
 

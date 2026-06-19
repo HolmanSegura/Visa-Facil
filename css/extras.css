@@ -150,6 +150,54 @@
   line-height: 1.5;
 }
 
+/* ----- Perfil: cambiar contraseña ----- */
+.input-pwd-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-pwd-wrap .form-input {
+  padding-right: 36px;
+  width: 100%;
+}
+
+.input-pwd-toggle {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--color-texto-suave);
+  display: flex;
+  align-items: center;
+}
+
+.input-pwd-toggle:hover {
+  color: var(--color-texto);
+}
+
+.form-ayuda {
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-debil);
+  margin-top: 4px;
+}
+
+.form-error {
+  font-size: var(--font-tam-sm);
+  color: #dc2626;
+  margin-top: var(--esp-2);
+  padding: var(--esp-2) var(--esp-3);
+  background: #fef2f2;
+  border-left: 3px solid #dc2626;
+  border-radius: var(--radio-md);
+}
+
+.hidden {
+  display: none !important;
+}
+
 .config-comisiones__tabs {
   display: flex;
   gap: var(--esp-2);

@@ -493,6 +493,10 @@
         <div style="font-size:var(--font-tam-xs);color:var(--color-texto-debil);margin-top:4px;" id="user-pop-rol">—</div>
       </div>
       <div class="popover__lista">
+        <button class="popover__item" id="btn-perfil">
+          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4Z"/></svg>
+          Mi perfil
+        </button>
         <button class="popover__item" id="btn-ir-hubspot">
           <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M14 3v2h4.6l-9.3 9.3 1.4 1.4L20 6.4V11h2V3h-8Zm-1 14H5V7h6V5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4h-2v4Z"/></svg>
           Ir a HubSpot
@@ -707,7 +711,6 @@
                 <tr>
                   <th>Asesor</th>
                   <th>% Comisión</th>
-                  <th>Base de cálculo</th>
                   <th style="width:40px"></th>
                 </tr>
               </thead>
@@ -917,10 +920,73 @@
       </div>
     </div>
 
+    <!-- Modal: Mi perfil / Cambiar contraseña -->
+    <div class="modal-overlay" id="modal-perfil" hidden>
+      <div class="modal" style="max-width:400px;">
+        <div class="modal__header">
+          <h3 class="modal__titulo">Mi perfil</h3>
+          <button class="modal__cerrar" data-cerrar-modal aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="modal__body">
+          <div style="margin-bottom:var(--esp-4);padding-bottom:var(--esp-4);border-bottom:1px solid var(--color-borde);">
+            <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);margin-bottom:2px;">Usuario</div>
+            <div style="font-weight:var(--font-peso-semibold);" id="perfil-nombre">—</div>
+            <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="perfil-email">—</div>
+          </div>
+          <form id="form-cambiar-password" novalidate>
+            <p style="font-size:var(--font-tam-sm);font-weight:var(--font-peso-semibold);margin:0 0 var(--esp-3);color:var(--color-texto);">
+              Cambiar contraseña
+            </p>
+            <div class="form-grupo">
+              <label class="form-label" for="perfil-pwd-actual">Contraseña actual</label>
+              <div class="input-pwd-wrap">
+                <input type="password" id="perfil-pwd-actual" class="form-input" autocomplete="current-password" required />
+                <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-actual" aria-label="Mostrar contraseña">
+                  <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+                  <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="form-grupo">
+              <label class="form-label" for="perfil-pwd-nueva">Nueva contraseña</label>
+              <div class="input-pwd-wrap">
+                <input type="password" id="perfil-pwd-nueva" class="form-input" autocomplete="new-password" required />
+                <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-nueva" aria-label="Mostrar contraseña">
+                  <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+                  <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2"/></svg>
+                </button>
+              </div>
+              <div class="form-ayuda">Mínimo 8 caracteres</div>
+            </div>
+            <div class="form-grupo">
+              <label class="form-label" for="perfil-pwd-confirma">Confirmar nueva contraseña</label>
+              <div class="input-pwd-wrap">
+                <input type="password" id="perfil-pwd-confirma" class="form-input" autocomplete="new-password" required />
+                <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-confirma" aria-label="Mostrar contraseña">
+                  <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+                  <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2"/></svg>
+                </button>
+              </div>
+            </div>
+            <div id="perfil-error" class="form-error" hidden></div>
+          </form>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--secundario" data-cerrar-modal>Cancelar</button>
+          <button class="btn btn--primario" id="btn-perfil-guardar" form="form-cambiar-password" type="submit">
+            Guardar contraseña
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ============================================================
        SCRIPTS
        ============================================================ -->
     <script src="js/app-session.js"></script>
+<script src="js/perfil.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/hubspot-api.js"></script>
     <script src="js/comisiones-main.js"></script>
