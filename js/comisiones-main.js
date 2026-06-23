@@ -262,6 +262,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       const res = await window.Api.comisiones.reporte({ desde, hasta });
       if (res && res.ok && Array.isArray(res.filas) && res.filas.length > 0) {
         estadoApp.datosOriginales = res.filas.map(normalizarFilaCom);
+        // Merge owners de HubSpot que ya cargaron (evita condición de carrera donde
+        // hubspot:owners-loaded dispara antes de que la API responda y luego es sobreescrito)
+        if (Array.isArray(window.ownersCatalogo)) {
+          window.ownersCatalogo.forEach((owner, i) => {
+            if (!estadoApp.datosOriginales.find(r => r.responsable === owner.nombre)) {
+              estadoApp.datosOriginales.push(normalizarFilaCom(
+                { responsable: owner.nombre, ingresos: 0, porcentaje: 0, teorico: 0, registrado: 0, pagos: 0, activo: true },
+                estadoApp.datosOriginales.length + i
+              ));
+            }
+          });
+        }
         estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
         cargadoDesdeAPI = true;
         console.info(`[Comisiones] ${estadoApp.datosOriginales.length} asesores cargados desde API.`);

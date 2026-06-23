@@ -305,7 +305,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (resC.ok && Array.isArray(resC.data) && resC.data.length > 0) {
       window.categoriasCatalogo = resC.data;
       const opsCat = resC.data
-        .map(c => `<option value="${c.valor}">${c.icono ? c.icono + ' ' : ''}${c.nombre}</option>`)
+        .map(c => `<option value="${c.valor}">${c.nombre}</option>`)
         .join("");
       // Poblar el select del modal de edición (el de gasto/ingreso se puebla en abrirComo())
       const selEditar = document.getElementById("editar-categoria");

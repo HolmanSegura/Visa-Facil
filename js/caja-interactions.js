@@ -680,7 +680,7 @@
 
       const cats = window.categoriasCatalogo || [];
       selectCat.innerHTML = cats.length
-        ? cats.map(c => `<option value="${c.valor}">${c.icono ? c.icono + ' ' : ''}${c.nombre}</option>`).join("")
+        ? cats.map(c => `<option value="${c.valor}">${c.nombre}</option>`).join("")
         : `<option value="otros">Otros</option>`;
 
       if (tipo === "ingreso") {
@@ -1450,7 +1450,7 @@
       listaCat.innerHTML = cats.map(c => `
         <label class="check-lista__item">
           <input type="checkbox" data-avanzado-grupo="categoria" data-avanzado-val="${c.valor}"/>
-          ${c.icono ? c.icono + " " : ""}${c.nombre}
+          ${c.nombre}
         </label>`).join("");
     }
 

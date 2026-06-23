@@ -30,7 +30,7 @@
       th: "CATEGORÍA", thClass: "th",
       render(m) {
         const td = document.createElement("td");
-        td.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;">${window.iconoCategoria(m.categoria)} ${window.etiquetaCategoria(m.categoria)}</span>`;
+        td.innerHTML = `<span>${window.etiquetaCategoria(m.categoria)}</span>`;
         return td;
       }
     },
