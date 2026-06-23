@@ -1126,9 +1126,10 @@
   pointer-events: auto;
 }
 
-/* Vista previa: botón flotante sobre la celda de título/descripción */
+/* Vista previa: botón inline junto al texto de la celda de descripción */
 .tabla-cotizaciones tbody tr td.td-vista-previa {
   position: relative;
+  pointer-events: auto;   /* rehabilita el área completa para no perder tr:hover en el gap */
 }
 
 .vista-previa__logo-img {
@@ -1138,13 +1139,10 @@
 }
 
 .btn-vista-previa-fila {
-  position: absolute;
-  right: var(--esp-4);
-  top: 50%;
-  transform: translateY(-50%);
   display: none;
-  height: 24px;
+  height: 22px;
   padding: 0 var(--esp-3);
+  margin-left: var(--esp-3);
   font-size: var(--font-tam-xs);
   font-weight: var(--font-peso-medio);
   color: var(--color-texto);
@@ -1152,9 +1150,10 @@
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-md);
   cursor: pointer;
-  z-index: 3;
-  transition: background var(--trans-rapida);
+  vertical-align: middle;
   white-space: nowrap;
+  transition: background var(--trans-rapida);
+  pointer-events: auto;
 }
 
 .btn-vista-previa-fila:hover {

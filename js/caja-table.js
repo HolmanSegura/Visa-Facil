@@ -135,16 +135,16 @@
     actualizarCabecera() {
       const theadRow = this.tabla.querySelector("thead tr");
       if (!theadRow) return;
-      const est  = window.estadoApp;
+      const est = window.estadoApp;
       const cols = est.columnasActivas || COLUMNAS_DEFECTO;
 
       theadRow.innerHTML = cols.map(key => {
         const col = COLUMNAS[key];
         if (!col) return `<th class="th">${key}</th>`;
-        const esOrden     = est.ordenColumna === key;
-        const claseExtra  = esOrden ? " th--orden" : "";
-        const dataOrden   = esOrden ? ` data-orden="${est.ordenDireccion}"` : "";
-        const iconoOrden  = esOrden
+        const esOrden = est.ordenColumna === key;
+        const claseExtra = esOrden ? " th--orden" : "";
+        const dataOrden = esOrden ? ` data-orden="${est.ordenDireccion}"` : "";
+        const iconoOrden = esOrden
           ? `<span class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6"/></svg></span>`
           : "";
         return `<th data-columna="${key}" class="${col.thClass}${claseExtra}"${dataOrden}>${col.th}${iconoOrden}</th>`;
@@ -152,7 +152,7 @@
     }
 
     construirFila(m) {
-      const tr   = document.createElement("tr");
+      const tr = document.createElement("tr");
       tr.dataset.id = m.id;
       const cols = window.estadoApp.columnasActivas || COLUMNAS_DEFECTO;
       cols.forEach(key => {
@@ -165,8 +165,8 @@
     renderizar() {
       this.actualizarCabecera();
 
-      const est    = window.estadoApp;
-      const cols   = est.columnasActivas || COLUMNAS_DEFECTO;
+      const est = window.estadoApp;
+      const cols = est.columnasActivas || COLUMNAS_DEFECTO;
       const inicio = (est.paginaActual - 1) * est.registrosPorPagina;
       const subset = est.datosVisibles.slice(inicio, inicio + est.registrosPorPagina);
 
@@ -204,7 +204,7 @@
       if (est.ordenColumna === columna) {
         est.ordenDireccion = est.ordenDireccion === "asc" ? "desc" : "asc";
       } else {
-        est.ordenColumna  = columna;
+        est.ordenColumna = columna;
         est.ordenDireccion = "asc";
       }
       this.aplicarOrden();
@@ -214,18 +214,18 @@
     aplicarOrden() {
       const est = window.estadoApp;
       const extractor = {
-        fecha:        it => new Date(it.fecha).getTime(),
-        tipo:         it => it.tipo,
-        categoria:    it => it.categoria,
-        descripcion:  it => it.descripcion.toLowerCase(),
-        responsable:  it => (it.responsable || "").toLowerCase(),
-        valor:        it => it.valor,
-        estado:       it => it.estado,
-        metodoPago:   it => (it.metodoPago || ""),
-        referencia:   it => (it.referencia || "").toLowerCase(),
-        cliente:      it => (it.cliente || "").toLowerCase(),
+        fecha: it => new Date(it.fecha).getTime(),
+        tipo: it => it.tipo,
+        categoria: it => it.categoria,
+        descripcion: it => it.descripcion.toLowerCase(),
+        responsable: it => (it.responsable || "").toLowerCase(),
+        valor: it => it.valor,
+        estado: it => it.estado,
+        metodoPago: it => (it.metodoPago || ""),
+        referencia: it => (it.referencia || "").toLowerCase(),
+        cliente: it => (it.cliente || "").toLowerCase(),
         observaciones: it => (it.observaciones || "").toLowerCase(),
-        puntoVenta:    it => (it.puntoVenta    || "").toLowerCase()
+        puntoVenta: it => (it.puntoVenta || "").toLowerCase()
       };
       const fn = extractor[est.ordenColumna];
       if (!fn) return;
@@ -243,7 +243,7 @@
 
     actualizarPaginacion() {
       if (!this.contPag) return;
-      const est   = window.estadoApp;
+      const est = window.estadoApp;
       const total = Math.max(1, Math.ceil(est.datosVisibles.length / est.registrosPorPagina));
       if (est.paginaActual > total) est.paginaActual = total;
 
@@ -261,7 +261,7 @@
     }
 
     cambiarPagina(p) {
-      const est   = window.estadoApp;
+      const est = window.estadoApp;
       const total = Math.ceil(est.datosVisibles.length / est.registrosPorPagina);
       if (p < 1 || p > total) return;
       est.paginaActual = p;
@@ -295,9 +295,9 @@
     if (window.estadoApp && !window.estadoApp.columnasActivas) {
       window.estadoApp.columnasActivas = [...COLUMNAS_DEFECTO];
     }
-    window.COLUMNAS_CAJA         = COLUMNAS;
+    window.COLUMNAS_CAJA = COLUMNAS;
     window.COLUMNAS_DEFECTO_CAJA = COLUMNAS_DEFECTO;
-    window.MAPA_TEXTO_CAJA       = MAPA_TEXTO;
+    window.MAPA_TEXTO_CAJA = MAPA_TEXTO;
     window.tablaInstance = new TablaCaja();
   });
 })();

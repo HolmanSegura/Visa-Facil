@@ -135,7 +135,7 @@ function etiquetaCategoria(valor) {
 
 function iconoCategoria(valor) {
   const cat = categoriasCatalogo.find(c => c.valor === valor);
-  return cat ? cat.icono : "📦";
+  return (cat?.icono) || "";
 }
 
 function etiquetaEstado(estado) {
