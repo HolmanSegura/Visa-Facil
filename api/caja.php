@@ -108,7 +108,7 @@ try {
             SELECT
                 m.id, m.fecha, m.tipo, m.descripcion,
                 m.valor, m.moneda, m.estado, m.metodo_pago,
-                m.referencia, m.observaciones,
+                m.referencia, m.observaciones, m.punto_venta,
                 u.nombre   AS responsable,
                 cl.nombre  AS cliente,
                 cat.valor  AS categoria,
@@ -169,8 +169,8 @@ try {
             INSERT INTO movimientos_caja
               (fecha, tipo, categoria_id, descripcion, responsable_id,
                valor, moneda, estado, metodo_pago, observaciones,
-               cliente_id, cotizacion_id, referencia)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               punto_venta, cliente_id, cotizacion_id, referencia)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $b['fecha']          ?? date('Y-m-d'),
@@ -180,9 +180,10 @@ try {
             $responsableId,
             $b['valor']          ?? 0,
             $b['moneda']         ?? 'COP',
-            $b['estado']         ?? 'pendiente',
+            $b['estado']         ?? 'pagado',
             $b['metodo_pago']    ?? null,
             $b['observaciones']  ?? null,
+            $b['punto_venta']    ?? null,
             $clienteId,
             $b['cotizacion_id']  ?? null,
             $referencia,
@@ -200,7 +201,7 @@ try {
 
         $permitidos = [
             'fecha','tipo','descripcion','valor','moneda',
-            'estado','metodo_pago','observaciones',
+            'estado','metodo_pago','observaciones','punto_venta',
             'categoria_id','responsable_id','cliente_id','cotizacion_id'
         ];
         if (!empty($b['categoria'])) {

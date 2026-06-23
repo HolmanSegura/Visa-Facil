@@ -442,6 +442,20 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Sección: Pagos registrados -->
+              <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable id="seccion-pagos-reg">
+                <div class="panel-detalle__seccion-titulo panel-detalle__seccion-titulo--flex" data-toggle-seccion>
+                  <span>
+                    <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion"><path fill="currentColor" d="m6 9 6 6 6-6H6Z" /></svg>
+                    Pagos registrados
+                  </span>
+                  <span class="detalle-pagos-badge" id="detalle-pagos-badge">0</span>
+                </div>
+                <div class="panel-detalle__seccion-cuerpo" id="lista-pagos-com">
+                  <p class="lista-pagos-com__vacia">Sin pagos registrados</p>
+                </div>
+              </div>
             </div>
           </div>
         </aside>
@@ -808,6 +822,64 @@
       </div>
     </div>
 
+    <!-- Modal: Editar pago de comisión -->
+    <div class="modal-overlay" id="modal-editar-pago-com" hidden>
+      <div class="modal">
+        <div class="modal__header">
+          <div class="modal__titulo">Editar pago de comisión</div>
+          <button class="modal__cerrar" data-cerrar-modal>
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
+          </button>
+        </div>
+        <div class="modal__body">
+          <input type="hidden" id="editar-pago-id"/>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-pago-asesor">Asesor</label>
+            <input type="text" id="editar-pago-asesor" class="form-input" readonly style="background:var(--color-fondo-suave);cursor:default"/>
+          </div>
+          <div class="form-grupo form-grupo--fila">
+            <div>
+              <label class="form-label form-label--req" for="editar-pago-valor">Valor</label>
+              <input type="number" id="editar-pago-valor" class="form-input" min="0" step="1000"/>
+            </div>
+            <div>
+              <label class="form-label form-label--req" for="editar-pago-fecha">Fecha</label>
+              <input type="date" id="editar-pago-fecha" class="form-input"/>
+            </div>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-pago-metodo">Método de pago</label>
+            <select id="editar-pago-metodo" class="form-select">
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-pago-descripcion">Descripción</label>
+            <input type="text" id="editar-pago-descripcion" class="form-input"/>
+          </div>
+          <div class="form-grupo">
+            <label class="form-label" for="editar-pago-observaciones">Observaciones</label>
+            <textarea id="editar-pago-observaciones" class="form-textarea" rows="2" placeholder="Notas adicionales…"></textarea>
+          </div>
+          <div id="editar-pago-confirmar-eliminar" hidden style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--radio-md);padding:var(--esp-3);margin-top:var(--esp-2);font-size:var(--font-tam-sm);">
+            ¿Eliminar este pago permanentemente?
+            <div style="display:flex;gap:var(--esp-2);margin-top:var(--esp-2)">
+              <button class="btn btn--ghost btn--peligro" id="confirmar-eliminar-pago-com" style="flex:1">Sí, eliminar</button>
+              <button class="btn btn--ghost" id="cancelar-eliminar-pago-com" style="flex:1">Cancelar</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--naranja" id="guardar-editar-pago-com">Guardar cambios</button>
+          <button class="btn btn--ghost btn--peligro" id="eliminar-pago-com">Eliminar</button>
+          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Agregar vista -->
     <div class="modal-overlay" id="modal-agregar-vista" hidden>
       <div class="modal modal--ancho">
@@ -994,6 +1066,7 @@
     <script src="js/comisiones-views.js"></script>
     <script src="js/comisiones-table.js"></script>
     <script src="js/comisiones-filters.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="js/comisiones-interactions.js"></script>
   </body>
 </html>

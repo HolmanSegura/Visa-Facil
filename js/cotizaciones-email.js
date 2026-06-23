@@ -597,45 +597,23 @@
   function exportarCSVFallback(datos, nombre) {
     const utils = window.utilsExport;
     if (!utils) {
-      console.error(
-        "[Email] SheetJS no disponible y utilsExport no encontrado. Agrega el CDN de SheetJS en index.html.",
-      );
-      window.mostrarToast?.("⚠ No se pudo exportar: SheetJS no está cargado");
+      console.error("[Email] utilsExport no encontrado.");
+      window.mostrarToast?.("⚠ No se pudo exportar");
       return;
     }
 
     const encHead = [
-      "ID",
-      "Título",
-      "Cliente",
-      "Estado",
-      "Monto",
-      "Moneda",
-      "Propietario",
-      "Fecha creación",
-      "Fecha vencimiento",
+      "ID", "Título", "Cliente", "Estado", "Monto",
+      "Moneda", "Propietario", "Fecha creación", "Fecha vencimiento",
     ];
     const filas = datos.map((c) => [
-      c.id,
-      c.titulo,
-      c.cliente || "",
-      c.estado,
-      c.cantidad,
-      c.moneda,
-      c.responsable || "",
-      c.fechaCreacion,
-      c.fechaVencimiento,
+      c.id, c.titulo, c.cliente || "", c.estado, c.cantidad,
+      c.moneda, c.responsable || "", c.fechaCreacion, c.fechaVencimiento,
     ]);
-    const csv =
-      "﻿" +
-      [encHead, ...filas]
-        .map((r) => r.map((v) => utils.escaparCSV(v)).join(","))
-        .join("\r\n");
 
-    utils.descargarTexto(csv, `${nombre}.csv`);
-    window.mostrarToast?.(
-      `✓ CSV exportado (${datos.length} cotizaciones) — Instala SheetJS para .xlsx`,
-    );
+    const blob = utils.matrizAXLSX([encHead, ...filas]);
+    utils.descargarBlob(blob, `${nombre}.xlsx`);
+    window.mostrarToast?.(`✓ Excel exportado (${datos.length} cotizaciones)`);
   }
 
   // -----------------------------------------------------------------

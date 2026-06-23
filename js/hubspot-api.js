@@ -497,6 +497,11 @@
    *   { titulo, estado, fechaVencimiento, moneda, cantidad, contactoId }
    * @returns Respuesta cruda de HubSpot (incluye `id`)
    */
+  async function obtenerOpcionesPropiedadInvoice(nombre) {
+    const data = await req("GET", `/crm/v3/properties/invoices/${nombre}`);
+    return (data.options || []).map(o => ({ value: o.value, label: o.label }));
+  }
+
   async function guardarCotizacionComoFactura(payload) {
     const properties = {
       hs_invoice_label: payload.titulo || "Cotización",
@@ -505,6 +510,7 @@
       hs_currency_code: payload.moneda || "COP",
       hs_amount_billed: String(payload.cantidad || 0),
     };
+    if (payload.puntoDeVenta) properties.punto_de_venta = payload.puntoDeVenta;
 
     const body = { properties };
 
@@ -612,6 +618,7 @@
       // Facturas / Cotizaciones
       guardarCotizacionComoFactura,
       actualizarFactura,
+      obtenerOpcionesPropiedadInvoice,
 
       // Alias de compatibilidad con cotizaciones-productos.js
       crearFacturaDesdeCotizacion: (cot, contactoId, _lineas) =>

@@ -279,6 +279,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.vistasInstance)  window.vistasInstance.renderizar();
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
+
+  // Cargar pagos individuales de comisión para el panel detalle
+  window.cajaPagosComisiones = [];
+  try {
+    if (window.Api) {
+      const resPagos = await window.Api.caja.listar({ tipo: "gasto", categoria: "comisiones", por_pagina: 200 });
+      if (resPagos.ok && Array.isArray(resPagos.data)) {
+        window.cajaPagosComisiones = resPagos.data.map(m => ({
+          id:           m.id,
+          fecha:        m.fecha,
+          descripcion:  m.descripcion || "",
+          responsable:  m.responsable || "",
+          valor:        parseFloat(m.valor) || 0,
+          moneda:       m.moneda || "COP",
+          metodo_pago:  m.metodo_pago || "efectivo",
+          observaciones: m.observaciones || "",
+          estado:       m.estado || "pagado",
+        }));
+        console.info(`[Comisiones] ${window.cajaPagosComisiones.length} pagos individuales cargados.`);
+      }
+    }
+  } catch (e) {
+    console.warn("[Comisiones] No se pudieron cargar pagos individuales:", e.message);
+  }
 });
 
 /* ============================================================

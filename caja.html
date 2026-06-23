@@ -510,6 +510,17 @@
                 <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
               </svg>
             </button>
+            <button
+              class="filtro-pill"
+              data-popover="popover-filtro-pdv"
+              data-filtro="puntoVenta"
+              style="display: none"
+            >
+              Punto de Venta
+              <svg viewBox="0 0 8 8" width="8" height="8">
+                <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+              </svg>
+            </button>
             <div class="toolbar-tabla__sep"></div>
             <button
               class="filtro-icon"
@@ -1320,10 +1331,6 @@
           ><input type="checkbox" data-filtro-val="pagado" /> Pagado</label
         >
         <label class="check-lista__item"
-          ><input type="checkbox" data-filtro-val="pendiente" />
-          Pendiente</label
-        >
-        <label class="check-lista__item"
           ><input type="checkbox" data-filtro-val="anulado" /> Anulado</label
         >
       </div>
@@ -1356,6 +1363,9 @@
         <button class="popover__item" data-pill-id="metodoPago">
           <span class="tipo-icono">💳</span>Método de pago
         </button>
+        <button class="popover__item" data-pill-id="puntoVenta">
+          <span class="tipo-icono">📍</span>Punto de Venta
+        </button>
       </div>
     </div>
 
@@ -1376,6 +1386,23 @@
           ><input type="checkbox" data-filtro-val="cheque" /> Cheque</label
         >
       </div>
+    </div>
+
+    <!-- Filtro: Punto de Venta (opcional) -->
+    <div class="popover" id="popover-filtro-pdv" hidden style="width: 260px">
+      <div class="popover__buscar">
+        <input
+          type="search"
+          class="popover__buscar-input"
+          id="filtro-pdv-buscar"
+          placeholder="Buscar punto de venta"
+          autocomplete="off"
+        />
+        <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+          <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/>
+        </svg>
+      </div>
+      <div class="popover__lista" id="lista-puntos-venta"></div>
     </div>
 
     <!-- Opciones de exportación -->
@@ -1546,7 +1573,6 @@
                 <label class="form-label" for="g-estado">Estado</label>
                 <select id="g-estado" class="form-select">
                   <option value="pagado">Pagado</option>
-                  <option value="pendiente">Pendiente</option>
                   <option value="anulado">Anulado</option>
                 </select>
               </div>
@@ -1554,13 +1580,25 @@
                 <label class="form-label" for="g-cliente"
                   >Cliente / Trámite (opcional)</label
                 >
-                <input
-                  type="text"
-                  id="g-cliente"
-                  class="form-input"
-                  placeholder="—"
-                />
+                <div id="caja-contacto-gasto-wrap" style="position:relative;">
+                  <input
+                    type="text"
+                    id="g-cliente"
+                    class="form-input"
+                    placeholder="Busca un contacto…"
+                    autocomplete="off"
+                    aria-autocomplete="list"
+                    aria-expanded="false"
+                  />
+                  <ul id="caja-gasto-contacto-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
+                </div>
               </div>
+            </div>
+            <div class="form-grupo">
+              <label class="form-label" for="g-punto-venta">Punto de Venta</label>
+              <select id="g-punto-venta" class="form-select">
+                <option value="">— Sin especificar —</option>
+              </select>
             </div>
             <div class="form-grupo">
               <label class="form-label" for="g-soporte">Adjuntar soporte</label>
@@ -1690,7 +1728,6 @@
                 <label class="form-label" for="editar-estado">Estado</label>
                 <select id="editar-estado" class="form-select">
                   <option value="pagado">Pagado</option>
-                  <option value="pendiente">Pendiente</option>
                   <option value="anulado">Anulado</option>
                 </select>
               </div>
@@ -1698,13 +1735,25 @@
                 <label class="form-label" for="editar-cliente"
                   >Cliente / Trámite</label
                 >
-                <input
-                  type="text"
-                  id="editar-cliente"
-                  class="form-input"
-                  placeholder="—"
-                />
+                <div id="caja-contacto-editar-wrap" style="position:relative;">
+                  <input
+                    type="text"
+                    id="editar-cliente"
+                    class="form-input"
+                    placeholder="Busca un contacto…"
+                    autocomplete="off"
+                    aria-autocomplete="list"
+                    aria-expanded="false"
+                  />
+                  <ul id="caja-editar-contacto-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
+                </div>
               </div>
+            </div>
+            <div class="form-grupo">
+              <label class="form-label" for="editar-punto-venta">Punto de Venta</label>
+              <select id="editar-punto-venta" class="form-select">
+                <option value="">— Sin especificar —</option>
+              </select>
             </div>
             <div class="form-grupo">
               <label class="form-label" for="editar-observaciones"
@@ -2716,14 +2765,17 @@
     <!-- Scripts -->
     <script src="js/app-session.js"></script>
     <script src="js/perfil.js"></script>
+    <script src="js/hubspot-api.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/caja-main.js"></script>
     <script src="js/sidebar.js"></script>
     <script src="js/caja-views.js"></script>
     <script src="js/caja-table.js"></script>
     <script src="js/caja-filters.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <script src="js/caja-export.js"></script>
     <script src="js/caja-comisiones.js"></script>
+    <script src="js/caja-contactos.js"></script>
     <script src="js/caja-interactions.js"></script>
 
     <!-- Modal: Filtros avanzados -->
@@ -2781,14 +2833,6 @@
                   data-avanzado-val="pagado"
                 />
                 Pagado</label
-              >
-              <label class="check-lista__item"
-                ><input
-                  type="checkbox"
-                  data-avanzado-grupo="estado"
-                  data-avanzado-val="pendiente"
-                />
-                Pendiente</label
               >
               <label class="check-lista__item"
                 ><input

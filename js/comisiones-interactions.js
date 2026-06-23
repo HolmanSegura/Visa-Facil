@@ -168,6 +168,9 @@
           ? `${per.desde} → ${per.hasta}`
           : "Período completo";
       }
+
+      // Lista de pagos individuales
+      renderPagosRegistrados(r.responsable);
     },
 
     ejecutarAccion(accion) {
@@ -200,9 +203,161 @@
         if (btnCirc) { this.ejecutarAccion(btnCirc.dataset.accionCom); return; }
         const btnMenu = e.target.closest("[data-accion-com-menu]");
         if (btnMenu) { this.ejecutarAccion(btnMenu.dataset.accionComMenu); Popovers.cerrar(); }
+
+        const btnEdit = e.target.closest("[data-editar-pago]");
+        if (btnEdit) { abrirModalEditarPago(parseInt(btnEdit.dataset.editarPago, 10)); }
       });
     }
   };
+
+  /* ================================================================
+     PAGOS INDIVIDUALES — RENDER, EDITAR, ELIMINAR
+     ================================================================ */
+
+  function renderPagosRegistrados(asesor) {
+    const lista  = document.getElementById("lista-pagos-com");
+    const badge  = document.getElementById("detalle-pagos-badge");
+    if (!lista) return;
+
+    const pagos = (window.cajaPagosComisiones || [])
+      .filter(m => m.responsable === asesor)
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    if (badge) badge.textContent = pagos.length;
+
+    if (pagos.length === 0) {
+      lista.innerHTML = `<p class="lista-pagos-com__vacia">Sin pagos registrados</p>`;
+      return;
+    }
+
+    const esc = s => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    lista.innerHTML = pagos.map(m => `
+      <div class="pago-com-item">
+        <div class="pago-com-item__info">
+          <span class="pago-com-item__fecha">${window.fechaCorta ? window.fechaCorta(m.fecha) : m.fecha}</span>
+          <span class="pago-com-item__desc" title="${esc(m.descripcion)}">${esc(m.descripcion)}</span>
+        </div>
+        <span class="pago-com-item__valor">${window.formatearMoneda ? window.formatearMoneda(m.valor, m.moneda || "COP") : m.valor}</span>
+        <button class="pago-com-item__edit" data-editar-pago="${m.id}" title="Editar pago">
+          <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+            <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/>
+          </svg>
+        </button>
+      </div>
+    `).join("");
+  }
+
+  function recalcularFilaAsesor(asesor) {
+    const pagosAsesor = (window.cajaPagosComisiones || []).filter(m => m.responsable === asesor);
+    const registrado  = pagosAsesor.reduce((s, m) => s + (parseFloat(m.valor) || 0), 0);
+
+    const row = window.estadoApp?.datosOriginales.find(r => r.responsable === asesor);
+    if (!row) return;
+
+    row.registrado = registrado;
+    row.diferencia = registrado - row.teorico;
+    row.pagos      = pagosAsesor.length;
+    row.estado     = window.derivarEstado?.(row) || row.estado;
+
+    if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+    if (window.actualizarDashboard) window.actualizarDashboard();
+    if (PanelDetalle.filaActual?.id === row.id) PanelDetalle.renderizar(row);
+  }
+
+  function abrirModalEditarPago(id) {
+    const m = (window.cajaPagosComisiones || []).find(p => p.id === id);
+    if (!m) return;
+
+    document.getElementById("editar-pago-id").value           = m.id;
+    document.getElementById("editar-pago-asesor").value       = m.responsable;
+    document.getElementById("editar-pago-valor").value        = m.valor;
+    document.getElementById("editar-pago-fecha").value        = m.fecha;
+    document.getElementById("editar-pago-metodo").value       = m.metodo_pago || "efectivo";
+    document.getElementById("editar-pago-descripcion").value  = m.descripcion;
+    document.getElementById("editar-pago-observaciones").value = m.observaciones || "";
+
+    const confirmar = document.getElementById("editar-pago-confirmar-eliminar");
+    if (confirmar) confirmar.hidden = true;
+
+    Modales.abrir("modal-editar-pago-com");
+  }
+
+  function initModalEditarPago() {
+    const btnGuardar  = document.getElementById("guardar-editar-pago-com");
+    const btnEliminar = document.getElementById("eliminar-pago-com");
+    const confirmar   = document.getElementById("editar-pago-confirmar-eliminar");
+    const btnConfirm  = document.getElementById("confirmar-eliminar-pago-com");
+    const btnCancelar = document.getElementById("cancelar-eliminar-pago-com");
+
+    if (!btnGuardar) return;
+
+    btnGuardar.addEventListener("click", async () => {
+      const id     = parseInt(document.getElementById("editar-pago-id").value, 10);
+      const valor  = parseFloat(document.getElementById("editar-pago-valor").value) || 0;
+      const fecha  = document.getElementById("editar-pago-fecha").value;
+      const metodo = document.getElementById("editar-pago-metodo").value;
+      const desc   = document.getElementById("editar-pago-descripcion").value.trim();
+      const obs    = document.getElementById("editar-pago-observaciones").value.trim();
+
+      if (!valor || valor <= 0) { window.mostrarToast("⚠ Ingresa un valor válido"); return; }
+      if (!fecha) { window.mostrarToast("⚠ La fecha es obligatoria"); return; }
+
+      try {
+        btnGuardar.disabled = true;
+        if (window.Api) {
+          await window.Api.caja.actualizar(id, {
+            valor, fecha, metodo_pago: metodo, descripcion: desc, observaciones: obs
+          });
+        }
+
+        const idx = (window.cajaPagosComisiones || []).findIndex(p => p.id === id);
+        if (idx >= 0) {
+          const prev = window.cajaPagosComisiones[idx];
+          window.cajaPagosComisiones[idx] = { ...prev, valor, fecha, metodo_pago: metodo, descripcion: desc, observaciones: obs };
+          recalcularFilaAsesor(prev.responsable);
+          renderPagosRegistrados(prev.responsable);
+        }
+
+        window.mostrarToast("✓ Pago actualizado");
+        Modales.cerrar(document.getElementById("modal-editar-pago-com"));
+      } catch (e) {
+        window.mostrarToast("⚠ No se pudo guardar: " + e.message);
+      } finally {
+        btnGuardar.disabled = false;
+      }
+    });
+
+    btnEliminar?.addEventListener("click", () => {
+      if (confirmar) confirmar.hidden = false;
+    });
+
+    btnCancelar?.addEventListener("click", () => {
+      if (confirmar) confirmar.hidden = true;
+    });
+
+    btnConfirm?.addEventListener("click", async () => {
+      const id = parseInt(document.getElementById("editar-pago-id").value, 10);
+      try {
+        btnConfirm.disabled = true;
+        if (window.Api) await window.Api.caja.eliminar(id);
+
+        const m = (window.cajaPagosComisiones || []).find(p => p.id === id);
+        const asesor = m?.responsable;
+        window.cajaPagosComisiones = (window.cajaPagosComisiones || []).filter(p => p.id !== id);
+        if (asesor) {
+          recalcularFilaAsesor(asesor);
+          renderPagosRegistrados(asesor);
+        }
+
+        window.mostrarToast("✓ Pago eliminado");
+        Modales.cerrar(document.getElementById("modal-editar-pago-com"));
+      } catch (e) {
+        window.mostrarToast("⚠ No se pudo eliminar: " + e.message);
+      } finally {
+        btnConfirm.disabled = false;
+      }
+    });
+  }
 
   /* ================================================================
      REGISTRAR PAGO DE COMISIÓN
@@ -262,8 +417,22 @@
       if (window.Api) {
         try {
           btnGuar.disabled = true;
-          await window.Api.caja.crear(movimiento);
+          const resp = await window.Api.caja.crear(movimiento);
           window.mostrarToast(`✓ Pago de comisión de ${window.formatearMoneda(valor, "COP")} registrado en Caja`);
+
+          // Agregar al caché de pagos individuales
+          const nuevoPago = {
+            id:           resp?.id || Date.now(),
+            fecha,        descripcion: desc,
+            responsable:  asesor,
+            valor,        moneda:     "COP",
+            metodo_pago:  metodo,     observaciones: "",
+            estado:       "pagado",
+          };
+          window.cajaPagosComisiones = window.cajaPagosComisiones || [];
+          window.cajaPagosComisiones.push(nuevoPago);
+          recalcularFilaAsesor(asesor);
+          if (PanelDetalle.filaActual?.responsable === asesor) renderPagosRegistrados(asesor);
         } catch (e) {
           window.mostrarToast("⚠ No se pudo guardar en Caja — pago anotado localmente");
           console.warn("[Comisiones] Error al registrar pago en Caja:", e.message);
@@ -274,51 +443,41 @@
         window.mostrarToast(`✓ Pago simulado: ${window.formatearMoneda(valor, "COP")} para ${asesor}`);
       }
 
-      // Actualizar fila en memoria
-      const row = window.estadoApp.datosOriginales.find(r => r.responsable === asesor);
-      if (row) {
-        row.registrado += valor;
-        row.diferencia  = row.registrado - row.teorico;
-        row.estado      = window.derivarEstado?.(row) || row.estado;
-        row.pagos++;
-        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
-        if (window.actualizarDashboard) window.actualizarDashboard();
-        if (window.vistasInstance) window.vistasInstance.renderizar();
-        if (PanelDetalle.filaActual?.id === row.id) PanelDetalle.renderizar(row);
-      }
-
       Modales.cerrar(modal);
     });
   }
 
   /* ================================================================
-     EXPORTAR FILA / TODOS A CSV
+     EXPORTAR A EXCEL (.xlsx)
      ================================================================ */
-  function escaparCSV(v) {
-    if (v === null || v === undefined) return "";
-    const s = String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`;
-    return s;
+  function toXLSXBlob(aoa) {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Comisiones");
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    return new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   }
 
-  function descargarTexto(contenido, nombre) {
+  function descargarBlob(blob, nombre) {
+    const url = URL.createObjectURL(blob);
     const a   = document.createElement("a");
-    a.href    = URL.createObjectURL(new Blob([contenido], { type: "text/csv;charset=utf-8;" }));
+    a.href    = url;
     a.download = nombre;
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   function nombreArchivo(base) {
     const d = new Date();
-    return `${base}_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.csv`;
+    return `${base}_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.xlsx`;
   }
 
   function exportarFilaCSV(row) {
     const header = ["Asesor","Ingresos base","% Comisión","Com. teórica","Com. registrada","# Pagos","Diferencia","Estado","Activo"];
     const fila   = [row.responsable, row.ingresos, row.porcentaje, row.teorico, row.registrado, row.pagos, row.diferencia, row.estado, row.activo ? "Sí" : "No"];
-    const csv    = "﻿" + [header, fila].map(r => r.map(escaparCSV).join(",")).join("\r\n");
-    descargarTexto(csv, nombreArchivo(`comision_${row.responsable.replace(/\s+/g,"_").toLowerCase()}`));
+    descargarBlob(toXLSXBlob([header, fila]), nombreArchivo(`comision_${row.responsable.replace(/\s+/g,"_").toLowerCase()}`));
     window.mostrarToast("✓ Comisión exportada");
   }
 
@@ -326,21 +485,13 @@
     const est  = window.estadoApp;
     const datos = alcance === "todos" ? est.datosOriginales : est.datosVisibles;
     const header = ["Asesor","Ingresos base","% Comisión","Com. teórica","Com. registrada","# Pagos","Diferencia","Estado","Activo"];
-    const per    = est.periodoActual;
-    const meta   = [
-      `# Reporte de comisiones`,
-      `# Período: ${per.desde || "—"} a ${per.hasta || "—"}`,
-      `# Generado: ${new Date().toLocaleString("es-CO")}`,
-      ``
-    ].join("\r\n");
     const filas = datos.map(r => [r.responsable, r.ingresos, r.porcentaje, r.teorico, r.registrado, r.pagos, r.diferencia, r.estado, r.activo ? "Sí" : "No"]);
     const totIng = datos.reduce((s, r) => s + r.ingresos, 0);
     const totTeo = datos.reduce((s, r) => s + r.teorico, 0);
     const totReg = datos.reduce((s, r) => s + r.registrado, 0);
     const totPag = datos.reduce((s, r) => s + r.pagos, 0);
     filas.push(["TOTAL", totIng, "", totTeo, totReg, totPag, totReg - totTeo, "", ""]);
-    const csv = "﻿" + meta + [header, ...filas].map(r => r.map(escaparCSV).join(",")).join("\r\n");
-    descargarTexto(csv, nombreArchivo("comisiones"));
+    descargarBlob(toXLSXBlob([header, ...filas]), nombreArchivo("comisiones"));
     window.mostrarToast(`✓ ${datos.length} asesores exportados`);
   }
 
@@ -1340,6 +1491,7 @@
     initCabeceraMenu();
     initModalConfigComisiones();
     initModalRegistrarPago();
+    initModalEditarPago();
     initFiltrosPill();
     initFiltroAdd();
     initEditarFiltros();

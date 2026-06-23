@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS `cotizaciones` (
   `cliente_id`          INT UNSIGNED    NULL DEFAULT NULL,
   `negocio_id`          INT UNSIGNED    NULL DEFAULT NULL,
   `hubspot_invoice_id`  VARCHAR(80)     NULL DEFAULT NULL,
+  `punto_venta`         VARCHAR(100)    NULL DEFAULT NULL COMMENT 'Valor de la propiedad punto_de_venta en HubSpot Invoice',
   `notas`               TEXT            NULL DEFAULT NULL,
   `created_at`          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -214,9 +215,10 @@ CREATE TABLE IF NOT EXISTS `movimientos_caja` (
   `responsable_id` INT UNSIGNED    NULL DEFAULT NULL,
   `valor`          DECIMAL(15, 2)  NOT NULL DEFAULT '0.00',
   `moneda`         ENUM('COP','USD','EUR') NOT NULL DEFAULT 'COP',
-  `estado`         ENUM('pagado','pendiente','anulado') NOT NULL DEFAULT 'pendiente',
+  `estado`         ENUM('pagado','anulado') NOT NULL DEFAULT 'pagado',
   `metodo_pago`    ENUM('efectivo','transferencia','tarjeta','cheque') NULL DEFAULT NULL,
   `observaciones`  TEXT            NULL DEFAULT NULL,
+  `punto_venta`    VARCHAR(100)    NULL DEFAULT NULL,
   `cliente_id`     INT UNSIGNED    NULL DEFAULT NULL,
   `cotizacion_id`  INT UNSIGNED    NULL DEFAULT NULL,
   `referencia`     VARCHAR(30)     NULL DEFAULT NULL COMMENT 'REF-YYYY-NNNN — generado automáticamente',
@@ -602,3 +604,8 @@ INSERT INTO `vistas_guardadas` (`usuario_id`, `modulo`, `nombre`, `filtros_json`
   (NULL, 'caja',         'Pendientes',                 '{"estado":["pendiente"]}',                     1, 2),
   (NULL, 'caja',         'Ingresos del mes',           '{"tipo":["ingreso"],"fecha":"mes"}',           1, 3),
   (NULL, 'caja',         'Gastos de publicidad',       '{"categoria":["publicidad"]}',                 1, 4);
+
+-- ── Migración: Punto de Venta en movimientos_caja y cotizaciones ─
+-- Ejecutar solo en instalaciones existentes (no aplica a instalaciones nuevas):
+-- ALTER TABLE `movimientos_caja` ADD COLUMN `punto_venta` VARCHAR(100) NULL DEFAULT NULL AFTER `observaciones`;
+-- ALTER TABLE `cotizaciones`     ADD COLUMN `punto_venta` VARCHAR(100) NULL DEFAULT NULL AFTER `hubspot_invoice_id`;

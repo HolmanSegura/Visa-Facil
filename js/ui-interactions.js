@@ -184,6 +184,41 @@
     abrir(cot) {
       if (!cot) return;
       this._cot = cot;
+
+      // Borrador / en_revision → edición completa reutilizando el modal de creación
+      if (["borrador", "en_revision"].includes(cot.estado)) {
+        const modal = document.getElementById("modal-crear-cotizacion");
+        if (!modal) return;
+        modal.dataset.modo = "editar";
+        modal.dataset.cotizacionId = cot.id;
+        const tit = modal.querySelector(".modal__titulo");
+        if (tit) tit.textContent = "Editar cotización";
+        const btnG = document.getElementById("guardar-cotizacion");
+        if (btnG) btnG.textContent = "Guardar cambios";
+        document.getElementById("cot-titulo").value = cot.titulo || "";
+        document.getElementById("cot-cliente").value = (cot.cliente === "—" ? "" : cot.cliente) || "";
+        document.getElementById("cot-moneda").value = cot.moneda || "COP";
+        document.getElementById("cot-estado").value = cot.estado || "borrador";
+        document.getElementById("cot-propietario").value = cot.responsable || "";
+        document.getElementById("cot-fecha-creacion").value = cot.fechaCreacion || "";
+        document.getElementById("cot-fecha-vencimiento").value = cot.fechaVencimiento || "";
+        const neg = document.getElementById("cot-negocio");
+        if (neg) neg.value = cot.negocio || "";
+        const com = document.getElementById("cot-comentarios");
+        if (com) com.value = cot.observaciones || "";
+        const pdv = document.getElementById("cot-punto-venta");
+        if (pdv) pdv.value = cot.puntoVenta || "";
+        if (window.ProductosCotizacion) {
+          window.ProductosCotizacion.limpiarLineas?.();
+          if (Array.isArray(cot.lineas) && cot.lineas.length > 0) {
+            cot.lineas.forEach(l => window.ProductosCotizacion.agregarLinea?.(l));
+          }
+        }
+        Modales.abrir("modal-crear-cotizacion");
+        return;
+      }
+
+      // Otros estados → edición ligera de metadatos
       document.getElementById("editar-cot-id").value = cot.id;
       document.getElementById("editar-cot-nombre").value = cot.titulo || "";
       document.getElementById("editar-cot-estado").value = cot.estado || "borrador";
@@ -191,6 +226,8 @@
       document.getElementById("editar-cot-propietario").value = cot.responsable || "";
       document.getElementById("editar-cot-fvencimiento").value = cot.fechaVencimiento || "";
       document.getElementById("editar-cot-cliente").value = cot.cliente || "";
+      const selPdv = document.getElementById("editar-cot-punto-venta");
+      if (selPdv) selPdv.value = cot.puntoVenta || "";
       Modales.abrir("modal-editar-cotizacion");
     },
 
@@ -207,6 +244,7 @@
       cot.responsable      = document.getElementById("editar-cot-propietario").value;
       cot.fechaVencimiento = document.getElementById("editar-cot-fvencimiento").value;
       cot.cliente          = document.getElementById("editar-cot-cliente").value.trim();
+      cot.puntoVenta       = document.getElementById("editar-cot-punto-venta")?.value || "";
 
       // Persistir en BD
       if (window.Api) {
@@ -218,6 +256,7 @@
             responsable:       cot.responsable,
             fecha_vencimiento: cot.fechaVencimiento || null,
             cliente:           cot.cliente,
+            punto_venta:       cot.puntoVenta || null,
           });
         } catch (e) {
           console.warn("[UI] API actualizar cotización falló:", e.message);
@@ -232,6 +271,10 @@
       Modales.cerrar(document.getElementById("modal-editar-cotizacion"));
       window.mostrarToast("✓ Cotización actualizada");
 
+      // Auto-envío al cambiar a en revisión o publicado
+      if (["en_revision", "publicado"].includes(cot.estado) && estadoAnterior !== cot.estado) {
+        setTimeout(() => EnviarCotizacion.abrir(cot), 300);
+      }
       // Flujo automático al aprobar
       if (cot.estado === "aprobado" && estadoAnterior !== "aprobado") {
         dispararFlujoCotizacionAprobada(cot);
@@ -254,8 +297,11 @@
   };
 
   const EnviarCotizacion = {
+    _cot: null,
+
     abrir(cot) {
       if (!cot) return;
+      this._cot = cot;
       document.getElementById("enviar-cot-id").value = cot.id;
       document.getElementById("enviar-cot-asunto").value = `Cotización: ${cot.titulo}`;
       document.getElementById("enviar-cot-destinatario").value = "";
@@ -264,14 +310,53 @@
       Modales.abrir("modal-enviar-cotizacion");
     },
 
-    enviar() {
+    async enviar() {
+      const id = parseInt(document.getElementById("enviar-cot-id").value, 10);
+      const cot = this._cot || window.estadoApp.datosOriginales.find(c => c.id === id);
       const destinatario = document.getElementById("enviar-cot-destinatario").value.trim();
-      if (!destinatario) {
+
+      if (!destinatario || !destinatario.includes("@")) {
         document.getElementById("enviar-cot-destinatario").focus();
+        window.mostrarToast("⚠ Ingresa un correo electrónico válido");
         return;
       }
-      Modales.cerrar(document.getElementById("modal-enviar-cotizacion"));
-      window.mostrarToast(`✓ Cotización enviada a ${destinatario}`);
+      if (!cot) {
+        window.mostrarToast("⚠ No se encontró la cotización");
+        return;
+      }
+
+      const btn = document.getElementById("confirmar-enviar-cotizacion");
+      const textoOrig = btn?.textContent;
+      if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+
+      try {
+        if (window.CotizacionEmail?.enviarCotizacion) {
+          await window.CotizacionEmail.enviarCotizacion(cot, destinatario);
+        } else {
+          window.mostrarToast(`✓ Cotización enviada a ${destinatario}`);
+        }
+
+        // Si estaba en borrador → pasar a en revisión automáticamente
+        if (cot.estado === "borrador") {
+          cot.estado = "en_revision";
+          if (window.Api) {
+            window.Api.cotizaciones.actualizar(cot.id, { estado: "en_revision" })
+              .catch(e => console.warn("[UI] Estado en_revision no guardado:", e.message));
+          }
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+          if (window.vistasInstance) window.vistasInstance.renderizar();
+          if (PanelDetalleCotizacion.cotActual?.id === cot.id) PanelDetalleCotizacion.renderizar(cot);
+          window.mostrarToast("✓ Correo enviado — cotización cambió a \"En revisión\"", 3500);
+        }
+
+        Modales.cerrar(document.getElementById("modal-enviar-cotizacion"));
+        this._cot = null;
+      } catch (err) {
+        console.error("[UI] Error enviando cotización:", err.message);
+        window.mostrarToast(`⚠ Error al enviar: ${err.message.slice(0, 80)}`);
+      } finally {
+        if (btn) { btn.disabled = false; if (textoOrig) btn.textContent = textoOrig; }
+      }
     },
 
     init() {
@@ -1042,9 +1127,9 @@
       return;
     }
     if (window.utilsExport) {
-      const csv = window.utilsExport.aCSV(publicadas);
+      const blob = window.utilsExport.aXLSX(publicadas);
       const nombre = window.utilsExport.nombreArchivo("cotizaciones-publicadas");
-      window.utilsExport.descargarTexto(csv, nombre);
+      window.utilsExport.descargarBlob(blob, nombre);
       window.mostrarToast(`✓ ${publicadas.length} cotizaciones publicadas descargadas`);
     } else if (window.exportarCotizacionesCSV) {
       // Fallback: usar exportador estándar con un swap temporal de datosVisibles
@@ -1056,25 +1141,50 @@
   }
 
   /* ----------------------------------------------------------
-     9. MODAL: CREAR COTIZACIÓN
+     9. MODAL: CREAR / EDITAR COTIZACIÓN
      ---------------------------------------------------------- */
+
+  function _resetModalCrear() {
+    const modal = document.getElementById("modal-crear-cotizacion");
+    if (!modal) return;
+    modal.dataset.modo = "";
+    modal.dataset.cotizacionId = "";
+    const tit = modal.querySelector(".modal__titulo");
+    if (tit) tit.textContent = "Crear cotización";
+    const btnG = document.getElementById("guardar-cotizacion");
+    if (btnG) btnG.textContent = "Guardar";
+  }
+
+  function _marcarCampoError(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.outline = "2px solid #dc2626";
+    el.focus();
+    el.addEventListener("input", () => { el.style.outline = ""; }, { once: true });
+  }
+
   function initCrearCotizacion() {
+    const modal = document.getElementById("modal-crear-cotizacion");
+
+    // Restablecer a modo "crear" cuando el modal se cierra
+    if (modal) {
+      new MutationObserver(() => {
+        if (modal.hasAttribute("hidden")) _resetModalCrear();
+      }).observe(modal, { attributes: true, attributeFilter: ["hidden"] });
+    }
+
     const btn = document.getElementById("btn-crear-cotizacion");
     if (btn) {
       btn.addEventListener("click", () => {
-        // Pre-poblar fechas con la fecha actual
+        _resetModalCrear();
         const hoy = new Date();
         const dentro30 = new Date();
         dentro30.setDate(dentro30.getDate() + 30);
-
         const iso = d => d.toISOString().slice(0, 10);
-
         const fc = document.getElementById("cot-fecha-creacion");
         const fv = document.getElementById("cot-fecha-vencimiento");
-
         if (fc) fc.value = iso(hoy);
         if (fv) fv.value = iso(dentro30);
-
         Modales.abrir("modal-crear-cotizacion");
       });
     }
@@ -1082,52 +1192,128 @@
     const btnGuardar = document.getElementById("guardar-cotizacion");
     if (btnGuardar) {
       btnGuardar.addEventListener("click", async () => {
-        const titulo = document.getElementById("cot-titulo").value.trim();
-        const cantidad = parseFloat(document.getElementById("cot-cantidad").value) || 0;
-        const moneda = document.getElementById("cot-moneda").value;
-        const estado = document.getElementById("cot-estado").value;
-        const propietario = document.getElementById("cot-propietario").value;
-        const fechaCreacion = document.getElementById("cot-fecha-creacion").value;
+        const modoEditar  = modal?.dataset.modo === "editar";
+        const cotIdEditar = modoEditar ? parseInt(modal.dataset.cotizacionId, 10) : null;
+
+        // ── Leer campos comunes ──────────────────────────────
+        const titulo         = document.getElementById("cot-titulo").value.trim();
+        const cliente        = document.getElementById("cot-cliente").value.trim();
+        const propietario    = document.getElementById("cot-propietario").value.trim();
+        const lineas         = window.ProductosCotizacion?.getLineas?.() || [];
+        const cantidad       = parseFloat(document.getElementById("cot-cantidad").value) || 0;
+        const moneda         = document.getElementById("cot-moneda").value;
+        const estado         = document.getElementById("cot-estado").value;
+        const fechaCreacion  = document.getElementById("cot-fecha-creacion").value;
         const fechaVencimiento = document.getElementById("cot-fecha-vencimiento").value;
-        const cliente = document.getElementById("cot-cliente").value.trim();
+        const negocio        = document.getElementById("cot-negocio")?.value.trim() || "";
+        const dealId         = document.getElementById("cot-deal-id")?.value.trim() || "";
+        const comentarios    = document.getElementById("cot-comentarios")?.value.trim() || "";
+        const puntoVenta     = document.getElementById("cot-punto-venta")?.value || "";
 
+        // ── Validaciones requeridas ──────────────────────────
         if (!titulo) {
-          window.mostrarToast("⚠ El título es obligatorio");
+          _marcarCampoError("cot-titulo");
+          window.mostrarToast("⚠ El nombre de la cotización es obligatorio");
           return;
         }
-        if (cantidad <= 0 && estado !== "borrador") {
-          window.mostrarToast("⚠ Agrega al menos un producto/línea antes de guardar");
+        if (!cliente) {
+          _marcarCampoError("cot-cliente");
+          window.mostrarToast("⚠ El cliente es obligatorio");
+          return;
+        }
+        if (!propietario) {
+          _marcarCampoError("cot-propietario");
+          window.mostrarToast("⚠ El propietario es obligatorio");
+          return;
+        }
+        if (lineas.length === 0) {
+          window.mostrarToast("⚠ Agrega al menos un producto a la cotización");
           return;
         }
 
-        const negocio    = document.getElementById("cot-negocio")?.value.trim() || "";
-        const dealId     = document.getElementById("cot-deal-id")?.value.trim() || "";
-        const comentarios = document.getElementById("cot-comentarios")?.value.trim() || "";
+        const lineasMapeadas = lineas.map(l => ({
+          productoId:     l.productoId || null,
+          nombre:         l.nombre,
+          descripcion:    l.descripcion || "",
+          precioUnitario: l.precioUnitario,
+          cantidad:       l.cantidad,
+          descuento:      l.descuento || 0,
+          tipoDescuento:  l.tipoDescuento || "porcentaje",
+        }));
 
-        const lineas = window.ProductosCotizacion?.getLineas?.() || [];
+        // ── MODO EDITAR ──────────────────────────────────────
+        if (modoEditar && cotIdEditar) {
+          const cot = window.estadoApp.datosOriginales.find(c => c.id === cotIdEditar);
+          if (!cot) return;
+          const estadoAnterior = cot.estado;
 
+          cot.titulo           = titulo;
+          cot.cliente          = cliente;
+          cot.moneda           = moneda;
+          cot.estado           = estado;
+          cot.responsable      = propietario;
+          cot.fechaCreacion    = fechaCreacion;
+          cot.fechaVencimiento = fechaVencimiento;
+          cot.negocio          = negocio;
+          cot.observaciones    = comentarios;
+          cot.puntoVenta       = puntoVenta;
+          cot.cantidad         = cantidad;
+          cot.lineas           = lineasMapeadas;
+
+          if (window.Api) {
+            try {
+              btnGuardar.disabled = true;
+              await window.Api.cotizaciones.actualizar(cotIdEditar, {
+                titulo, cliente, moneda, estado, responsable: propietario,
+                fecha_creacion: fechaCreacion, fecha_vencimiento: fechaVencimiento || null,
+                cantidad, negocio, observaciones: comentarios,
+                punto_venta: puntoVenta || null, lineas: lineasMapeadas,
+              });
+            } catch (e) {
+              console.warn("[UI] API actualizar cotización falló:", e.message);
+              window.mostrarToast("⚠ No se pudo guardar en el servidor");
+            } finally {
+              btnGuardar.disabled = false;
+            }
+          }
+
+          if (window.ProductosCotizacion?.limpiarLineas) window.ProductosCotizacion.limpiarLineas();
+          if (window.DealsAutocomplete) window.DealsAutocomplete.limpiar();
+          if (window.ContactosAutocomplete) window.ContactosAutocomplete.limpiar();
+          Modales.cerrar(modal);
+
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+          if (window.vistasInstance) window.vistasInstance.renderizar();
+          if (PanelDetalleCotizacion.cotActual?.id === cotIdEditar) PanelDetalleCotizacion.renderizar(cot);
+
+          window.mostrarToast("✓ Cotización actualizada");
+
+          if (["en_revision", "publicado"].includes(estado) && estadoAnterior !== estado) {
+            setTimeout(() => EnviarCotizacion.abrir(cot), 300);
+          }
+          if (estado === "aprobado" && estadoAnterior !== "aprobado") {
+            dispararFlujoCotizacionAprobada(cot);
+          }
+          return;
+        }
+
+        // ── MODO CREAR ───────────────────────────────────────
         const nueva = {
           titulo,
-          estado:           estado || "borrador",
+          estado:          estado || "borrador",
           cantidad,
           moneda,
-          estadoFirma:      "no_aplica",
+          estadoFirma:     "no_aplica",
           fechaCreacion,
           fechaVencimiento,
-          responsable:      propietario || "",
-          cliente:          cliente || "—",
-          negocio:          negocio || "",
-          hubspot_deal_id:  dealId  || null,
-          observaciones:    comentarios || "",
-          lineas:           lineas.map(l => ({
-            productoId:     l.productoId || null,
-            nombre:         l.nombre,
-            descripcion:    l.descripcion || "",
-            precioUnitario: l.precioUnitario,
-            cantidad:       l.cantidad,
-            descuento:      l.descuento || 0,
-            tipoDescuento:  l.tipoDescuento || "porcentaje",
-          })),
+          responsable:     propietario,
+          puntoVenta,
+          punto_venta:     puntoVenta,
+          cliente:         cliente || "—",
+          negocio:         negocio || "",
+          hubspot_deal_id: dealId  || null,
+          observaciones:   comentarios || "",
+          lineas:          lineasMapeadas,
         };
 
         let guardadoEnServidor = false;
@@ -1152,24 +1338,24 @@
 
         window.estadoApp.datosOriginales.unshift(nueva);
 
-        // Reset form
         document.getElementById("form-cotizacion").reset();
         document.getElementById("cot-cantidad").value = "0";
-        // Limpiar líneas de productos
         if (window.ProductosCotizacion?.limpiarLineas) window.ProductosCotizacion.limpiarLineas();
-        // Limpiar autocompletes
         if (window.DealsAutocomplete) window.DealsAutocomplete.limpiar();
         if (window.ContactosAutocomplete) window.ContactosAutocomplete.limpiar();
 
-        // Cerrar modal
-        Modales.cerrar(document.getElementById("modal-crear-cotizacion"));
+        Modales.cerrar(modal);
 
-        // Actualizar vistas y tabla
         if (window.vistasInstance) window.vistasInstance.renderizar();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
 
         if (guardadoEnServidor || !window.Api) {
           window.mostrarToast(`✓ Cotización "${titulo}" creada`);
+        }
+
+        // Auto-envío al crear en revisión o publicado
+        if (["en_revision", "publicado"].includes(nueva.estado)) {
+          setTimeout(() => EnviarCotizacion.abrir(nueva), 300);
         }
       });
     }
@@ -1985,6 +2171,7 @@
           moneda:           cot.moneda || "COP",
           cantidad:         cot.cantidad || 0,
           contactoId:       cot.hubspot_contact_id || null,
+          puntoDeVenta:     cot.puntoVenta || "",
         });
         if (resp?.id) {
           cot.hubspot_invoice_id = resp.id;
@@ -2015,11 +2202,12 @@
             descripcion:   `Comisión — ${cot.titulo}`,
             valor:         comisionMonto,
             moneda:        cot.moneda || "COP",
-            estado:        "pendiente",
+            estado:        "pagado",
             responsable:   cot.responsable,
             cotizacion_id: cot.id,
             fecha:         new Date().toISOString().split("T")[0],
             observaciones: `${pct}% sobre ${fmt(cot.cantidad, cot.moneda || "COP")} · Cotización #${cot.id}`,
+            punto_venta:   cot.puntoVenta || null,
           });
 
           resultados.push(`comisión ${fmt(comisionMonto, cot.moneda || "COP")} pendiente para ${cot.responsable}`);

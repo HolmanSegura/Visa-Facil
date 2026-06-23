@@ -46,28 +46,23 @@ try {
         $hasta      = $_GET['hasta']      ?? date('Y-m-d');
         $usuarioId  = !empty($_GET['usuario_id']) ? (int) $_GET['usuario_id'] : null;
 
-        // Ingresos por asesor en el período
-        $sqlIngresos = "
-            SELECT m.responsable_id, SUM(m.valor) AS total_ingresos
-            FROM movimientos_caja m
-            WHERE m.tipo = 'ingreso'
-              AND m.estado = 'pagado'
-              AND m.fecha BETWEEN ? AND ?
-              AND m.deleted_at IS NULL
-        ";
-        $paramsI = [$desde, $hasta];
-        if ($usuarioId) { $sqlIngresos .= " AND m.responsable_id = ?"; $paramsI[] = $usuarioId; }
-        $sqlIngresos .= " GROUP BY m.responsable_id";
-        $stmtI = $db->prepare($sqlIngresos);
-        $stmtI->execute($paramsI);
-        $ingresosPorAsesor = [];
-        foreach ($stmtI->fetchAll() as $r) {
-            $ingresosPorAsesor[$r['responsable_id']] = (float) $r['total_ingresos'];
-        }
-
-        // Comisiones ya registradas como gasto categoría "comisiones"
-        $sqlRegistradas = "
-            SELECT m.responsable_id, SUM(m.valor) AS total_registrado, COUNT(*) AS n_pagos
+        /*
+         * Fuente de verdad: movimientos_caja tipo=gasto, categoria=comisiones.
+         *
+         * Estado 'pendiente' → comisión devengada (factura HubSpot pagada, aún no
+         *                       transferida al asesor). Creado automáticamente por
+         *                       api/hubspot-webhook.php.
+         * Estado 'pagado'    → comisión ya transferida al asesor.
+         *
+         * teorico    = devengado total (pendiente + pagado)
+         * registrado = sólo lo ya pagado al asesor
+         */
+        $sqlCom = "
+            SELECT m.responsable_id,
+                   SUM(m.valor)                                  AS total_devengado,
+                   SUM(IF(m.estado = 'pagado', m.valor, 0))      AS total_pagado,
+                   COUNT(*)                                       AS n_total,
+                   COUNT(IF(m.estado = 'pagado', 1, NULL))       AS n_pagados
             FROM movimientos_caja m
             JOIN categorias_caja cat ON cat.id = m.categoria_id
             WHERE cat.valor = 'comisiones'
@@ -75,16 +70,18 @@ try {
               AND m.fecha BETWEEN ? AND ?
               AND m.deleted_at IS NULL
         ";
-        $paramsR = [$desde, $hasta];
-        if ($usuarioId) { $sqlRegistradas .= " AND m.responsable_id = ?"; $paramsR[] = $usuarioId; }
-        $sqlRegistradas .= " GROUP BY m.responsable_id";
-        $stmtR = $db->prepare($sqlRegistradas);
-        $stmtR->execute($paramsR);
-        $registradasPorAsesor = [];
-        foreach ($stmtR->fetchAll() as $r) {
-            $registradasPorAsesor[$r['responsable_id']] = [
-                'total'  => (float) $r['total_registrado'],
-                'pagos'  => (int)   $r['n_pagos'],
+        $paramsC = [$desde, $hasta];
+        if ($usuarioId) { $sqlCom .= " AND m.responsable_id = ?"; $paramsC[] = $usuarioId; }
+        $sqlCom .= " GROUP BY m.responsable_id";
+        $stmtC = $db->prepare($sqlCom);
+        $stmtC->execute($paramsC);
+        $comisionesPorAsesor = [];
+        foreach ($stmtC->fetchAll() as $r) {
+            $comisionesPorAsesor[$r['responsable_id']] = [
+                'devengado' => (float) $r['total_devengado'],
+                'pagado'    => (float) $r['total_pagado'],
+                'total'     => (int)   $r['n_total'],
+                'pagados'   => (int)   $r['n_pagados'],
             ];
         }
 
@@ -93,19 +90,21 @@ try {
         $configMap = [];
         foreach ($configs as $c) { $configMap[$c['usuario_id']] = $c; }
 
-        // Todos los asesores con actividad
+        // Todos los asesores con actividad en el período
         $stmtU = $db->query("SELECT id, nombre FROM usuarios WHERE deleted_at IS NULL ORDER BY nombre");
         $filas = [];
         foreach ($stmtU->fetchAll() as $u) {
-            $uid      = (int) $u['id'];
-            $ingresos = $ingresosPorAsesor[$uid]   ?? 0;
-            $reg      = $registradasPorAsesor[$uid] ?? ['total' => 0, 'pagos' => 0];
-            if ($ingresos === 0.0 && $reg['total'] === 0.0) continue;
+            $uid = (int) $u['id'];
+            $com = $comisionesPorAsesor[$uid] ?? null;
+            if (!$com) continue;
 
             $cfg      = $configMap[$uid] ?? null;
             $pct      = $cfg ? (float) $cfg['porcentaje'] : 0;
             $activo   = $cfg ? (bool)  $cfg['activo']     : true;
-            $teorico  = round($ingresos * $pct / 100, 2);
+            $teorico  = $com['devengado'];
+            $registrado = $com['pagado'];
+            // ingresos aproximado: si porcentaje > 0, inferir base; si no, 0
+            $ingresos = ($pct > 0) ? round($teorico / ($pct / 100)) : 0;
 
             $filas[] = [
                 'usuario_id'  => $uid,
@@ -113,10 +112,10 @@ try {
                 'activo'      => $activo,
                 'ingresos'    => $ingresos,
                 'porcentaje'  => $pct,
-                'teorico'     => $teorico,
-                'registrado'  => $reg['total'],
-                'pagos'       => $reg['pagos'],
-                'diferencia'  => round($reg['total'] - $teorico, 2),
+                'teorico'     => round($teorico, 2),
+                'registrado'  => round($registrado, 2),
+                'pagos'       => $com['pagados'],
+                'diferencia'  => round($registrado - $teorico, 2),
             ];
         }
 

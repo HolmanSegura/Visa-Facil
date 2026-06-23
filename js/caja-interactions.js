@@ -134,6 +134,7 @@
       document.getElementById("editar-estado").value = mov.estado || "pagado";
       document.getElementById("editar-cliente").value = mov.cliente || "";
       document.getElementById("editar-observaciones").value = mov.observaciones || "";
+      document.getElementById("editar-punto-venta").value = mov.puntoVenta || "";
 
       Modales.abrir("modal-editar-movimiento");
     },
@@ -153,6 +154,7 @@
       mov.estado        = document.getElementById("editar-estado").value;
       mov.cliente       = document.getElementById("editar-cliente").value.trim();
       mov.observaciones = document.getElementById("editar-observaciones").value.trim();
+      mov.puntoVenta    = document.getElementById("editar-punto-venta").value;
 
       if (window.Api) {
         try {
@@ -167,6 +169,7 @@
             estado:        mov.estado,
             cliente:       mov.cliente,
             observaciones: mov.observaciones,
+            punto_venta:   mov.puntoVenta,
           });
         } catch (e) {
           console.warn("[Caja] API actualizar movimiento falló:", e.message);
@@ -275,7 +278,7 @@
           const copia = {
             ...m,
             descripcion: m.descripcion + " (copia)",
-            estado: "pendiente",
+            estado: "pagado",
           };
           delete copia.id;
           delete copia.referencia;
@@ -672,6 +675,9 @@
       tipoInput.value = tipo;
       modoComision(false);
 
+      // Pre-cargar catálogo de productos en background para el autocomplete
+      window.configComisionesAPI?.cargarCatalogoProductos?.();
+
       const cats = window.categoriasCatalogo || [];
       selectCat.innerHTML = cats.length
         ? cats.map(c => `<option value="${c.valor}">${c.icono ? c.icono + ' ' : ''}${c.nombre}</option>`).join("")
@@ -729,6 +735,7 @@
         const estado        = document.getElementById("g-estado").value;
         const cliente       = document.getElementById("g-cliente").value.trim();
         const observaciones = document.getElementById("g-observaciones").value.trim();
+        const puntoVenta    = document.getElementById("g-punto-venta").value;
 
         if (!descripcion) { window.mostrarToast("⚠ La descripción es obligatoria"); return; }
         if (!valor || valor <= 0) { window.mostrarToast("⚠ Ingresa un valor válido"); return; }
@@ -737,7 +744,7 @@
         const nuevo = {
           fecha, tipo, categoria, descripcion, responsable,
           valor, moneda, estado, metodoPago, observaciones,
-          cliente, adjunto: null
+          puntoVenta, punto_venta: puntoVenta, cliente, adjunto: null
         };
 
         if (window.Api) {
@@ -1209,6 +1216,37 @@
         });
       });
     }
+
+    // PUNTO DE VENTA (pill opcional)
+    const listaPdv = document.getElementById("lista-puntos-venta");
+    if (listaPdv) {
+      const unicosPdv = [...new Set(
+        window.estadoApp.datosOriginales.map(m => m.puntoVenta).filter(Boolean)
+      )].sort();
+      listaPdv.innerHTML = unicosPdv.length > 0
+        ? unicosPdv.map(pdv => `
+            <label class="check-lista__item">
+              <input type="checkbox" data-pdv="${pdv}"/>
+              ${pdv}
+            </label>`).join("")
+        : `<p style="padding:var(--esp-3);color:var(--color-texto-suave);font-size:var(--font-tam-sm)">Sin registros aún</p>`;
+      listaPdv.addEventListener("change", (e) => {
+        if (e.target.matches('input[type="checkbox"]')) {
+          window.estadoApp.filtros.puntoVenta = [...listaPdv.querySelectorAll('input:checked')].map(c => c.dataset.pdv);
+          if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        }
+      });
+
+      const buscarPdv = document.getElementById("filtro-pdv-buscar");
+      if (buscarPdv) {
+        buscarPdv.addEventListener("input", () => {
+          const q = buscarPdv.value.trim().toLowerCase();
+          listaPdv.querySelectorAll(".check-lista__item").forEach(item => {
+            item.style.display = q === "" || item.textContent.trim().toLowerCase().includes(q) ? "" : "none";
+          });
+        });
+      }
+    }
   }
 
   /* ---------- AGREGAR FILTRO RÁPIDO (botón +) ---------- */
@@ -1219,6 +1257,7 @@
     asesor:     { icono: "👤", nombre: "Responsable" },
     estado:     { icono: "𝑓𝑥", nombre: "Estado" },
     metodoPago: { icono: "💳", nombre: "Método de pago" },
+    puntoVenta: { icono: "📍", nombre: "Punto de Venta" },
   };
 
   function _pillEsVisibleCaja(filtroId) {
@@ -1239,6 +1278,7 @@
     if (filtroId === "asesor")     est.filtros.asesor = [];
     if (filtroId === "estado")     est.filtros.estado = [];
     if (filtroId === "metodoPago") est.filtros.metodoPago = [];
+    if (filtroId === "puntoVenta") est.filtros.puntoVenta = [];
   }
 
   function initFiltroAdd() {
@@ -1754,6 +1794,24 @@
     window.Modales = Modales;
     window.PanelConfig = PanelConfig;
     window.PanelDetalle = PanelDetalle;
+
+    // Poblar selects de Punto de Venta desde HubSpot (async, no bloquea)
+    (async () => {
+      try {
+        if (window.HubSpotAPI?.obtenerOpcionesPropiedadInvoice) {
+          const opciones = await window.HubSpotAPI.obtenerOpcionesPropiedadInvoice("punto_de_venta");
+          window._pdvOpciones = opciones;
+          const html = `<option value="">— Sin especificar —</option>` +
+            opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
+          ["g-punto-venta", "editar-punto-venta"].forEach(id => {
+            const sel = document.getElementById(id);
+            if (sel) sel.innerHTML = html;
+          });
+        }
+      } catch (e) {
+        console.warn("[Caja] No se pudieron cargar opciones de Punto de Venta:", e.message);
+      }
+    })();
 
     console.log("[Caja] UI interactions inicializadas");
   });

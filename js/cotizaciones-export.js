@@ -1,19 +1,9 @@
 /* ============================================================
-   COTIZACIONES-EXPORT.JS
-   Exportación consolidada de cotizaciones a CSV (compatible Excel).
-
-   Notas frontend:
-   - Genera un .csv UTF-8 con BOM para que Excel lea tildes/eñes
-     correctamente sin pasos extra.
-   - Respeta el alcance elegido (visibles / todos).
-   - Usa las etiquetas legibles del módulo (estado, firma) en vez
-     de los códigos internos.
-   - Si más adelante el backend ofrece un endpoint /export, basta
-     reemplazar `exportar()` por una llamada fetch que traiga el blob.
+   COTIZACIONES-EXPORT.JS  —  Exportación de cotizaciones a Excel (.xlsx)
+   Requiere SheetJS (XLSX global) cargado antes de este script.
    ============================================================ */
 (function () {
 
-  // Orden y formato de las columnas exportadas.
   const COLUMNAS_EXPORT = [
     { campo: "id",                titulo: "ID" },
     { campo: "titulo",            titulo: "Título" },
@@ -28,31 +18,30 @@
     { campo: "fechaVencimiento",  titulo: "Fecha vencimiento" }
   ];
 
-  /**
-   * Escapa un valor para CSV según RFC 4180.
-   */
-  function escaparCSV(v) {
-    if (v === null || v === undefined) return "";
-    const s = String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
-      return '"' + s.replace(/"/g, '""') + '"';
-    }
-    return s;
+  function celda(col, fila) {
+    const v = col.format ? col.format(fila[col.campo]) : fila[col.campo];
+    return v === null || v === undefined ? "" : v;
   }
 
-  function aCSV(filas) {
-    const head = COLUMNAS_EXPORT.map(c => escaparCSV(c.titulo)).join(",");
-    const body = filas.map(f =>
-      COLUMNAS_EXPORT.map(c => {
-        const valor = c.format ? c.format(f[c.campo]) : f[c.campo];
-        return escaparCSV(valor);
-      }).join(",")
-    ).join("\r\n");
-    return "\uFEFF" + head + "\r\n" + body;
+  function toXLSXBlob(aoa) {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cotizaciones");
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    return new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   }
 
-  function descargarTexto(contenido, nombre, mime = "text/csv;charset=utf-8") {
-    const blob = new Blob([contenido], { type: mime });
+  function matrizAXLSX(rows2D) {
+    return toXLSXBlob(rows2D.map(r => r.map(v => (v === null || v === undefined) ? "" : v)));
+  }
+
+  function aXLSX(filas) {
+    const head = COLUMNAS_EXPORT.map(c => c.titulo);
+    const rows = filas.map(f => COLUMNAS_EXPORT.map(c => celda(c, f)));
+    return toXLSXBlob([head, ...rows]);
+  }
+
+  function descargarBlob(blob, nombre) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -73,14 +62,10 @@
     return `${yyyy}${mm}${dd}-${hh}${mi}`;
   }
 
-  function nombreArchivo(prefijo, ext = "csv") {
+  function nombreArchivo(prefijo, ext = "xlsx") {
     return `${prefijo}-${timestamp()}.${ext}`;
   }
 
-  /**
-   * Exporta cotizaciones según alcance.
-   * @param {"visibles"|"todos"} alcance
-   */
   function exportar(alcance) {
     const est = window.estadoApp;
     if (!est) return;
@@ -94,14 +79,10 @@
       return;
     }
 
-    const csv = aCSV(filas);
-    descargarTexto(csv, nombreArchivo("cotizaciones"));
-    window.mostrarToast(`✓ ${filas.length} cotizaciones exportadas a CSV`);
+    descargarBlob(aXLSX(filas), nombreArchivo("cotizaciones"));
+    window.mostrarToast(`✓ ${filas.length} cotizaciones exportadas a Excel`);
   }
 
-  /**
-   * Actualiza los contadores que muestra el popover de export.
-   */
   function actualizarContadores() {
     const est = window.estadoApp;
     if (!est) return;
@@ -117,16 +98,14 @@
       popover.addEventListener("click", (e) => {
         const btn = e.target.closest("[data-export-alcance]");
         if (!btn) return;
-        const alcance = btn.dataset.exportAlcance;
-        exportar(alcance);
+        exportar(btn.dataset.exportAlcance);
         if (window.Popovers) window.Popovers.cerrar();
       });
     }
 
-    window.actualizarContadoresExport  = actualizarContadores;
-    window.exportarCotizacionesCSV     = exportar;
-    // Reutilizables por cotizaciones-comisiones.js
-    window.utilsExport = { aCSV, escaparCSV, descargarTexto, nombreArchivo, timestamp };
+    window.actualizarContadoresExport = actualizarContadores;
+    window.exportarCotizacionesCSV    = exportar;  // alias heredado
+    window.utilsExport = { aXLSX, matrizAXLSX, descargarBlob, nombreArchivo, timestamp };
 
     actualizarContadores();
   });

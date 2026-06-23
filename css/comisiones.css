@@ -177,6 +177,103 @@
   display: none;
 }
 
+/* ── Título de sección con badge de conteo (pagos registrados) ── */
+.panel-detalle__seccion-titulo--flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detalle-pagos-badge {
+  font-size: var(--font-tam-xs);
+  background: var(--color-fondo-suave);
+  color: var(--color-texto-suave);
+  border-radius: var(--radio-pill);
+  padding: 1px 8px;
+  font-weight: var(--font-peso-medio);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ── Lista de pagos individuales en panel detalle ── */
+.lista-pagos-com__vacia {
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-debil);
+  text-align: center;
+  padding: var(--esp-4) 0;
+}
+
+.pago-com-item {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-2) 0;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.pago-com-item:last-child {
+  border-bottom: none;
+}
+
+.pago-com-item__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pago-com-item__fecha {
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-suave);
+}
+
+.pago-com-item__desc {
+  font-size: var(--font-tam-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  color: var(--color-texto);
+}
+
+.pago-com-item__valor {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-texto);
+}
+
+.pago-com-item__edit {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: none;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  transition: all var(--trans-rapida);
+}
+
+.pago-com-item__edit:hover {
+  background: var(--color-fondo-hover);
+  color: var(--color-texto);
+  border-color: var(--color-borde-fuerte);
+}
+
+/* ── Botón de peligro (eliminar) ── */
+.btn--peligro {
+  color: #dc2626;
+}
+
+.btn--peligro:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
 .panel-detalle__seccion--colapsable.colapsado .chevron-seccion {
   transform: rotate(-90deg);
 }

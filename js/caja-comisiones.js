@@ -880,18 +880,8 @@
     const totPag = reporte.filas.reduce((s, f) => s + f.pagos, 0);
     filas.push(["TOTAL","",totIng,"",totTeo,totReg,totPag,totReg-totTeo]);
 
-    const meta = [
-      `# Reporte de comisiones`,
-      `# Período: ${reporte.desde || "—"} a ${reporte.hasta || "—"}`,
-      `# Asesor: ${reporte.asesorFiltro || "Todos"}`,
-      `# Generado: ${new Date().toLocaleString("es-CO")}`,
-      ``
-    ].join("\r\n");
-
-    const csv = "﻿" + meta +
-      [header, ...filas].map(r => r.map(v => utils.escaparCSV(v)).join(",")).join("\r\n");
-
-    utils.descargarTexto(csv, utils.nombreArchivo("reporte-comisiones"));
+    const blob = utils.matrizAXLSX([header, ...filas]);
+    utils.descargarBlob(blob, utils.nombreArchivo("reporte-comisiones"));
     window.mostrarToast?.(`✓ Reporte exportado (${reporte.filas.length} asesores)`);
   }
 

@@ -99,6 +99,14 @@
         td.textContent = m.observaciones || "—";
         return td;
       }
+    },
+    puntoVenta: {
+      th: "PUNTO DE VENTA", thClass: "th",
+      render(m) {
+        const td = document.createElement("td");
+        td.textContent = m.puntoVenta || "—";
+        return td;
+      }
     }
   };
 
@@ -107,7 +115,8 @@
     descripcion: "Descripción", responsable: "Responsable",
     valor: "Valor", estado: "Estado",
     metodoPago: "Método de pago", referencia: "Referencia",
-    cliente: "Cliente relacionado", observaciones: "Observaciones"
+    cliente: "Cliente relacionado", observaciones: "Observaciones",
+    puntoVenta: "Punto de Venta"
   };
 
   const COLUMNAS_DEFECTO = ["fecha", "tipo", "categoria", "descripcion", "responsable", "valor", "estado"];
@@ -215,7 +224,8 @@
         metodoPago:   it => (it.metodoPago || ""),
         referencia:   it => (it.referencia || "").toLowerCase(),
         cliente:      it => (it.cliente || "").toLowerCase(),
-        observaciones: it => (it.observaciones || "").toLowerCase()
+        observaciones: it => (it.observaciones || "").toLowerCase(),
+        puntoVenta:    it => (it.puntoVenta    || "").toLowerCase()
       };
       const fn = extractor[est.ordenColumna];
       if (!fn) return;

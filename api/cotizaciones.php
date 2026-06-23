@@ -112,6 +112,7 @@ try {
             SELECT
                 c.id, c.titulo, c.estado, c.estado_firma,
                 c.moneda, c.cantidad, c.fecha_creacion, c.fecha_vencimiento,
+                c.punto_venta,
                 u.nombre  AS responsable,
                 cl.nombre AS cliente,
                 n.nombre  AS negocio
@@ -152,12 +153,12 @@ try {
               (titulo, estado, estado_firma, moneda, cantidad,
                descuento_global, tipo_descuento_global, tasa_iva,
                fecha_creacion, fecha_vencimiento,
-               usuario_id, cliente_id, negocio_id, notas)
+               usuario_id, cliente_id, negocio_id, punto_venta, notas)
             VALUES
               (:titulo, :estado, :estado_firma, :moneda, :cantidad,
                :desc_global, :tipo_desc, :tasa_iva,
                :fecha_creacion, :fecha_vencimiento,
-               :usuario_id, :cliente_id, :negocio_id, :notas)
+               :usuario_id, :cliente_id, :negocio_id, :punto_venta, :notas)
         ");
         $stmt->execute([
             ':titulo'           => $b['titulo'],
@@ -173,6 +174,7 @@ try {
             ':usuario_id'       => $usuarioId,
             ':cliente_id'       => $clienteId,
             ':negocio_id'       => $negocioId,
+            ':punto_venta'      => $b['punto_venta'] ?? $b['puntoVenta'] ?? null,
             ':notas'            => $b['notas'] ?? $b['observaciones'] ?? null,
         ]);
         $newId = (int) $db->lastInsertId();
@@ -206,7 +208,7 @@ try {
             'titulo','estado','estado_firma','moneda','cantidad',
             'descuento_global','tipo_descuento_global','tasa_iva',
             'fecha_creacion','fecha_vencimiento','notas',
-            'usuario_id','cliente_id','negocio_id','hubspot_invoice_id'
+            'usuario_id','cliente_id','negocio_id','hubspot_invoice_id','punto_venta'
         ];
         foreach ($permitidos as $c) {
             if (array_key_exists($c, $b)) {

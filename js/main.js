@@ -189,6 +189,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         fechaCreacion: c.fecha_creacion,
         fechaVencimiento: c.fecha_vencimiento,
         responsable: c.responsable || "",
+        puntoVenta:  c.punto_venta || "",
         cliente: c.cliente_nombre || c.cliente || "",
         negocio: c.negocio_nombre || c.negocio || "",
       }));
@@ -204,5 +205,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       e.message,
     );
     mostrarToast("⚠ No se pudo conectar con la base de datos");
+  }
+
+  // Cargar opciones de Punto de Venta desde HubSpot y poblar los selects
+  try {
+    if (window.HubSpotAPI?.obtenerOpcionesPropiedadInvoice) {
+      const opciones = await window.HubSpotAPI.obtenerOpcionesPropiedadInvoice("punto_de_venta");
+      window._pdvOpciones = opciones;
+      const html = `<option value="">— Sin especificar —</option>` +
+        opciones.map(o => `<option value="${o.value}">${o.label}</option>`).join("");
+      ["cot-punto-venta", "editar-cot-punto-venta"].forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) sel.innerHTML = html;
+      });
+    }
+  } catch (e) {
+    console.warn("[App] No se pudieron cargar opciones de Punto de Venta:", e.message);
   }
 });

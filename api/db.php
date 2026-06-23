@@ -23,10 +23,11 @@ define('DB_USER', $_ENV['DB_USER'] ?? 'visafacildev');
 define('DB_PASS', $_ENV['DB_PASS'] ?? '=V[#}sud]aNZbP$i');
 define('DB_PORT', $_ENV['DB_PORT'] ?? '3306');
 
-define('DAPTA_WEBHOOK_URL', $_ENV['DAPTA_WEBHOOK_URL'] ?? '');
-define('DAPTA_API_KEY',     $_ENV['DAPTA_API_KEY']     ?? '');
-define('HUBSPOT_TOKEN',     $_ENV['HUBSPOT_TOKEN']      ?? '');
-define('UPLOADS_DIR',       ROOT_DIR . '/uploads/');
+define('DAPTA_WEBHOOK_URL',      $_ENV['DAPTA_WEBHOOK_URL']      ?? '');
+define('DAPTA_API_KEY',          $_ENV['DAPTA_API_KEY']          ?? '');
+define('HUBSPOT_TOKEN',          $_ENV['HUBSPOT_TOKEN']          ?? '');
+define('HUBSPOT_WEBHOOK_SECRET', $_ENV['HUBSPOT_WEBHOOK_SECRET'] ?? '');
+define('UPLOADS_DIR',            ROOT_DIR . '/uploads/');
 define('UPLOADS_URL',       '/uploads/');
 
 function getDB(): PDO {

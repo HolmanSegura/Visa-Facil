@@ -605,22 +605,8 @@
     const totPipVal = reporte.filas.reduce((s, f) => s + f.totalPipeline, 0);
     filas.push(["TOTAL", totCer, totVen, "", totTeo, totPipCnt, totPipVal]);
 
-    const meta = [
-      `# Reporte de comisiones — Cotizaciones`,
-      `# Período (por fecha de creación): ${reporte.desde || "—"} a ${reporte.hasta || "—"}`,
-      `# Asesor: ${reporte.asesorFiltro || "Todos"}`,
-      `# Definición de "cerrada": estado = aprobado`,
-      `# Definición de "pipeline": estado = publicado o en_revision`,
-      `# Generado: ${new Date().toLocaleString("es-CO")}`,
-      ``
-    ].join("\r\n");
-
-    const lineas = [header, ...filas].map(row =>
-      row.map(v => utils.escaparCSV(v)).join(",")
-    ).join("\r\n");
-
-    const csv = "\uFEFF" + meta + lineas;
-    utils.descargarTexto(csv, utils.nombreArchivo("reporte-comisiones-cotizaciones"));
+    const blob = utils.matrizAXLSX([header, ...filas]);
+    utils.descargarBlob(blob, utils.nombreArchivo("reporte-comisiones-cotizaciones"));
     window.mostrarToast(`✓ Reporte exportado (${reporte.filas.length} asesores)`);
   }
 

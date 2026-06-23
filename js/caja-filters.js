@@ -125,8 +125,9 @@
         r = r.filter(m =>
           m.descripcion.toLowerCase().includes(q) ||
           m.responsable.toLowerCase().includes(q) ||
-          (m.referencia || "").toLowerCase().includes(q) ||
-          (m.cliente || "").toLowerCase().includes(q)
+          (m.referencia    || "").toLowerCase().includes(q) ||
+          (m.cliente       || "").toLowerCase().includes(q) ||
+          (m.puntoVenta    || "").toLowerCase().includes(q)
         );
       }
 
@@ -168,6 +169,11 @@
         r = r.filter(m => est.filtros.metodoPago.includes(m.metodoPago));
       }
 
+      // Punto de Venta
+      if (est.filtros.puntoVenta && est.filtros.puntoVenta.length > 0) {
+        r = r.filter(m => est.filtros.puntoVenta.includes(m.puntoVenta));
+      }
+
       est.datosVisibles = r;
       est.paginaActual = 1;
       if (window.tablaInstance)        window.tablaInstance.renderizar();
@@ -192,6 +198,7 @@
         if (tipo === "asesor")     count = est.filtros.asesor.length;
         if (tipo === "estado")     count = est.filtros.estado.length;
         if (tipo === "metodoPago") count = (est.filtros.metodoPago || []).length;
+        if (tipo === "puntoVenta") count = (est.filtros.puntoVenta || []).length;
 
         const tieneValor = count > 0;
         pill.classList.toggle("tiene-valor", tieneValor);
@@ -256,6 +263,14 @@
         });
       }
 
+      // Punto de Venta
+      const listaPdv = document.getElementById("lista-puntos-venta");
+      if (listaPdv) {
+        listaPdv.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.checked = (est.filtros.puntoVenta || []).includes(cb.dataset.pdv);
+        });
+      }
+
       // Fecha — solo resaltar el preset si el filtro es un string preset
       const popFecha = document.getElementById("popover-filtro-fecha");
       if (popFecha) {
@@ -293,6 +308,7 @@
       est.filtros.asesor = [];
       est.filtros.estado = [];
       est.filtros.metodoPago = [];
+      est.filtros.puntoVenta = [];
       if (this.inputBusqueda) this.inputBusqueda.value = "";
       this.aplicarFiltros();
     }
