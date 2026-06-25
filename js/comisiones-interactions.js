@@ -15,12 +15,12 @@
       p.style.visibility = "hidden";
       p.removeAttribute("hidden");
       const rp = p.getBoundingClientRect();
-      let top  = rt.bottom + 6;
+      let top = rt.bottom + 6;
       let left = rt.left;
       if (left + rp.width > window.innerWidth - 10) left = rt.right - rp.width;
       if (left < 10) left = 10;
       if (top + rp.height > window.innerHeight - 10) { top = rt.top - rp.height - 6; if (top < 10) top = 10; }
-      p.style.top = top + "px";  p.style.left = left + "px";  p.style.visibility = "visible";
+      p.style.top = top + "px"; p.style.left = left + "px"; p.style.visibility = "visible";
     },
     abrir(id, trigger) {
       if (this.activo && this.activo.id === id) { this.cerrar(); return; }
@@ -28,13 +28,13 @@
       const p = document.getElementById(id);
       if (!p) return;
       this.posicionar(p, trigger);
-      this.activo = p;  this.triggerActivo = trigger;
+      this.activo = p; this.triggerActivo = trigger;
       if (trigger.setAttribute) trigger.setAttribute("aria-expanded", "true");
     },
     cerrar() {
       if (this.activo) this.activo.setAttribute("hidden", "");
       if (this.triggerActivo?.setAttribute) this.triggerActivo.setAttribute("aria-expanded", "false");
-      this.activo = null;  this.triggerActivo = null;
+      this.activo = null; this.triggerActivo = null;
     },
     init() {
       document.addEventListener("click", e => {
@@ -84,7 +84,7 @@
      PANEL CONFIGURACIÓN TABLA
      ================================================================ */
   const PanelConfig = {
-    abrir()  { const p = document.getElementById("panel-config-tabla");  if (p) { PanelDetalle.cerrar(); p.classList.add("abierto"); } },
+    abrir() { const p = document.getElementById("panel-config-tabla"); if (p) { PanelDetalle.cerrar(); p.classList.add("abierto"); } },
     cerrar() { document.getElementById("panel-config-tabla")?.classList.remove("abierto"); },
     init() {
       document.getElementById("btn-config-tabla")?.addEventListener("click", () => this.abrir());
@@ -132,23 +132,23 @@
         avatar.style.color = "#fff";
       }
 
-      if ($("detalle-titulo"))    $("detalle-titulo").textContent    = r.responsable;
+      if ($("detalle-titulo")) $("detalle-titulo").textContent = r.responsable;
       if ($("detalle-subtitulo")) $("detalle-subtitulo").textContent = r.activo === false ? "Asesor inactivo" : "Asesor activo";
 
       const monto = $("detalle-monto");
       if (monto) {
         monto.textContent = window.formatearMoneda(r.teorico, "COP");
-        monto.className   = "panel-detalle__monto panel-detalle__monto--comision";
+        monto.className = "panel-detalle__monto panel-detalle__monto--comision";
       }
 
       // Campos del desglose
       const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
 
-      set("detalle-ingresos",    window.formatearMoneda(r.ingresos, "COP"));
-      set("detalle-porcentaje",  `${(r.porcentaje || 0).toFixed(1)}%`);
-      set("detalle-teorico",     window.formatearMoneda(r.teorico, "COP"));
-      set("detalle-registrado",  window.formatearMoneda(r.registrado, "COP"));
-      set("detalle-pagos",       r.pagos);
+      set("detalle-ingresos", window.formatearMoneda(r.ingresos, "COP"));
+      set("detalle-porcentaje", `${(r.porcentaje || 0).toFixed(1)}%`);
+      set("detalle-teorico", window.formatearMoneda(r.teorico, "COP"));
+      set("detalle-registrado", window.formatearMoneda(r.registrado, "COP"));
+      set("detalle-pagos", r.pagos);
 
       const elDif = $("detalle-diferencia");
       if (elDif) {
@@ -215,8 +215,8 @@
      ================================================================ */
 
   function renderPagosRegistrados(asesor) {
-    const lista  = document.getElementById("lista-pagos-com");
-    const badge  = document.getElementById("detalle-pagos-badge");
+    const lista = document.getElementById("lista-pagos-com");
+    const badge = document.getElementById("detalle-pagos-badge");
     if (!lista) return;
 
     const pagos = (window.cajaPagosComisiones || [])
@@ -247,17 +247,31 @@
     `).join("");
   }
 
-  function recalcularFilaAsesor(asesor) {
-    const pagosAsesor = (window.cajaPagosComisiones || []).filter(m => m.responsable === asesor);
-    const registrado  = pagosAsesor.reduce((s, m) => s + (parseFloat(m.valor) || 0), 0);
-
-    const row = window.estadoApp?.datosOriginales.find(r => r.responsable === asesor);
+  async function recalcularFilaAsesor(asesor) {
+    const row = window.estadoApp?.datosOriginales?.find(r => r.responsable === asesor);
     if (!row) return;
 
-    row.registrado = registrado;
-    row.diferencia = registrado - row.teorico;
-    row.pagos      = pagosAsesor.length;
-    row.estado     = window.derivarEstado?.(row) || row.estado;
+    try {
+      const { desde, hasta } = window.estadoApp?.periodoActual || {};
+
+      if (window.Api?.comisiones?.reporte) {
+        const res = await window.Api.comisiones.reporte({ desde, hasta });
+        if (res?.ok && Array.isArray(res.filas)) {
+          const fresh = res.filas.find(r => r.responsable === asesor);
+          if (fresh) {
+            row.ingresos = parseFloat(fresh.ingresos) || 0;
+            row.porcentaje = parseFloat(fresh.porcentaje) || 0;
+            row.teorico = parseFloat(fresh.teorico) || 0;
+            row.registrado = parseFloat(fresh.registrado) || 0;
+            row.pagos = parseInt(fresh.pagos, 10) || 0;
+            row.diferencia = parseFloat(fresh.diferencia) || 0;
+            row.estado = window.derivarEstado?.(row) || fresh.estado || row.estado;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[Comisiones] No se pudo recalcular desde API:", e.message);
+    }
 
     if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
     if (window.actualizarDashboard) window.actualizarDashboard();
@@ -268,12 +282,12 @@
     const m = (window.cajaPagosComisiones || []).find(p => p.id === id);
     if (!m) return;
 
-    document.getElementById("editar-pago-id").value           = m.id;
-    document.getElementById("editar-pago-asesor").value       = m.responsable;
-    document.getElementById("editar-pago-valor").value        = m.valor;
-    document.getElementById("editar-pago-fecha").value        = m.fecha;
-    document.getElementById("editar-pago-metodo").value       = m.metodo_pago || "efectivo";
-    document.getElementById("editar-pago-descripcion").value  = m.descripcion;
+    document.getElementById("editar-pago-id").value = m.id;
+    document.getElementById("editar-pago-asesor").value = m.responsable;
+    document.getElementById("editar-pago-valor").value = m.valor;
+    document.getElementById("editar-pago-fecha").value = m.fecha;
+    document.getElementById("editar-pago-metodo").value = m.metodo_pago || "efectivo";
+    document.getElementById("editar-pago-descripcion").value = m.descripcion;
     document.getElementById("editar-pago-observaciones").value = m.observaciones || "";
 
     const confirmar = document.getElementById("editar-pago-confirmar-eliminar");
@@ -283,21 +297,21 @@
   }
 
   function initModalEditarPago() {
-    const btnGuardar  = document.getElementById("guardar-editar-pago-com");
+    const btnGuardar = document.getElementById("guardar-editar-pago-com");
     const btnEliminar = document.getElementById("eliminar-pago-com");
-    const confirmar   = document.getElementById("editar-pago-confirmar-eliminar");
-    const btnConfirm  = document.getElementById("confirmar-eliminar-pago-com");
+    const confirmar = document.getElementById("editar-pago-confirmar-eliminar");
+    const btnConfirm = document.getElementById("confirmar-eliminar-pago-com");
     const btnCancelar = document.getElementById("cancelar-eliminar-pago-com");
 
     if (!btnGuardar) return;
 
     btnGuardar.addEventListener("click", async () => {
-      const id     = parseInt(document.getElementById("editar-pago-id").value, 10);
-      const valor  = parseFloat(document.getElementById("editar-pago-valor").value) || 0;
-      const fecha  = document.getElementById("editar-pago-fecha").value;
+      const id = parseInt(document.getElementById("editar-pago-id").value, 10);
+      const valor = parseFloat(document.getElementById("editar-pago-valor").value) || 0;
+      const fecha = document.getElementById("editar-pago-fecha").value;
       const metodo = document.getElementById("editar-pago-metodo").value;
-      const desc   = document.getElementById("editar-pago-descripcion").value.trim();
-      const obs    = document.getElementById("editar-pago-observaciones").value.trim();
+      const desc = document.getElementById("editar-pago-descripcion").value.trim();
+      const obs = document.getElementById("editar-pago-observaciones").value.trim();
 
       if (!valor || valor <= 0) { window.mostrarToast("⚠ Ingresa un valor válido"); return; }
       if (!fecha) { window.mostrarToast("⚠ La fecha es obligatoria"); return; }
@@ -359,6 +373,64 @@
     });
   }
 
+  function obtenerPeriodoActualCom() {
+    const per = window.estadoApp?.periodoActual || {};
+    return {
+      desde: per.desde || "",
+      hasta: per.hasta || ""
+    };
+  }
+
+  async function listarComisionesPendientesAsesor(asesor) {
+    if (!window.Api || !window.Api.caja) return [];
+
+    const { desde, hasta } = obtenerPeriodoActualCom();
+
+    const resp = await window.Api.caja.listar({
+      tipo: "gasto",
+      categoria: "comisiones",
+      estado: "pendiente",
+      desde,
+      hasta,
+      por_pagina: 200
+    });
+
+    if (!resp?.ok || !Array.isArray(resp.data)) return [];
+
+    return resp.data.filter(m => (m.responsable || "") === asesor);
+  }
+
+  async function marcarMovimientoComisionPagado(id, payloadExtra = {}) {
+    if (!window.Api || !window.Api.caja || !id) {
+      throw new Error("API de Caja no disponible o id inválido");
+    }
+
+    return await window.Api.caja.actualizar(id, {
+      estado: "pagado",
+      ...payloadExtra
+    });
+  }
+
+  async function pagarComisionesPendientesAsesor(asesor, extras = {}) {
+    const pendientes = await listarComisionesPendientesAsesor(asesor);
+
+    if (!pendientes.length) {
+      return { ok: true, actualizados: 0, movimientos: [] };
+    }
+
+    const actualizados = [];
+    for (const mov of pendientes) {
+      await marcarMovimientoComisionPagado(mov.id, extras);
+      actualizados.push(mov);
+    }
+
+    return {
+      ok: true,
+      actualizados: actualizados.length,
+      movimientos: actualizados
+    };
+  }
+
   /* ================================================================
      REGISTRAR PAGO DE COMISIÓN
      ================================================================ */
@@ -367,83 +439,94 @@
     if (!modal) return;
 
     const hoy = new Date();
-    const iso = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,"0")}-${String(hoy.getDate()).padStart(2,"0")}`;
+    const iso = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
 
-    const selAsesor  = document.getElementById("pago-com-asesor");
-    const inValor    = document.getElementById("pago-com-valor");
-    const inFecha    = document.getElementById("pago-com-fecha");
-    const inDesc     = document.getElementById("pago-com-descripcion");
+    const selAsesor = document.getElementById("pago-com-asesor");
+    const inValor = document.getElementById("pago-com-valor");
+    const inFecha = document.getElementById("pago-com-fecha");
+    const inDesc = document.getElementById("pago-com-descripcion");
 
     if (selAsesor) selAsesor.value = row.responsable;
-    if (inValor)   inValor.value   = Math.max(0, row.teorico - row.registrado);
-    if (inFecha)   inFecha.value   = iso;
-    if (inDesc)    inDesc.value    = `Pago de comisión a ${row.responsable}`;
+    if (inValor) inValor.value = Math.max(0, row.teorico - row.registrado);
+    if (inFecha) inFecha.value = iso;
+    if (inDesc) inDesc.value = `Pago de comisión a ${row.responsable}`;
 
     Modales.abrir("modal-registrar-pago-com");
   }
 
   function initModalRegistrarPago() {
-    const modal   = document.getElementById("modal-registrar-pago-com");
+    const modal = document.getElementById("modal-registrar-pago-com");
     const btnGuar = document.getElementById("guardar-pago-com");
     if (!modal || !btnGuar) return;
 
-    // Poblar select de asesores desde HubSpot owners (fallback: reporte BD)
     const selAsesor = document.getElementById("pago-com-asesor");
+
     if (selAsesor) {
       const nombres = Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0
         ? window.ownersCatalogo.map(o => o.nombre).sort()
-        : [...new Set(window.estadoApp?.datosOriginales.map(r => r.responsable) || [])].sort();
+        : [...new Set((window.estadoApp?.datosOriginales || []).map(r => r.responsable))].sort();
+
       selAsesor.innerHTML = nombres.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");
     }
 
     btnGuar.addEventListener("click", async () => {
-      const asesor = document.getElementById("pago-com-asesor")?.value || "";
-      const valor  = parseFloat(document.getElementById("pago-com-valor")?.value) || 0;
-      const fecha  = document.getElementById("pago-com-fecha")?.value  || "";
-      const metodo = document.getElementById("pago-com-metodo")?.value || "efectivo";
-      const desc   = document.getElementById("pago-com-descripcion")?.value?.trim() || `Pago de comisión a ${asesor}`;
+      const asesor = document.getElementById("pago-com-asesor")?.value;
+      const fecha = document.getElementById("pago-com-fecha")?.value;
+      const metodo = document.getElementById("pago-com-metodo")?.value || "transferencia";
+      const desc = document.getElementById("pago-com-descripcion")?.value?.trim() || "";
 
-      if (!asesor) { window.mostrarToast("⚠ Selecciona un asesor"); return; }
-      if (!valor || valor <= 0) { window.mostrarToast("⚠ Ingresa un valor válido"); return; }
-      if (!fecha) { window.mostrarToast("⚠ La fecha es obligatoria"); return; }
-
-      const movimiento = {
-        fecha, tipo: "gasto", categoria: "comisiones",
-        descripcion: desc, responsable: asesor,
-        valor, moneda: "COP", estado: "pagado",
-        metodo_pago: metodo
-      };
-
-      if (window.Api) {
-        try {
-          btnGuar.disabled = true;
-          const resp = await window.Api.caja.crear(movimiento);
-          window.mostrarToast(`✓ Pago de comisión de ${window.formatearMoneda(valor, "COP")} registrado en Caja`);
-
-          // Agregar al caché de pagos individuales
-          const nuevoPago = {
-            id:           resp?.id || Date.now(),
-            fecha,        descripcion: desc,
-            responsable:  asesor,
-            valor,        moneda:     "COP",
-            metodo_pago:  metodo,     observaciones: "",
-            estado:       "pagado",
-          };
-          window.cajaPagosComisiones = window.cajaPagosComisiones || [];
-          window.cajaPagosComisiones.push(nuevoPago);
-          recalcularFilaAsesor(asesor);
-          if (PanelDetalle.filaActual?.responsable === asesor) renderPagosRegistrados(asesor);
-        } catch (e) {
-          window.mostrarToast("⚠ No se pudo guardar en Caja — pago anotado localmente");
-          console.warn("[Comisiones] Error al registrar pago en Caja:", e.message);
-        } finally {
-          btnGuar.disabled = false;
-        }
-      } else {
-        window.mostrarToast(`✓ Pago simulado: ${window.formatearMoneda(valor, "COP")} para ${asesor}`);
+      if (!asesor) {
+        window.mostrarToast("Selecciona un asesor");
+        return;
       }
 
-      Modales.cerrar(modal);
+      if (!fecha) {
+        window.mostrarToast("La fecha es obligatoria");
+        return;
+      }
+
+      try {
+        btnGuar.disabled = true;
+
+        const resultado = await pagarComisionesPendientesAsesor(asesor, {
+          fecha,
+          metodo_pago: metodo,
+          observaciones: desc
+        });
+
+        if (!resultado.actualizados) {
+          window.mostrarToast("No hay comisiones pendientes para este asesor en el período actual");
+          return;
+        }
+
+        const row = window.estadoApp?.datosOriginales?.find(r => r.responsable === asesor);
+        if (row) {
+          row.registrado = row.teorico;
+          row.diferencia = row.registrado - row.teorico;
+          row.pagos = row.teorico > 0 ? row.pagos + resultado.actualizados : row.pagos;
+          row.estado = window.derivarEstado?.(row) || "pagado";
+        }
+
+        if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+        if (window.actualizarDashboard) window.actualizarDashboard();
+        if (window.recargarComisiones) {
+          const per = window.estadoApp?.periodoActual || {};
+          await window.recargarComisiones(per.desde, per.hasta);
+        }
+
+        if (PanelDetalle.filaActual?.responsable === asesor) {
+          const filaActualizada = window.estadoApp?.datosOriginales?.find(r => r.responsable === asesor);
+          if (filaActualizada) PanelDetalle.renderizar(filaActualizada);
+        }
+
+        window.mostrarToast(`${resultado.actualizados} comisión(es) marcadas como pagadas`);
+        Modales.cerrar(modal);
+      } catch (e) {
+        console.error("[Comisiones] Error al marcar comisiones como pagadas:", e);
+        window.mostrarToast("No se pudieron marcar las comisiones como pagadas");
+      } finally {
+        btnGuar.disabled = false;
+      }
     });
   }
 
@@ -460,8 +543,8 @@
 
   function descargarBlob(blob, nombre) {
     const url = URL.createObjectURL(blob);
-    const a   = document.createElement("a");
-    a.href    = url;
+    const a = document.createElement("a");
+    a.href = url;
     a.download = nombre;
     document.body.appendChild(a);
     a.click();
@@ -471,20 +554,20 @@
 
   function nombreArchivo(base) {
     const d = new Date();
-    return `${base}_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.xlsx`;
+    return `${base}_${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}.xlsx`;
   }
 
   function exportarFilaCSV(row) {
-    const header = ["Asesor","Ingresos base","% Comisión","Com. teórica","Com. registrada","# Pagos","Diferencia","Estado","Activo"];
-    const fila   = [row.responsable, row.ingresos, row.porcentaje, row.teorico, row.registrado, row.pagos, row.diferencia, row.estado, row.activo ? "Sí" : "No"];
-    descargarBlob(toXLSXBlob([header, fila]), nombreArchivo(`comision_${row.responsable.replace(/\s+/g,"_").toLowerCase()}`));
+    const header = ["Asesor", "Ingresos base", "% Comisión", "Com. teórica", "Com. registrada", "# Pagos", "Diferencia", "Estado", "Activo"];
+    const fila = [row.responsable, row.ingresos, row.porcentaje, row.teorico, row.registrado, row.pagos, row.diferencia, row.estado, row.activo ? "Sí" : "No"];
+    descargarBlob(toXLSXBlob([header, fila]), nombreArchivo(`comision_${row.responsable.replace(/\s+/g, "_").toLowerCase()}`));
     window.mostrarToast("✓ Comisión exportada");
   }
 
   function exportarTodosCSV(alcance = "visibles") {
-    const est  = window.estadoApp;
+    const est = window.estadoApp;
     const datos = alcance === "todos" ? est.datosOriginales : est.datosVisibles;
-    const header = ["Asesor","Ingresos base","% Comisión","Com. teórica","Com. registrada","# Pagos","Diferencia","Estado","Activo"];
+    const header = ["Asesor", "Ingresos base", "% Comisión", "Com. teórica", "Com. registrada", "# Pagos", "Diferencia", "Estado", "Activo"];
     const filas = datos.map(r => [r.responsable, r.ingresos, r.porcentaje, r.teorico, r.registrado, r.pagos, r.diferencia, r.estado, r.activo ? "Sí" : "No"]);
     const totIng = datos.reduce((s, r) => s + r.ingresos, 0);
     const totTeo = datos.reduce((s, r) => s + r.teorico, 0);
@@ -498,7 +581,7 @@
   /* ================================================================
      CONFIG COMISIONES — PERSISTENCIA
      ================================================================ */
-  const KEY_LS  = "caja:configComisiones";
+  const KEY_LS = "caja:configComisiones";
   const DEFAULT_CFG = { version: 2, porAsesor: [], porProducto: [], generalProductoPorcentaje: 5 };
 
   function cargarConfig() {
@@ -548,7 +631,7 @@
      CONFIG COMISIONES — RENDER MODAL
      ================================================================ */
   function escHtml(s) {
-    return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   function renderConfigComisiones() {
@@ -621,17 +704,17 @@
     document.querySelectorAll("[data-row-asesor]").forEach(tr => {
       const nombre = tr.dataset.responsable || "";
       const activo = tr.dataset.activo !== "false";
-      const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
-      const base   = "por_venta";
+      const pct = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      const base = "por_venta";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
     cfg.generalProductoPorcentaje = parseFloat(document.getElementById("config-com-general-pct")?.value) || 5;
 
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
       const inputEl = tr.querySelector('[data-field="producto-texto"]');
-      const prod    = inputEl?.value?.trim() || "";
-      const prodId  = inputEl?.dataset?.prodId || "";
-      const pct     = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      const prod = inputEl?.value?.trim() || "";
+      const prodId = inputEl?.dataset?.prodId || "";
+      const pct = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
       if (prod) cfg.porProducto.push({ productoId: prodId, producto: prod, porcentaje: pct });
     });
     return cfg;
@@ -641,11 +724,11 @@
      AUTOCOMPLETADO DE PRODUCTOS
      ================================================================ */
   const PRODUCTOS_FALLBACK = [
-    { id:"ej-1", nombre:"Sitio web corporativo",          precio:4500000 },
-    { id:"ej-2", nombre:"Tienda Shopify",                  precio:8200000 },
-    { id:"ej-3", nombre:"SEO técnico mensual",             precio:1200000 },
-    { id:"ej-4", nombre:"Soporte y mantenimiento mensual", precio:980000  },
-    { id:"ej-5", nombre:"Consultoría HubSpot",             precio:2800000 }
+    { id: "ej-1", nombre: "Sitio web corporativo", precio: 4500000 },
+    { id: "ej-2", nombre: "Tienda Shopify", precio: 8200000 },
+    { id: "ej-3", nombre: "SEO técnico mensual", precio: 1200000 },
+    { id: "ej-4", nombre: "Soporte y mantenimiento mensual", precio: 980000 },
+    { id: "ej-5", nombre: "Consultoría HubSpot", precio: 2800000 }
   ];
   let catalogoProductos = [];
 
@@ -674,23 +757,23 @@
 
     function mostrarDrop(input, termino) {
       cerrarDrop();
-      const cat  = obtenerCat();
-      const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-      const q    = norm(termino);
-      const filtrados = q.length < 1 ? cat.slice(0,10) : cat.filter(p => norm(p.nombre).includes(q)).slice(0,10);
+      const cat = obtenerCat();
+      const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+      const q = norm(termino);
+      const filtrados = q.length < 1 ? cat.slice(0, 10) : cat.filter(p => norm(p.nombre).includes(q)).slice(0, 10);
       if (!filtrados.length) return;
-      const ul  = document.createElement("ul");
+      const ul = document.createElement("ul");
       ul.className = "prod-autocomplete__lista";
-      ul._datos    = filtrados;
+      ul._datos = filtrados;
       filtrados.forEach((p, i) => {
-        const li  = document.createElement("li");
+        const li = document.createElement("li");
         li.className = "prod-autocomplete__item";
-        li.setAttribute("role","option"); li.setAttribute("tabindex","-1"); li.dataset.prodIdx = i;
-        li.innerHTML = `<span class="prod-ac__nombre">${escHtml(p.nombre)}</span><span class="prod-ac__precio">${window.formatearMoneda(p.precio,"COP")}</span>`;
+        li.setAttribute("role", "option"); li.setAttribute("tabindex", "-1"); li.dataset.prodIdx = i;
+        li.innerHTML = `<span class="prod-ac__nombre">${escHtml(p.nombre)}</span><span class="prod-ac__precio">${window.formatearMoneda(p.precio, "COP")}</span>`;
         ul.appendChild(li);
       });
       const rect = input.getBoundingClientRect();
-      ul.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;`;
+      ul.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;width:${rect.width}px;z-index:9999;`;
       document.body.appendChild(ul);
       dropdown = ul; inputActivo = input;
     }
@@ -699,10 +782,10 @@
       if (!prod || !inputActivo) return;
       inputActivo.value = prod.nombre; inputActivo.dataset.prodId = prod.id || "";
       const cap = inputActivo; cerrarDrop();
-      cap.dispatchEvent(new CustomEvent("autocomplete:seleccionado", { bubbles:true, detail: prod }));
+      cap.dispatchEvent(new CustomEvent("autocomplete:seleccionado", { bubbles: true, detail: prod }));
     }
 
-    containerEl.addEventListener("input",   e => { const in_ = e.target.closest("[data-autocomplete-prod]"); if (!in_) return; clearTimeout(in_._acT); in_._acT = setTimeout(() => mostrarDrop(in_, in_.value.trim()), 200); });
+    containerEl.addEventListener("input", e => { const in_ = e.target.closest("[data-autocomplete-prod]"); if (!in_) return; clearTimeout(in_._acT); in_._acT = setTimeout(() => mostrarDrop(in_, in_.value.trim()), 200); });
     containerEl.addEventListener("focusin", e => { const in_ = e.target.closest("[data-autocomplete-prod]"); if (!in_ || in_.value.trim().length < 1) return; mostrarDrop(in_, in_.value.trim()); });
     containerEl.addEventListener("keydown", e => {
       const in_ = e.target.closest("[data-autocomplete-prod]");
@@ -710,15 +793,15 @@
       if (!dropdown) return;
       const li = e.target.closest("[role='option']"); if (!li) return;
       const items = [...dropdown.querySelectorAll("[role='option']")]; const idx = items.indexOf(li);
-      if      (e.key === "ArrowDown")             { e.preventDefault(); items[idx+1]?.focus(); }
-      else if (e.key === "ArrowUp")               { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx-1]?.focus(); }
-      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx,10)]); }
-      else if (e.key === "Escape")                { cerrarDrop(); inputActivo?.focus(); }
+      if (e.key === "ArrowDown") { e.preventDefault(); items[idx + 1]?.focus(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
+      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); }
+      else if (e.key === "Escape") { cerrarDrop(); inputActivo?.focus(); }
     });
     document.addEventListener("click", e => {
       if (!dropdown) return;
       const li = e.target.closest(".prod-autocomplete__item");
-      if (li && dropdown.contains(li)) { seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx,10)]); return; }
+      if (li && dropdown.contains(li)) { seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); return; }
       if (!dropdown.contains(e.target) && !containerEl.contains(e.target)) cerrarDrop();
     });
   }
@@ -764,7 +847,7 @@
       const btnT = e.target.closest('[data-accion-asesor="toggle-activo"]');
       if (btnT) {
         const tr = btnT.closest("tr");
-        const eraActivo  = tr.dataset.activo !== "false";
+        const eraActivo = tr.dataset.activo !== "false";
         const ahoraActivo = !eraActivo;
         tr.dataset.activo = ahoraActivo;
         tr.classList.toggle("asesor-row--inactivo", !ahoraActivo);
@@ -791,7 +874,7 @@
       const vacia = tbody.querySelector(".tabla-config-comisiones__vacio");
       if (vacia) tbody.innerHTML = "";
       const idx = tbody.querySelectorAll("[data-row-producto]").length;
-      const tr  = document.createElement("tr");
+      const tr = document.createElement("tr");
       tr.dataset.rowProducto = idx;
       tr.innerHTML = `
         <td><input type="text" class="form-input form-input--sm" data-field="producto-texto" data-autocomplete-prod placeholder="Busca un producto…" autocomplete="off" style="width:100%;max-width:260px;"/></td>
@@ -806,7 +889,7 @@
     document.getElementById("btn-guardar-config-comisiones")?.addEventListener("click", () => {
       const cfg = leerConfigDesdeUI();
       guardarConfig(cfg);
-      const act  = cfg.porAsesor.filter(a => a.activo !== false).length;
+      const act = cfg.porAsesor.filter(a => a.activo !== false).length;
       const inac = cfg.porAsesor.length - act;
       window.mostrarToast(`✓ Config guardada — ${act} asesor(es) activo(s)${inac > 0 ? `, ${inac} inactivo(s)` : ""}, ${cfg.porProducto.length} producto(s)`);
       Modales.cerrar(modal);
@@ -839,7 +922,7 @@
       const btn = e.target.closest(".tab__menu");
       if (btn) {
         vistaTarget = btn.dataset.vistaTarget;
-        const vista   = window.estadoApp?.vistas?.find(v => v.id === vistaTarget);
+        const vista = window.estadoApp?.vistas?.find(v => v.id === vistaTarget);
         const popover = document.getElementById("popover-tab-menu");
         if (popover) {
           popover.querySelector('[data-accion="tab-rename"]')?.classList.toggle("popover__item--deshabilitado", !!vista?.fija);
@@ -851,12 +934,12 @@
     const popover = document.getElementById("popover-tab-menu");
     if (!popover) return;
     popover.addEventListener("click", e => {
-      const item   = e.target.closest("[data-accion]");
+      const item = e.target.closest("[data-accion]");
       if (!item || item.classList.contains("popover__item--deshabilitado")) return;
       const accion = item.dataset.accion;
       if (!vistaTarget || !window.vistasInstance) return;
-      if (accion === "tab-rename")   { Popovers.cerrar(); requestAnimationFrame(() => window.vistasInstance.iniciarEdicionInline(vistaTarget)); return; }
-      if (accion === "tab-clonar")   { window.vistasInstance.clonarVista(vistaTarget); Popovers.cerrar(); return; }
+      if (accion === "tab-rename") { Popovers.cerrar(); requestAnimationFrame(() => window.vistasInstance.iniciarEdicionInline(vistaTarget)); return; }
+      if (accion === "tab-clonar") { window.vistasInstance.clonarVista(vistaTarget); Popovers.cerrar(); return; }
       if (accion === "tab-eliminar") { window.vistasInstance.cerrarVista(vistaTarget); Popovers.cerrar(); return; }
       Popovers.cerrar();
     });
@@ -887,7 +970,7 @@
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
         if (!accion) return;
         if (accion === "cab-config-comisiones") { if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones"); Popovers.cerrar(); return; }
-        if (accion === "cab-exportar-todos")    { exportarTodosCSV("todos"); Popovers.cerrar(); return; }
+        if (accion === "cab-exportar-todos") { exportarTodosCSV("todos"); Popovers.cerrar(); return; }
         if (accion === "cab-exportar-visibles") { exportarTodosCSV("visibles"); Popovers.cerrar(); return; }
         Popovers.cerrar();
       });
@@ -966,7 +1049,7 @@
       popFecha.querySelectorAll("[data-fecha-accion]").forEach(btn => {
         btn.addEventListener("click", e => {
           e.stopPropagation();
-          const accion  = btn.dataset.fechaAccion;
+          const accion = btn.dataset.fechaAccion;
           const inDesde = document.getElementById("filtro-fecha-desde");
           const inHasta = document.getElementById("filtro-fecha-hasta");
           if (accion === "limpiar") {
@@ -995,7 +1078,7 @@
   const PILLS_META = {
     asesor: { icono: "👤", nombre: "Asesor" },
     estado: { icono: "🔵", nombre: "Estado" },
-    fecha:  { icono: "📅", nombre: "Fecha"  }
+    fecha: { icono: "📅", nombre: "Fecha" }
   };
 
   function pillEsVisible(id) {
@@ -1012,14 +1095,14 @@
     const est = window.estadoApp;
     if (id === "asesor") est.filtros.asesor = [];
     if (id === "estado") est.filtros.estado = [];
-    if (id === "fecha")  est.filtros.fecha  = null;
+    if (id === "fecha") est.filtros.fecha = null;
   }
 
   function initFiltroAdd() {
     const pop = document.getElementById("popover-filtro-add");
     if (!pop) return;
     const buscarInput = pop.querySelector("#filtro-add-buscar");
-    const lista       = pop.querySelector("#filtro-add-lista");
+    const lista = pop.querySelector("#filtro-add-lista");
 
     pop.addEventListener("click", e => {
       const item = e.target.closest(".popover__item[data-pill-id]");
@@ -1055,8 +1138,8 @@
   function poblarModalEditarFiltros() {
     const modal = document.getElementById("modal-editar-filtros");
     if (!modal) return;
-    const lista     = modal.querySelector("#lista-filtros-edit");
-    const contador  = modal.querySelector("#contador-filtros");
+    const lista = modal.querySelector("#lista-filtros-edit");
+    const contador = modal.querySelector("#contador-filtros");
     if (!lista) return;
 
     const pillsVisibles = Object.entries(PILLS_META).filter(([id]) => pillEsVisible(id));
@@ -1115,7 +1198,7 @@
   function initOrdenar() {
     const popover = document.getElementById("popover-ordenar");
     if (!popover) return;
-    const select  = popover.querySelector("#select-orden");
+    const select = popover.querySelector("#select-orden");
     const dirBtns = popover.querySelectorAll(".popover-ordenar__dir button");
 
     function sincronizarUI() {
@@ -1148,7 +1231,7 @@
       const btnVP = e.target.closest(".btn-vista-previa-fila");
       if (btnVP) {
         e.stopPropagation();
-        const id  = parseInt(btnVP.dataset.cotId, 10);
+        const id = parseInt(btnVP.dataset.cotId, 10);
         const row = window.estadoApp.datosOriginales.find(r => r.id === id);
         if (row) PanelDetalle.abrir(row);
         return;
@@ -1156,9 +1239,9 @@
       const linkTitulo = e.target.closest(".celda-titulo__link, .celda-avatar__nombre");
       if (linkTitulo) {
         e.preventDefault(); e.stopPropagation();
-        const tr  = linkTitulo.closest("tr[data-id]");
+        const tr = linkTitulo.closest("tr[data-id]");
         if (!tr) return;
-        const id  = parseInt(tr.dataset.id, 10);
+        const id = parseInt(tr.dataset.id, 10);
         const row = window.estadoApp.datosOriginales.find(r => r.id === id);
         if (row) PanelDetalle.abrir(row);
         return;
@@ -1168,8 +1251,8 @@
     tbody.addEventListener("mouseenter", e => {
       const tr = e.target.closest?.("tr[data-id]");
       if (!tr || tr.querySelector(".btn-vista-previa-fila")) return;
-      const id  = tr.dataset.id;
-      const td  = tr.querySelector(".celda-avatar")?.closest("td");
+      const id = tr.dataset.id;
+      const td = tr.querySelector(".celda-avatar")?.closest("td");
       if (!td) return;
       td.classList.add("td-vista-previa");
       const btn = document.createElement("button");
@@ -1182,13 +1265,13 @@
      TOGGLE FILTROS RÁPIDOS
      ================================================================ */
   function initToggleFiltros() {
-    const btn  = document.getElementById("btn-toggle-filtros");
+    const btn = document.getElementById("btn-toggle-filtros");
     const fila = document.getElementById("filtros-rapidos");
     if (!btn || !fila) return;
     btn.addEventListener("click", () => {
       const visible = !fila.hasAttribute("hidden");
-      if (visible) { fila.setAttribute("hidden",""); btn.classList.remove("btn--activo"); btn.setAttribute("aria-pressed","false"); }
-      else { fila.removeAttribute("hidden"); btn.classList.add("btn--activo"); btn.setAttribute("aria-pressed","true"); }
+      if (visible) { fila.setAttribute("hidden", ""); btn.classList.remove("btn--activo"); btn.setAttribute("aria-pressed", "false"); }
+      else { fila.removeAttribute("hidden"); btn.classList.add("btn--activo"); btn.setAttribute("aria-pressed", "true"); }
     });
   }
 
@@ -1258,7 +1341,7 @@
     popover.addEventListener("click", e => {
       const btn = e.target.closest("[data-page-size]");
       if (!btn) return;
-      const v   = parseInt(btn.dataset.pageSize, 10);
+      const v = parseInt(btn.dataset.pageSize, 10);
       if (!v) return;
       window.estadoApp.registrosPorPagina = v;
       window.estadoApp.paginaActual = 1;
@@ -1289,10 +1372,10 @@
     if (!modal) return;
 
     const CATALOGO = {
-      todos:      { nombre: "Todos los asesores",   descripcion: "Muestra todos los asesores sin filtros.", filtrosDesc: [], filtro: () => true },
-      pendientes: { nombre: "Pendientes de pago",   descripcion: "Asesores con comisión no pagada.",       filtrosDesc: ["Estado: Pendiente, Parcial"], filtro: r => r.estado !== "pagado" },
-      pagados:    { nombre: "Pagados",               descripcion: "Asesores con comisión pagada.",          filtrosDesc: ["Estado: Pagado"],             filtro: r => r.estado === "pagado" },
-      activos:    { nombre: "Solo activos",          descripcion: "Asesores marcados como activos.",        filtrosDesc: ["Activo: Sí"],                  filtro: r => r.activo !== false }
+      todos: { nombre: "Todos los asesores", descripcion: "Muestra todos los asesores sin filtros.", filtrosDesc: [], filtro: () => true },
+      pendientes: { nombre: "Pendientes de pago", descripcion: "Asesores con comisión no pagada.", filtrosDesc: ["Estado: Pendiente, Parcial"], filtro: r => r.estado !== "pagado" },
+      pagados: { nombre: "Pagados", descripcion: "Asesores con comisión pagada.", filtrosDesc: ["Estado: Pagado"], filtro: r => r.estado === "pagado" },
+      activos: { nombre: "Solo activos", descripcion: "Asesores marcados como activos.", filtrosDesc: ["Activo: Sí"], filtro: r => r.activo !== false }
     };
 
     let vistaSeleccionada = "todos";
@@ -1339,7 +1422,7 @@
       if (!item) return;
       popover.querySelectorAll("[data-vista-tipo]").forEach(i => i.classList.remove("popover__item--seleccionado"));
       item.classList.add("popover__item--seleccionado");
-      const tipo  = item.dataset.vistaTipo;
+      const tipo = item.dataset.vistaTipo;
       const label = document.getElementById("lbl-vista-tabla");
       const nombres = { tabla: "Vista de tabla", tablero: "Vista de tablero", lista: "Vista de lista" };
       if (label) label.textContent = nombres[tipo] || "Vista de tabla";
@@ -1352,9 +1435,9 @@
      EDITAR COLUMNAS
      ================================================================ */
   function initEditarColumnas() {
-    const modal   = document.getElementById("modal-editar-columnas");
+    const modal = document.getElementById("modal-editar-columnas");
     const colDisp = document.getElementById("cols-disponibles");
-    const colSel  = document.getElementById("cols-seleccionadas");
+    const colSel = document.getElementById("cols-seleccionadas");
     if (!modal || !colDisp || !colSel) return;
 
     const MAPA_TEXTO = window.MAPA_TEXTO_COM || {
@@ -1373,7 +1456,7 @@
       const div = document.createElement("div");
       div.dataset.col = clave;
       if (fija) {
-        div.className   = "editar-columnas__seleccionada editar-columnas__seleccionada--fija";
+        div.className = "editar-columnas__seleccionada editar-columnas__seleccionada--fija";
         div.textContent = texto(clave);
       } else {
         div.className = "editar-columnas__seleccionada";
@@ -1384,7 +1467,7 @@
     }
 
     function sincronizar() {
-      const cols = window.estadoApp?.columnasActivas || window.COLUMNAS_DEFECTO_COM || ["responsable","ingresos","porcentaje","teorico","registrado","pagos","diferencia","estado"];
+      const cols = window.estadoApp?.columnasActivas || window.COLUMNAS_DEFECTO_COM || ["responsable", "ingresos", "porcentaje", "teorico", "registrado", "pagos", "diferencia", "estado"];
       colSel.innerHTML = "";
       cols.forEach(k => colSel.appendChild(crearItem(k, k === "responsable")));
       contar();
@@ -1400,7 +1483,7 @@
       if (!row) { e.preventDefault(); return; }
       dragged = row; requestAnimationFrame(() => row.classList.add("dragging")); e.dataTransfer.effectAllowed = "move";
     });
-    colSel.addEventListener("dragend",  () => { dragged?.classList.remove("dragging"); dragged = null; });
+    colSel.addEventListener("dragend", () => { dragged?.classList.remove("dragging"); dragged = null; });
     colSel.addEventListener("dragover", e => {
       e.preventDefault(); if (!dragged) return;
       const over = e.target.closest(".editar-columnas__seleccionada");
@@ -1410,8 +1493,8 @@
     });
 
     colDisp.addEventListener("change", e => {
-      const cb    = e.target.closest("input[type=checkbox]"); if (!cb) return;
-      const lbl   = cb.closest("[data-col]"); const clave = lbl?.dataset.col; if (!clave) return;
+      const cb = e.target.closest("input[type=checkbox]"); if (!cb) return;
+      const lbl = cb.closest("[data-col]"); const clave = lbl?.dataset.col; if (!clave) return;
       if (cb.checked) { if (!colSel.querySelector(`[data-col="${clave}"]`)) { colSel.appendChild(crearItem(clave, false)); contar(); } }
       else { colSel.querySelector(`[data-col="${clave}"]`)?.remove(); contar(); }
     });
@@ -1426,8 +1509,8 @@
       const cols = [...colSel.querySelectorAll("[data-col]")].map(d => d.dataset.col).filter(Boolean);
       if (!cols.length) { window.mostrarToast?.("⚠ Agrega al menos una columna"); return; }
       window.estadoApp.columnasActivas = cols;
-      if (window.filtrosInstance)     window.filtrosInstance.aplicarFiltros();
-      else if (window.tablaInstance)  window.tablaInstance.renderizar();
+      if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
+      else if (window.tablaInstance) window.tablaInstance.renderizar();
       Modales.cerrar(modal);
       window.mostrarToast?.(`✓ ${cols.length} columnas aplicadas`);
     });
@@ -1474,7 +1557,7 @@
             if (Array.isArray(resp.porProducto)) {
               resp.porProducto = resp.porProducto.map(p => ({
                 productoId: p.productoId ?? p.producto_id ?? null,
-                producto:   p.producto   ?? p.nombre_producto ?? '',
+                producto: p.producto ?? p.nombre_producto ?? '',
                 porcentaje: parseFloat(p.porcentaje) || 5
               }));
             }
@@ -1505,9 +1588,9 @@
     initEditarColumnas();
     initClickFilasCom();
 
-    window.Popovers     = Popovers;
-    window.Modales      = Modales;
-    window.PanelConfig  = PanelConfig;
+    window.Popovers = Popovers;
+    window.Modales = Modales;
+    window.PanelConfig = PanelConfig;
     window.PanelDetalle = PanelDetalle;
 
     console.log("[Comisiones] UI interactions inicializadas");

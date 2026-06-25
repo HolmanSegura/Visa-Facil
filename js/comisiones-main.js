@@ -40,83 +40,83 @@ const vistasInicialesCom = [
 const datosEjemploCom = [
   {
     id: 1,
-    responsable:  "Néstor Goyes",
-    ingresos:     15000000,
-    porcentaje:   5,
-    teorico:      750000,
-    registrado:   750000,
-    pagos:        2,
-    diferencia:   0,
-    estado:       "pagado",
-    activo:       true
+    responsable: "Néstor Goyes",
+    ingresos: 15000000,
+    porcentaje: 5,
+    teorico: 750000,
+    registrado: 750000,
+    pagos: 2,
+    diferencia: 0,
+    estado: "pagado",
+    activo: true
   },
   {
     id: 2,
-    responsable:  "Laura Herrera",
-    ingresos:     8500000,
-    porcentaje:   5,
-    teorico:      425000,
-    registrado:   200000,
-    pagos:        1,
-    diferencia:   -225000,
-    estado:       "parcial",
-    activo:       true
+    responsable: "Laura Herrera",
+    ingresos: 8500000,
+    porcentaje: 5,
+    teorico: 425000,
+    registrado: 200000,
+    pagos: 1,
+    diferencia: -225000,
+    estado: "parcial",
+    activo: true
   },
   {
     id: 3,
-    responsable:  "Carlos Mejía",
-    ingresos:     12000000,
-    porcentaje:   5,
-    teorico:      600000,
-    registrado:   600000,
-    pagos:        3,
-    diferencia:   0,
-    estado:       "pagado",
-    activo:       true
+    responsable: "Carlos Mejía",
+    ingresos: 12000000,
+    porcentaje: 5,
+    teorico: 600000,
+    registrado: 600000,
+    pagos: 3,
+    diferencia: 0,
+    estado: "pagado",
+    activo: true
   },
   {
     id: 4,
-    responsable:  "Ana Rodríguez",
-    ingresos:     5200000,
-    porcentaje:   3,
-    teorico:      156000,
-    registrado:   0,
-    pagos:        0,
-    diferencia:   -156000,
-    estado:       "pendiente",
-    activo:       true
+    responsable: "Ana Rodríguez",
+    ingresos: 5200000,
+    porcentaje: 3,
+    teorico: 156000,
+    registrado: 0,
+    pagos: 0,
+    diferencia: -156000,
+    estado: "pendiente",
+    activo: true
   },
   {
     id: 5,
-    responsable:  "David Castillo",
-    ingresos:     0,
-    porcentaje:   5,
-    teorico:      0,
-    registrado:   0,
-    pagos:        0,
-    diferencia:   0,
-    estado:       "pagado",
-    activo:       false
+    responsable: "David Castillo",
+    ingresos: 0,
+    porcentaje: 5,
+    teorico: 0,
+    registrado: 0,
+    pagos: 0,
+    diferencia: 0,
+    estado: "pagado",
+    activo: false
   }
 ];
 
 const estadoApp = {
-  datosOriginales:      [],
-  datosVisibles:        [],
-  paginaActual:         1,
-  registrosPorPagina:   25,
-  ordenColumna:         "responsable",
-  ordenDireccion:       "asc",
-  busquedaActual:       "",
+  datosOriginales: [],
+  datosVisibles: [],
+  paginaActual: 1,
+  registrosPorPagina: 25,
+  ordenColumna: "responsable",
+  ordenDireccion: "asc",
+  busquedaActual: "",
   filtros: {
-    asesor:  [],
-    estado:  [],
-    fecha:   null
+    asesor: [],
+    estado: [],
+    fecha: null
   },
-  vistas:         vistasInicialesCom,
-  vistaActivaId:  "todos",
-  periodoActual:  { desde: "", hasta: "" },
-  configTabla:    { altura: "default", zebra: false },
+  vistas: vistasInicialesCom,
+  vistaActivaId: "todos",
+  periodoActual: { desde: "", hasta: "" },
+  configTabla: { altura: "default", zebra: false },
   columnasActivas: ["responsable", "ingresos", "porcentaje", "teorico", "registrado", "pagos", "diferencia", "estado"]
 };
 
@@ -130,14 +130,14 @@ function formatearMoneda(monto, moneda) {
 
 function formatearFecha(fechaIso) {
   if (!fechaIso) return "";
-  const meses = ["ene.","feb.","mar.","abr.","may.","jun.","jul.","ago.","sep.","oct.","nov.","dic."];
+  const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
   const f = new Date(fechaIso);
   return `${f.getDate()} de ${meses[f.getMonth()]} de ${f.getFullYear()}`;
 }
 
 function fechaCorta(fechaIso) {
   if (!fechaIso) return "";
-  const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const f = new Date(fechaIso);
   return `${f.getDate()} ${meses[f.getMonth()]} ${f.getFullYear()}`;
 }
@@ -165,26 +165,29 @@ function mostrarToast(mensaje, duracion = 2800) {
 }
 
 function derivarEstado(row) {
-  if (!row.teorico || row.teorico <= 0) return "pagado";
-  if (!row.registrado || row.registrado <= 0) return "pendiente";
-  if (row.registrado >= row.teorico) return "pagado";
+  const teorico = parseFloat(row.teorico) || 0;
+  const registrado = parseFloat(row.registrado) || 0;
+
+  if (teorico <= 0) return "pagado";
+  if (registrado <= 0) return "pendiente";
+  if (registrado >= teorico) return "pagado";
   return "parcial";
 }
 
 function normalizarFilaCom(f, idx) {
-  const registrado = parseFloat(f.registrado)  || 0;
-  const teorico    = parseFloat(f.teorico)     || 0;
+  const registrado = parseFloat(f.registrado) || 0;
+  const teorico = parseFloat(f.teorico) || 0;
   const diferencia = registrado - teorico;
   const row = {
-    id:          f.usuario_id ?? (idx + 1),
+    id: f.usuario_id ?? (idx + 1),
     responsable: f.responsable || "",
-    ingresos:    parseFloat(f.ingresos)   || 0,
-    porcentaje:  parseFloat(f.porcentaje) || 0,
+    ingresos: parseFloat(f.ingresos) || 0,
+    porcentaje: parseFloat(f.porcentaje) || 0,
     teorico,
     registrado,
-    pagos:       parseInt(f.pagos, 10) || 0,
+    pagos: parseInt(f.pagos, 10) || 0,
     diferencia,
-    activo:      f.activo !== false
+    activo: f.activo !== false
   };
   row.estado = derivarEstado(row);
   return row;
@@ -205,18 +208,18 @@ function fechaIsoHoy() {
 function actualizarDashboard() {
   const datos = estadoApp.datosVisibles;
 
-  const totTeorico    = datos.reduce((s, r) => s + r.teorico, 0);
+  const totTeorico = datos.reduce((s, r) => s + r.teorico, 0);
   const totRegistrado = datos.reduce((s, r) => s + r.registrado, 0);
-  const totDif        = totRegistrado - totTeorico;
-  const conDeuda      = datos.filter(r => r.estado !== "pagado");
-  const montoDeuda    = conDeuda.reduce((s, r) => s + Math.max(0, r.teorico - r.registrado), 0);
+  const totDif = totRegistrado - totTeorico;
+  const conDeuda = datos.filter(r => r.estado !== "pagado");
+  const montoDeuda = conDeuda.reduce((s, r) => s + Math.max(0, r.teorico - r.registrado), 0);
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-  set("card-teorico",        formatearMoneda(totTeorico, "COP"));
-  set("card-teorico-count",  `${datos.filter(r => r.activo).length} asesor(es)`);
+  set("card-teorico", formatearMoneda(totTeorico, "COP"));
+  set("card-teorico-count", `${datos.filter(r => r.activo).length} asesor(es)`);
 
-  set("card-registrado",     formatearMoneda(totRegistrado, "COP"));
+  set("card-registrado", formatearMoneda(totRegistrado, "COP"));
   set("card-registrado-count", `${datos.filter(r => r.estado === "pagado").length} pagado(s)`);
 
   const elDif = document.getElementById("card-diferencia");
@@ -224,11 +227,11 @@ function actualizarDashboard() {
     elDif.textContent = (totDif >= 0 ? "+" : "") + formatearMoneda(totDif, "COP");
     elDif.className = "tarjeta-resumen__valor" +
       (totDif > 0 ? " tarjeta-resumen__valor--positivo" :
-       totDif < 0 ? " tarjeta-resumen__valor--negativo" : "");
+        totDif < 0 ? " tarjeta-resumen__valor--negativo" : "");
   }
   set("card-dif-sub", totDif >= 0 ? "Con excedente" : "Con déficit");
 
-  set("card-pendientes",       formatearMoneda(montoDeuda, "COP"));
+  set("card-pendientes", formatearMoneda(montoDeuda, "COP"));
   set("card-pendientes-count", conDeuda.length);
 }
 
@@ -238,19 +241,19 @@ function actualizarDashboard() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("[Comisiones] Iniciando módulo de Comisiones...");
 
-  window.estadoApp           = estadoApp;
-  window.formatearMoneda     = formatearMoneda;
-  window.formatearFecha      = formatearFecha;
-  window.fechaCorta          = fechaCorta;
-  window.obtenerIniciales    = obtenerIniciales;
-  window.etiquetaEstado      = etiquetaEstado;
-  window.mostrarToast        = mostrarToast;
+  window.estadoApp = estadoApp;
+  window.formatearMoneda = formatearMoneda;
+  window.formatearFecha = formatearFecha;
+  window.fechaCorta = fechaCorta;
+  window.obtenerIniciales = obtenerIniciales;
+  window.etiquetaEstado = etiquetaEstado;
+  window.mostrarToast = mostrarToast;
   window.actualizarDashboard = actualizarDashboard;
-  window.derivarEstado       = derivarEstado;
-  window.normalizarFilaCom   = normalizarFilaCom;
+  window.derivarEstado = derivarEstado;
+  window.normalizarFilaCom = normalizarFilaCom;
 
   // Período por defecto: mes actual
-  const hoy   = new Date();
+  const hoy = new Date();
   const desde = primerDiaMes(hoy);
   const hasta = fechaIsoHoy();
   estadoApp.periodoActual = { desde, hasta };
@@ -274,7 +277,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
           });
         }
-        estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
+        estadoApp.datosVisibles = [...estadoApp.datosOriginales];
         cargadoDesdeAPI = true;
         console.info(`[Comisiones] ${estadoApp.datosOriginales.length} asesores cargados desde API.`);
       }
@@ -285,10 +288,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!cargadoDesdeAPI) {
     estadoApp.datosOriginales = datosEjemploCom;
-    estadoApp.datosVisibles   = [...datosEjemploCom];
+    estadoApp.datosVisibles = [...datosEjemploCom];
   }
 
-  if (window.vistasInstance)  window.vistasInstance.renderizar();
+  if (window.vistasInstance) window.vistasInstance.renderizar();
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
 
@@ -299,15 +302,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const resPagos = await window.Api.caja.listar({ tipo: "gasto", categoria: "comisiones", por_pagina: 200 });
       if (resPagos.ok && Array.isArray(resPagos.data)) {
         window.cajaPagosComisiones = resPagos.data.map(m => ({
-          id:           m.id,
-          fecha:        m.fecha,
-          descripcion:  m.descripcion || "",
-          responsable:  m.responsable || "",
-          valor:        parseFloat(m.valor) || 0,
-          moneda:       m.moneda || "COP",
-          metodo_pago:  m.metodo_pago || "efectivo",
+          id: m.id,
+          fecha: m.fecha,
+          descripcion: m.descripcion || "",
+          responsable: m.responsable || "",
+          valor: parseFloat(m.valor) || 0,
+          moneda: m.moneda || "COP",
+          metodo_pago: m.metodo_pago || "efectivo",
           observaciones: m.observaciones || "",
-          estado:       m.estado || "pagado",
+          estado: m.estado || "pagado",
         }));
         console.info(`[Comisiones] ${window.cajaPagosComisiones.length} pagos individuales cargados.`);
       }
@@ -334,19 +337,19 @@ document.addEventListener("hubspot:owners-loaded", ({ detail }) => {
     if (!existe) {
       estadoApp.datosOriginales.push(normalizarFilaCom({
         responsable: owner.nombre,
-        ingresos:    0,
-        porcentaje:  0,
-        teorico:     0,
-        registrado:  0,
-        pagos:       0,
-        activo:      true
+        ingresos: 0,
+        porcentaje: 0,
+        teorico: 0,
+        registrado: 0,
+        pagos: 0,
+        activo: true
       }, estadoApp.datosOriginales.length));
       modificado = true;
     }
   });
 
   if (modificado) {
-    if (window.vistasInstance)  window.vistasInstance.renderizar();
+    if (window.vistasInstance) window.vistasInstance.renderizar();
     if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
     actualizarDashboard();
     console.info(`[Comisiones] Owners HubSpot fusionados: ${estadoApp.datosOriginales.length} total.`);
@@ -375,7 +378,7 @@ window.recargarComisiones = async function (desde, hasta) {
           });
         }
         estadoApp.datosVisibles = [...estadoApp.datosOriginales];
-        if (window.vistasInstance)  window.vistasInstance.renderizar();
+        if (window.vistasInstance) window.vistasInstance.renderizar();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
         actualizarDashboard();
         return;

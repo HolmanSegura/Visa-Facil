@@ -1,1072 +1,1249 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Módulo de Comisiones - configuración y seguimiento de comisiones por asesor" />
-    <title>Comisiones | Panel de comisiones</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Módulo de Comisiones - configuración y seguimiento de comisiones por asesor" />
+  <title>Comisiones | Panel de comisiones</title>
 
-    <link rel="stylesheet" href="css/variables.css" />
-    <link rel="stylesheet" href="css/reset.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/global-toolbar.css" />
-    <link rel="stylesheet" href="css/sidebar.css" />
-    <link rel="stylesheet" href="css/main-content.css" />
-    <link rel="stylesheet" href="css/popovers.css" />
-    <link rel="stylesheet" href="css/caja.css" />
-    <link rel="stylesheet" href="css/comisiones.css" />
-    <link rel="stylesheet" href="css/extras.css" />
-  </head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <body>
-    <!-- ============================================
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/global-toolbar.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/main-content.css" />
+  <link rel="stylesheet" href="css/popovers.css" />
+  <link rel="stylesheet" href="css/caja.css" />
+  <link rel="stylesheet" href="css/comisiones.css" />
+  <link rel="stylesheet" href="css/extras.css" />
+</head>
+
+<body>
+  <!-- ============================================
        BARRA SUPERIOR GLOBAL
        ============================================ -->
-    <header class="toolbar" role="banner">
-      <a href="#" class="toolbar__logo toolbar__logo--img" aria-label="Visa Fácil — Ir al inicio">
-        <img src="img/visafacil.png" alt="Visa Fácil" class="toolbar__logo-img" />
-      </a>
-      <div class="toolbar__spacer" aria-hidden="true"></div>
-      <button class="toolbar__profile" aria-label="Ver perfil de usuario" data-popover="popover-usuario">
-        <span class="toolbar__avatar" aria-hidden="true">
-          <svg viewBox="0 0 32 32" width="20" height="20">
-            <circle cx="16" cy="16" r="16" fill="#cbd5e0" />
-            <circle cx="16" cy="13" r="5" fill="#fff" />
-            <path fill="#fff" d="M6 28a10 10 0 0 1 20 0v2H6v-2Z" />
-          </svg>
-        </span>
-        <span class="toolbar__profile-name">…</span>
-        <svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true">
-          <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+  <header class="toolbar" role="banner">
+    <a href="#" class="toolbar__logo toolbar__logo--img" aria-label="Visa Fácil — Ir al inicio">
+      <img src="img/visafacil.png" alt="Visa Fácil" class="toolbar__logo-img" />
+    </a>
+    <div class="toolbar__spacer" aria-hidden="true"></div>
+    <button class="toolbar__profile" aria-label="Ver perfil de usuario" data-popover="popover-usuario">
+      <span class="toolbar__avatar" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="20" height="20">
+          <circle cx="16" cy="16" r="16" fill="#cbd5e0" />
+          <circle cx="16" cy="13" r="5" fill="#fff" />
+          <path fill="#fff" d="M6 28a10 10 0 0 1 20 0v2H6v-2Z" />
         </svg>
-      </button>
-    </header>
+      </span>
+      <span class="toolbar__profile-name">…</span>
+      <svg viewBox="0 0 8 8" width="8" height="8" aria-hidden="true">
+        <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+      </svg>
+    </button>
+  </header>
 
-    <!-- ============================================
+  <!-- ============================================
        SIDEBAR
        ============================================ -->
-    <aside id="sidebar" class="sidebar sidebar--colapsado" aria-label="Navegación principal">
-      <nav class="sidebar__nav">
-        <ul class="sidebar__list" role="menu">
-          <li class="sidebar__item" role="menuitem">
-            <a href="index.html" class="sidebar__btn" title="Cotizaciones">
-              <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
-                <path fill="currentColor" d="M7 2h18a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4Zm2 22h14v2H9v-2Zm0-4h14v2H9v-2Zm7-15a1 1 0 0 0-1 1v1c-1 .2-2 .8-2 2 0 1.3 1 2 2.3 2.4l.7.2v2c-.5-.1-1-.4-1.4-.7a.7.7 0 0 0-1 .8c.4.8 1.4 1.3 2.4 1.4v1a1 1 0 0 0 2 0v-1c1.2-.3 2-1 2-2.3 0-1.5-1.2-2.2-2.6-2.6l-.4-.1V9.7c.4.1.7.3 1 .6a.7.7 0 0 0 1-.8c-.4-.7-1.2-1.1-2-1.3V7a1 1 0 0 0-1-1Z" />
-              </svg>
-              <span class="sidebar__label">Cotizaciones</span>
-            </a>
-          </li>
-          <li class="sidebar__item" role="menuitem">
-            <a href="caja.html" class="sidebar__btn" title="Caja">
-              <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
-                <path fill="currentColor" d="M3 7h26v18H3V7Zm2 2v14h22V9H5Zm11 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM7 11h2v2H7v-2Zm0 8h2v2H7v-2Zm16-8h2v2h-2v-2Zm0 8h2v2h-2v-2Z" />
-              </svg>
-              <span class="sidebar__label">Caja</span>
-            </a>
-          </li>
-          <li class="sidebar__item sidebar__item--activo" role="menuitem">
-            <a href="comisiones.html" class="sidebar__btn" title="Comisiones" aria-current="page">
-              <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
-                <path fill="currentColor" d="M16 2a14 14 0 1 0 0 28A14 14 0 0 0 16 2Zm0 2a12 12 0 1 1 0 24A12 12 0 0 1 16 4ZM11 9l12 14-1.5 1.3L9.5 10.3 11 9Zm.5 1a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Zm9 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z" />
-              </svg>
-              <span class="sidebar__label">Comisiones</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-      <button id="btn-toggle-sidebar" class="sidebar__toggle" aria-label="Expandir o colapsar">
-        <svg viewBox="0 0 24 24" width="14" height="14">
-          <path fill="none" stroke="currentColor" stroke-width="1.5" d="M3 3h18v18H3V3Zm6 4 4 5-4 5" />
-        </svg>
-      </button>
-    </aside>
+  <aside id="sidebar" class="sidebar sidebar--colapsado" aria-label="Navegación principal">
+    <nav class="sidebar__nav">
+      <ul class="sidebar__list" role="menu">
+        <li class="sidebar__item" role="menuitem">
+          <a href="index.html" class="sidebar__btn" title="Cotizaciones">
+            <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor"
+                d="M7 2h18a4 4 0 0 1 4 4v20a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4Zm2 22h14v2H9v-2Zm0-4h14v2H9v-2Zm7-15a1 1 0 0 0-1 1v1c-1 .2-2 .8-2 2 0 1.3 1 2 2.3 2.4l.7.2v2c-.5-.1-1-.4-1.4-.7a.7.7 0 0 0-1 .8c.4.8 1.4 1.3 2.4 1.4v1a1 1 0 0 0 2 0v-1c1.2-.3 2-1 2-2.3 0-1.5-1.2-2.2-2.6-2.6l-.4-.1V9.7c.4.1.7.3 1 .6a.7.7 0 0 0 1-.8c-.4-.7-1.2-1.1-2-1.3V7a1 1 0 0 0-1-1Z" />
+            </svg>
+            <span class="sidebar__label">Cotizaciones</span>
+          </a>
+        </li>
+        <li class="sidebar__item" role="menuitem">
+          <a href="caja.html" class="sidebar__btn" title="Caja">
+            <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor"
+                d="M3 7h26v18H3V7Zm2 2v14h22V9H5Zm11 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM7 11h2v2H7v-2Zm0 8h2v2H7v-2Zm16-8h2v2h-2v-2Zm0 8h2v2h-2v-2Z" />
+            </svg>
+            <span class="sidebar__label">Caja</span>
+          </a>
+        </li>
+        <li class="sidebar__item sidebar__item--activo" role="menuitem">
+          <a href="comisiones.html" class="sidebar__btn" title="Comisiones" aria-current="page">
+            <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
+              <path fill="currentColor"
+                d="M16 2a14 14 0 1 0 0 28A14 14 0 0 0 16 2Zm0 2a12 12 0 1 1 0 24A12 12 0 0 1 16 4ZM11 9l12 14-1.5 1.3L9.5 10.3 11 9Zm.5 1a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Zm9 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z" />
+            </svg>
+            <span class="sidebar__label">Comisiones</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <button id="btn-toggle-sidebar" class="sidebar__toggle" aria-label="Expandir o colapsar">
+      <svg viewBox="0 0 24 24" width="14" height="14">
+        <path fill="none" stroke="currentColor" stroke-width="1.5" d="M3 3h18v18H3V3Zm6 4 4 5-4 5" />
+      </svg>
+    </button>
+  </aside>
 
-    <!-- ============================================
+  <!-- ============================================
        CONTENIDO PRINCIPAL
        ============================================ -->
-    <main id="contenido-principal" class="contenido" role="main">
+  <main id="contenido-principal" class="contenido" role="main">
 
-      <!-- Dashboard de tarjetas resumen -->
-      <section class="dashboard-comisiones" aria-label="Resumen de comisiones">
-        <div class="tarjeta-resumen" data-card="teorico">
-          <div class="tarjeta-resumen__cabecera">
-            <div class="tarjeta-resumen__titulo">Comisión teórica</div>
-            <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4ZM8 9l8 10-1.5 1.2L6.5 10.2 8 9Zm.5 1a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm7 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z" />
-              </svg>
-            </div>
-          </div>
-          <div class="tarjeta-resumen__valor" id="card-teorico">COP 0</div>
-          <div class="tarjeta-resumen__detalle">
-            <span id="card-teorico-count">0 asesor(es)</span>
-          </div>
-        </div>
-
-        <div class="tarjeta-resumen" data-card="registrado">
-          <div class="tarjeta-resumen__cabecera">
-            <div class="tarjeta-resumen__titulo">Comisión pagada</div>
-            <div class="tarjeta-resumen__icono tarjeta-resumen__icono--verde">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
-              </svg>
-            </div>
-          </div>
-          <div class="tarjeta-resumen__valor tarjeta-resumen__valor--positivo" id="card-registrado">COP 0</div>
-          <div class="tarjeta-resumen__detalle">
-            <span id="card-registrado-count">0 pagado(s)</span>
-          </div>
-        </div>
-
-        <div class="tarjeta-resumen" data-card="diferencia">
-          <div class="tarjeta-resumen__cabecera">
-            <div class="tarjeta-resumen__titulo">Diferencia</div>
-            <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M3 4h18v6H3V4Zm0 10h18v6H3v-6Z" />
-              </svg>
-            </div>
-          </div>
-          <div class="tarjeta-resumen__valor" id="card-diferencia">COP 0</div>
-          <div class="tarjeta-resumen__detalle">
-            <span id="card-dif-sub">Pagada − teórica</span>
-          </div>
-        </div>
-
-        <div class="tarjeta-resumen" data-card="pendientes">
-          <div class="tarjeta-resumen__cabecera">
-            <div class="tarjeta-resumen__titulo">Por liquidar</div>
-            <div class="tarjeta-resumen__icono tarjeta-resumen__icono--naranja">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-2V6h2v7Zm0 4h-2v-2h2v2Z" />
-              </svg>
-            </div>
-          </div>
-          <div class="tarjeta-resumen__valor tarjeta-resumen__valor--negativo" id="card-pendientes">COP 0</div>
-          <div class="tarjeta-resumen__detalle">
-            <span><span id="card-pendientes-count">0</span> sin liquidar</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Cabecera con selector Comisiones + tabs + acciones -->
-      <section class="cabecera">
-        <div class="cabecera__selector">
-          <button class="selector-objeto" id="btn-selector-objeto" data-popover="popover-objetos" aria-haspopup="true" aria-expanded="false">
-            <svg viewBox="0 0 32 32" width="12" height="12">
-              <path fill="currentColor" d="M16 2a14 14 0 1 0 0 28A14 14 0 0 0 16 2Zm0 2a12 12 0 1 1 0 24A12 12 0 0 1 16 4ZM11 9l12 14-1.5 1.3L9.5 10.3 11 9Z" />
+    <!-- Dashboard de tarjetas resumen -->
+    <section class="dashboard-comisiones" aria-label="Resumen de comisiones">
+      <div class="tarjeta-resumen" data-card="teorico">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Comisión teórica</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor"
+                d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4ZM8 9l8 10-1.5 1.2L6.5 10.2 8 9Zm.5 1a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm7 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z" />
             </svg>
-            <span>Comisiones</span>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor" id="card-teorico">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span id="card-teorico-count">0 asesor(es)</span>
+        </div>
+      </div>
+
+      <div class="tarjeta-resumen" data-card="registrado">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Comisión pagada</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--verde">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor tarjeta-resumen__valor--positivo" id="card-registrado">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span id="card-registrado-count">0 pagado(s)</span>
+        </div>
+      </div>
+
+      <div class="tarjeta-resumen" data-card="diferencia">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Diferencia</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M3 4h18v6H3V4Zm0 10h18v6H3v-6Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor" id="card-diferencia">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span id="card-dif-sub">Pagada − teórica</span>
+        </div>
+      </div>
+
+      <div class="tarjeta-resumen" data-card="pendientes">
+        <div class="tarjeta-resumen__cabecera">
+          <div class="tarjeta-resumen__titulo">Por liquidar</div>
+          <div class="tarjeta-resumen__icono tarjeta-resumen__icono--naranja">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-2V6h2v7Zm0 4h-2v-2h2v2Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="tarjeta-resumen__valor tarjeta-resumen__valor--negativo" id="card-pendientes">COP 0</div>
+        <div class="tarjeta-resumen__detalle">
+          <span><span id="card-pendientes-count">0</span> sin liquidar</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cabecera con selector Comisiones + tabs + acciones -->
+    <section class="cabecera">
+      <div class="cabecera__selector">
+        <button class="selector-objeto" id="btn-selector-objeto" data-popover="popover-objetos" aria-haspopup="true"
+          aria-expanded="false">
+          <svg viewBox="0 0 32 32" width="12" height="12">
+            <path fill="currentColor"
+              d="M16 2a14 14 0 1 0 0 28A14 14 0 0 0 16 2Zm0 2a12 12 0 1 1 0 24A12 12 0 0 1 16 4ZM11 9l12 14-1.5 1.3L9.5 10.3 11 9Z" />
+          </svg>
+          <span>Comisiones</span>
+          <svg viewBox="0 0 8 8" width="8" height="8">
+            <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="cabecera__sep" aria-hidden="true"></div>
+
+      <div class="tabs-wrapper">
+        <button class="tabs__scroll" id="btn-tab-scroll-left" type="button" aria-label="Desplazar tabs a la izquierda"
+          hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path fill="currentColor" d="M15 5l2 2-5 5 5 5-2 2-7-7 7-7Z" />
+          </svg>
+        </button>
+        <div class="tabs" id="tabs-vistas" role="tablist"></div>
+        <button class="tabs__scroll" id="btn-tab-scroll-right" type="button" aria-label="Desplazar tabs a la derecha"
+          hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path fill="currentColor" d="M9 5l-2 2 5 5-5 5 2 2 7-7-7-7Z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="cabecera__sep" aria-hidden="true"></div>
+
+      <button class="tab__agregar" id="btn-add-tab" data-popover="popover-tab-add">
+        <svg viewBox="0 0 12 12" width="12" height="12">
+          <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+        </svg>
+      </button>
+
+      <div class="cabecera__acciones">
+        <button class="btn btn--icon btn--bordered" id="btn-cabecera-menu" data-popover="popover-cabecera-menu">
+          <svg viewBox="0 0 32 32" width="14" height="14">
+            <circle cx="16" cy="6" r="3" fill="currentColor" />
+            <circle cx="16" cy="16" r="3" fill="currentColor" />
+            <circle cx="16" cy="26" r="3" fill="currentColor" />
+          </svg>
+        </button>
+        <button id="btn-configurar-comisiones" class="btn btn--primario">
+          <svg viewBox="0 0 32 32" width="12" height="12">
+            <path fill="currentColor"
+              d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+          </svg>
+          Configurar
+        </button>
+      </div>
+    </section>
+
+    <!-- Fila flex: tabla + panel lateral -->
+    <div class="contenido__body">
+      <div class="bloque-tabla">
+
+        <!-- Toolbar de tabla -->
+        <section class="toolbar-tabla">
+          <div class="toolbar-tabla__grupo">
+            <div class="campo-busqueda">
+              <svg viewBox="0 0 24 24" width="14" height="14" class="campo-busqueda__icono">
+                <path fill="currentColor"
+                  d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+              </svg>
+              <input type="search" id="input-buscar-tabla" class="campo-busqueda__input"
+                placeholder="Buscar por asesor" />
+            </div>
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--ghost" id="btn-vista-tabla" data-popover="popover-vista-tabla" aria-haspopup="true"
+              aria-expanded="false">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor" d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z" />
+              </svg>
+              <span id="lbl-vista-tabla">Vista de tabla</span>
+              <svg viewBox="0 0 8 8" width="8" height="8">
+                <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+              </svg>
+            </button>
+            <button class="btn btn--icon" id="btn-config-tabla">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor"
+                  d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+              </svg>
+            </button>
+            <button class="btn btn--ghost" id="btn-editar-columnas">Editar columnas</button>
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--ghost btn--activo" id="btn-toggle-filtros" aria-pressed="true">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z" />
+              </svg>
+              Filtros
+            </button>
+            <button class="btn btn--ghost" id="btn-ordenar" data-popover="popover-ordenar">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor"
+                  d="M12 24H10V4H8v20H6l3 3 3-3Zm6-17v2h10V7H18Zm0 6v2h8v-2h-8Zm0 6v2h6v-2h-6Z" />
+              </svg>
+              Ordenar
+            </button>
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--ghost" id="btn-exportar-toolbar"
+              data-popover="popover-export-opciones">Exportar</button>
+          </div>
+          <div class="toolbar-tabla__grupo toolbar-tabla__grupo--final">
+            <div class="toolbar-tabla__sep"></div>
+            <button class="btn btn--icon" id="btn-duplicar-vista" aria-label="Duplicar vista">
+              <svg viewBox="0 0 32 32" width="14" height="14">
+                <path fill="currentColor"
+                  d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
+              </svg>
+            </button>
+            <button class="btn btn--ghost" id="btn-guardar-vista"
+              data-popover="popover-guardar-readonly">Guardar</button>
+          </div>
+        </section>
+
+        <!-- Filtros rápidos -->
+        <section class="filtros-rapidos" id="filtros-rapidos">
+          <button class="filtro-pill" data-popover="popover-filtro-asesor" data-filtro="asesor">
+            Asesor
             <svg viewBox="0 0 8 8" width="8" height="8">
               <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-        </div>
-
-        <div class="cabecera__sep" aria-hidden="true"></div>
-
-        <div class="tabs-wrapper">
-          <button class="tabs__scroll" id="btn-tab-scroll-left" type="button" aria-label="Desplazar tabs a la izquierda" hidden>
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-              <path fill="currentColor" d="M15 5l2 2-5 5 5 5-2 2-7-7 7-7Z" />
+          <button class="filtro-pill" data-popover="popover-filtro-estado" data-filtro="estado">
+            Estado
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-          <div class="tabs" id="tabs-vistas" role="tablist"></div>
-          <button class="tabs__scroll" id="btn-tab-scroll-right" type="button" aria-label="Desplazar tabs a la derecha" hidden>
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-              <path fill="currentColor" d="M9 5l-2 2 5 5-5 5 2 2 7-7-7-7Z" />
+          <button class="filtro-pill" data-popover="popover-filtro-fecha" data-filtro="fecha">
+            Fecha
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-        </div>
-
-        <div class="cabecera__sep" aria-hidden="true"></div>
-
-        <button class="tab__agregar" id="btn-add-tab" data-popover="popover-tab-add">
-          <svg viewBox="0 0 12 12" width="12" height="12">
-            <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
-          </svg>
-        </button>
-
-        <div class="cabecera__acciones">
-          <button class="btn btn--icon btn--bordered" id="btn-cabecera-menu" data-popover="popover-cabecera-menu">
+          <div class="toolbar-tabla__sep"></div>
+          <button class="filtro-icon" id="btn-add-filtro" data-popover="popover-filtro-add">
+            <svg viewBox="0 0 12 12" width="12" height="12">
+              <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+            </svg>
+          </button>
+          <button class="filtro-icon" id="btn-edit-filtros">
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
+            </svg>
+          </button>
+          <button class="filtro-avanzados">
             <svg viewBox="0 0 32 32" width="14" height="14">
-              <circle cx="16" cy="6" r="3" fill="currentColor" />
-              <circle cx="16" cy="16" r="3" fill="currentColor" />
-              <circle cx="16" cy="26" r="3" fill="currentColor" />
+              <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Z" />
+            </svg>
+            Filtros avanzados
+          </button>
+        </section>
+
+        <!-- Tabla -->
+        <section class="tabla-wrapper">
+          <div class="tabla-scroll">
+            <table class="tabla-cotizaciones tabla-comisiones" id="tabla-comisiones">
+              <thead>
+                <tr>
+                  <th data-columna="responsable" class="th">ASESOR</th>
+                  <th data-columna="ingresos" class="th th--num">INGRESOS BASE</th>
+                  <th data-columna="porcentaje" class="th th--num">% COM.</th>
+                  <th data-columna="teorico" class="th th--num">COM. TEÓRICA</th>
+                  <th data-columna="registrado" class="th th--num">COM. REGISTRADA</th>
+                  <th data-columna="pagos" class="th th--num"># PAGOS</th>
+                  <th data-columna="diferencia" data-orden="asc" class="th th--num th--orden">
+                    <span>DIFERENCIA</span>
+                    <span class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10">
+                        <path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6" />
+                      </svg></span>
+                  </th>
+                  <th data-columna="estado" class="th">ESTADO</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-comisiones"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Paginación -->
+        <section class="paginacion">
+          <button class="pag-btn pag-btn--nav" disabled>
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path fill="currentColor" d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z" />
+            </svg>
+            Anterior
+          </button>
+          <div class="pag-numeros" id="pag-numeros">
+            <button class="pag-num pag-num--activo">1</button>
+          </div>
+          <button class="pag-btn pag-btn--nav">
+            Siguiente
+            <svg viewBox="0 0 24 24" width="12" height="12">
+              <path fill="currentColor" d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z" />
             </svg>
           </button>
-          <button id="btn-configurar-comisiones" class="btn btn--primario">
-            <svg viewBox="0 0 32 32" width="12" height="12">
-              <path fill="currentColor" d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+          <button class="pag-tamano" id="btn-tamano-pagina" data-popover="popover-tamano-pagina" aria-haspopup="true"
+            aria-expanded="false">
+            <span id="lbl-tamano">25 por página</span>
+            <svg viewBox="0 0 8 8" width="8" height="8">
+              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"></path>
             </svg>
-            Configurar
           </button>
-        </div>
-      </section>
-
-      <!-- Fila flex: tabla + panel lateral -->
-      <div class="contenido__body">
-        <div class="bloque-tabla">
-
-          <!-- Toolbar de tabla -->
-          <section class="toolbar-tabla">
-            <div class="toolbar-tabla__grupo">
-              <div class="campo-busqueda">
-                <svg viewBox="0 0 24 24" width="14" height="14" class="campo-busqueda__icono">
-                  <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
-                </svg>
-                <input type="search" id="input-buscar-tabla" class="campo-busqueda__input" placeholder="Buscar por asesor" />
-              </div>
-              <div class="toolbar-tabla__sep"></div>
-              <button class="btn btn--ghost" id="btn-vista-tabla" data-popover="popover-vista-tabla" aria-haspopup="true" aria-expanded="false">
-                <svg viewBox="0 0 32 32" width="14" height="14">
-                  <path fill="currentColor" d="M4 4h24v6H4V4Zm0 9h24v6H4v-6Zm0 9h24v6H4v-6Z" />
-                </svg>
-                <span id="lbl-vista-tabla">Vista de tabla</span>
-                <svg viewBox="0 0 8 8" width="8" height="8">
-                  <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-                </svg>
-              </button>
-              <button class="btn btn--icon" id="btn-config-tabla">
-                <svg viewBox="0 0 32 32" width="14" height="14">
-                  <path fill="currentColor" d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
-                </svg>
-              </button>
-              <button class="btn btn--ghost" id="btn-editar-columnas">Editar columnas</button>
-              <div class="toolbar-tabla__sep"></div>
-              <button class="btn btn--ghost btn--activo" id="btn-toggle-filtros" aria-pressed="true">
-                <svg viewBox="0 0 32 32" width="14" height="14">
-                  <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Zm4 7h8v2h-8v-2Z" />
-                </svg>
-                Filtros
-              </button>
-              <button class="btn btn--ghost" id="btn-ordenar" data-popover="popover-ordenar">
-                <svg viewBox="0 0 32 32" width="14" height="14">
-                  <path fill="currentColor" d="M12 24H10V4H8v20H6l3 3 3-3Zm6-17v2h10V7H18Zm0 6v2h8v-2h-8Zm0 6v2h6v-2h-6Z" />
-                </svg>
-                Ordenar
-              </button>
-              <div class="toolbar-tabla__sep"></div>
-              <button class="btn btn--ghost" id="btn-exportar-toolbar" data-popover="popover-export-opciones">Exportar</button>
-            </div>
-            <div class="toolbar-tabla__grupo toolbar-tabla__grupo--final">
-              <div class="toolbar-tabla__sep"></div>
-              <button class="btn btn--icon" id="btn-duplicar-vista" aria-label="Duplicar vista">
-                <svg viewBox="0 0 32 32" width="14" height="14">
-                  <path fill="currentColor" d="M8 2h12a3 3 0 0 1 3 3v1H10a3 3 0 0 0-3 3v15H6a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3h2Zm6 6h12a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3Z" />
-                </svg>
-              </button>
-              <button class="btn btn--ghost" id="btn-guardar-vista" data-popover="popover-guardar-readonly">Guardar</button>
-            </div>
-          </section>
-
-          <!-- Filtros rápidos -->
-          <section class="filtros-rapidos" id="filtros-rapidos">
-            <button class="filtro-pill" data-popover="popover-filtro-asesor" data-filtro="asesor">
-              Asesor
-              <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" /></svg>
-            </button>
-            <button class="filtro-pill" data-popover="popover-filtro-estado" data-filtro="estado">
-              Estado
-              <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" /></svg>
-            </button>
-            <button class="filtro-pill" data-popover="popover-filtro-fecha" data-filtro="fecha">
-              Fecha
-              <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" /></svg>
-            </button>
-            <div class="toolbar-tabla__sep"></div>
-            <button class="filtro-icon" id="btn-add-filtro" data-popover="popover-filtro-add">
-              <svg viewBox="0 0 12 12" width="12" height="12"><path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" /></svg>
-            </button>
-            <button class="filtro-icon" id="btn-edit-filtros">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" /></svg>
-            </button>
-            <button class="filtro-avanzados">
-              <svg viewBox="0 0 32 32" width="14" height="14"><path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Z" /></svg>
-              Filtros avanzados
-            </button>
-          </section>
-
-          <!-- Tabla -->
-          <section class="tabla-wrapper">
-            <div class="tabla-scroll">
-              <table class="tabla-cotizaciones tabla-comisiones" id="tabla-comisiones">
-                <thead>
-                  <tr>
-                    <th data-columna="responsable" class="th">ASESOR</th>
-                    <th data-columna="ingresos" class="th th--num">INGRESOS BASE</th>
-                    <th data-columna="porcentaje" class="th th--num">% COM.</th>
-                    <th data-columna="teorico" class="th th--num">COM. TEÓRICA</th>
-                    <th data-columna="registrado" class="th th--num">COM. REGISTRADA</th>
-                    <th data-columna="pagos" class="th th--num"># PAGOS</th>
-                    <th data-columna="diferencia" data-orden="asc" class="th th--num th--orden">
-                      <span>DIFERENCIA</span>
-                      <span class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6"/></svg></span>
-                    </th>
-                    <th data-columna="estado" class="th">ESTADO</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-comisiones"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- Paginación -->
-          <section class="paginacion">
-            <button class="pag-btn pag-btn--nav" disabled>
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="m15 4-8 8 8 8 1.5-1.5L10 12l6.5-6.5L15 4Z" /></svg>
-              Anterior
-            </button>
-            <div class="pag-numeros" id="pag-numeros">
-              <button class="pag-num pag-num--activo">1</button>
-            </div>
-            <button class="pag-btn pag-btn--nav">
-              Siguiente
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="m9 4 8 8-8 8-1.5-1.5L14 12 7.5 5.5 9 4Z" /></svg>
-            </button>
-            <button class="pag-tamano" id="btn-tamano-pagina" data-popover="popover-tamano-pagina" aria-haspopup="true" aria-expanded="false">
-              <span id="lbl-tamano">25 por página</span>
-              <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z"></path></svg>
-            </button>
-            <div class="popover" id="popover-tamano-pagina" hidden style="width:180px">
-              <div class="popover__lista">
-                <button class="popover__item" data-page-size="25">25 por página</button>
-                <button class="popover__item" data-page-size="50">50 por página</button>
-                <button class="popover__item" data-page-size="100">100 por página</button>
-              </div>
-            </div>
-          </section>
-        </div>
-        <!-- /.bloque-tabla -->
-
-        <!-- Panel lateral: Detalle de comisión -->
-        <aside class="panel-detalle" id="panel-detalle-com">
-          <div class="panel-detalle__card">
-            <div class="panel-detalle__header">
-              <span class="panel-detalle__vp-label">Vista previa</span>
-              <button class="panel-detalle__cerrar" data-cerrar-detalle aria-label="Cerrar">
-                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" /></svg>
-              </button>
-            </div>
-            <div class="panel-detalle__body">
-              <div class="panel-detalle__highlight">
-                <div class="panel-detalle__highlight-top">
-                  <button class="btn btn--link" id="detalle-com-acciones" data-popover="popover-detalle-com-acciones">
-                    Acciones <svg viewBox="0 0 8 8" width="8" height="8"><path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" /></svg>
-                  </button>
-                </div>
-                <div class="panel-detalle__avatar panel-detalle__avatar--comision" id="detalle-avatar" style="font-size:18px;font-weight:700;color:#fff;">—</div>
-                <h3 class="panel-detalle__titulo" id="detalle-titulo">—</h3>
-                <div class="panel-detalle__subtitulo" id="detalle-subtitulo">—</div>
-                <div class="panel-detalle__monto panel-detalle__monto--comision" id="detalle-monto">COP 0</div>
-                <div class="panel-detalle__acciones panel-detalle__acciones--cot">
-                  <button class="panel-detalle__accion-circ" data-accion-com="config" title="Configurar">
-                    <span class="panel-detalle__accion-icono">
-                      <svg viewBox="0 0 32 32" width="14" height="14"><path fill="currentColor" d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z"/></svg>
-                    </span>
-                    <span>Configurar</span>
-                  </button>
-                  <button class="panel-detalle__accion-circ" data-accion-com="pago" title="Registrar pago">
-                    <span class="panel-detalle__accion-icono">
-                      <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M13 5v6h6v2h-6v6h-2v-6H5v-2h6V5h2Z"/></svg>
-                    </span>
-                    <span>Registrar pago</span>
-                  </button>
-                  <button class="panel-detalle__accion-circ" data-accion-com="exportar" title="Exportar">
-                    <span class="panel-detalle__accion-icono">
-                      <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    </span>
-                    <span>Exportar</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Sección: Desglose de comisión -->
-              <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
-                <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
-                  <span>
-                    <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion"><path fill="currentColor" d="m6 9 6 6 6-6H6Z" /></svg>
-                    Desglose de comisión
-                  </span>
-                </div>
-                <div class="panel-detalle__seccion-cuerpo">
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">Ingresos base</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-ingresos">—</span>
-                  </div>
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">% Comisión</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-porcentaje">—</span>
-                  </div>
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">Comisión teórica</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-teorico">—</span>
-                  </div>
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">Comisión registrada</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-registrado">—</span>
-                  </div>
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label"># Pagos registrados</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-pagos">—</span>
-                  </div>
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">Diferencia</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-diferencia">—</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sección: Estado y período -->
-              <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
-                <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
-                  <span>
-                    <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion"><path fill="currentColor" d="m6 9 6 6 6-6H6Z" /></svg>
-                    Estado y período
-                  </span>
-                </div>
-                <div class="panel-detalle__seccion-cuerpo">
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">Estado</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-estado">—</span>
-                  </div>
-                  <div class="panel-detalle__campo-stacked">
-                    <span class="panel-detalle__campo-label">Período consultado</span>
-                    <span class="panel-detalle__campo-valor" id="detalle-periodo">—</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sección: Pagos registrados -->
-              <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable id="seccion-pagos-reg">
-                <div class="panel-detalle__seccion-titulo panel-detalle__seccion-titulo--flex" data-toggle-seccion>
-                  <span>
-                    <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion"><path fill="currentColor" d="m6 9 6 6 6-6H6Z" /></svg>
-                    Pagos registrados
-                  </span>
-                  <span class="detalle-pagos-badge" id="detalle-pagos-badge">0</span>
-                </div>
-                <div class="panel-detalle__seccion-cuerpo" id="lista-pagos-com">
-                  <p class="lista-pagos-com__vacia">Sin pagos registrados</p>
-                </div>
-              </div>
+          <div class="popover" id="popover-tamano-pagina" hidden style="width:180px">
+            <div class="popover__lista">
+              <button class="popover__item" data-page-size="25">25 por página</button>
+              <button class="popover__item" data-page-size="50">50 por página</button>
+              <button class="popover__item" data-page-size="100">100 por página</button>
             </div>
           </div>
-        </aside>
-
-        <!-- Panel de configuración de la tabla -->
-        <aside class="panel-detalle" id="panel-config-tabla" aria-label="Configuración de la tabla">
-          <div class="panel-detalle__card">
-            <div class="panel-detalle__header">
-              <span class="panel-detalle__vp-label">Configuración de la tabla</span>
-              <button class="panel-detalle__cerrar" data-cerrar-panel aria-label="Cerrar">
-                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" /></svg>
-              </button>
-            </div>
-            <div class="panel-lateral__body">
-              <div class="panel-lateral__seccion">
-                <div class="panel-lateral__seccion-titulo">Registros por página</div>
-                <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="25" checked /> 25 por página</label>
-                <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="50" /> 50 por página</label>
-                <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="100" /> 100 por página</label>
-              </div>
-              <div class="panel-lateral__seccion">
-                <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
-                <label class="panel-lateral__radio"><input type="radio" name="altura" value="compacto" /> Compacto</label>
-                <label class="panel-lateral__radio"><input type="radio" name="altura" value="default" checked /> Valor predeterminado</label>
-                <label class="panel-lateral__radio"><input type="radio" name="altura" value="comodo" /> Cómodo</label>
-              </div>
-              <div class="panel-lateral__seccion">
-                <div class="panel-lateral__switch-row">
-                  <span>Zebra striping ⓘ</span>
-                  <div class="switch" id="switch-zebra"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
+        </section>
       </div>
-    </main>
+      <!-- /.bloque-tabla -->
 
-    <!-- ============================================================
+      <!-- Panel lateral: Detalle de comisión -->
+      <aside class="panel-detalle" id="panel-detalle-com">
+        <div class="panel-detalle__card">
+          <div class="panel-detalle__header">
+            <span class="panel-detalle__vp-label">Vista previa</span>
+            <button class="panel-detalle__cerrar" data-cerrar-detalle aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+              </svg>
+            </button>
+          </div>
+          <div class="panel-detalle__body">
+            <div class="panel-detalle__highlight">
+              <div class="panel-detalle__highlight-top">
+                <button class="btn btn--link" id="detalle-com-acciones" data-popover="popover-detalle-com-acciones">
+                  Acciones <svg viewBox="0 0 8 8" width="8" height="8">
+                    <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
+                  </svg>
+                </button>
+              </div>
+              <div class="panel-detalle__avatar panel-detalle__avatar--comision" id="detalle-avatar"
+                style="font-size:18px;font-weight:700;color:#fff;">—</div>
+              <h3 class="panel-detalle__titulo" id="detalle-titulo">—</h3>
+              <div class="panel-detalle__subtitulo" id="detalle-subtitulo">—</div>
+              <div class="panel-detalle__monto panel-detalle__monto--comision" id="detalle-monto">COP 0</div>
+              <div class="panel-detalle__acciones panel-detalle__acciones--cot">
+                <button class="panel-detalle__accion-circ" data-accion-com="config" title="Configurar">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 32 32" width="14" height="14">
+                      <path fill="currentColor"
+                        d="M27.9 13.4h-2.5c-.2-.8-.5-1.5-.8-2.1l1.8-1.8a2.1 2.1 0 0 0 0-3l-.7-.8a2.2 2.2 0 0 0-3 0l-1.8 1.8c-.6-.3-1.3-.6-2-.8V4.1a2.1 2.1 0 0 0-2.2-2.1h-1a2.1 2.1 0 0 0-2.2 2.1v2.6c-.7.2-1.4.4-2 .8L9.7 5.7a2.2 2.2 0 0 0-3 0l-.7.7a2.1 2.1 0 0 0 0 3l1.8 1.8c-.3.6-.6 1.3-.8 2H4.5a2.1 2.1 0 0 0-2.1 2.2v1c0 1.2.9 2.2 2.1 2.2H7c.2.7.5 1.4.8 2L6 20.4a2.1 2.1 0 0 0 0 3l.7.8a2.2 2.2 0 0 0 3 0l1.8-1.8c.6.3 1.3.6 2 .8v2.6c0 1.2.9 2.2 2.1 2.2h1c1.2 0 2.1-1 2.1-2.2v-2.5c.8-.2 1.5-.5 2.1-.8l1.8 1.8a2.2 2.2 0 0 0 3 0l.7-.8a2.1 2.1 0 0 0 0-3l-1.8-1.8c.3-.6.6-1.3.8-2h2.5c1.2 0 2.1-1 2.1-2.1v-1c0-1.2-.9-2.1-2.1-2.1ZM16 20.2a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
+                    </svg>
+                  </span>
+                  <span>Configurar</span>
+                </button>
+                <button class="panel-detalle__accion-circ" data-accion-com="pago" title="Registrar pago">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path fill="currentColor" d="M13 5v6h6v2h-6v6h-2v-6H5v-2h6V5h2Z" />
+                    </svg>
+                  </span>
+                  <span>Registrar pago</span>
+                </button>
+                <button class="panel-detalle__accion-circ" data-accion-com="exportar" title="Exportar">
+                  <span class="panel-detalle__accion-icono">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path fill="currentColor" d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" stroke="currentColor"
+                        stroke-width="2" fill="none" />
+                    </svg>
+                  </span>
+                  <span>Exportar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sección: Desglose de comisión -->
+            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
+              <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
+                <span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
+                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                  </svg>
+                  Desglose de comisión
+                </span>
+              </div>
+              <div class="panel-detalle__seccion-cuerpo">
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Ingresos base</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-ingresos">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">% Comisión</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-porcentaje">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Comisión teórica</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-teorico">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Comisión registrada</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-registrado">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label"># Pagos registrados</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-pagos">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Diferencia</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-diferencia">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección: Estado y período -->
+            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable>
+              <div class="panel-detalle__seccion-titulo" data-toggle-seccion>
+                <span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
+                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                  </svg>
+                  Estado y período
+                </span>
+              </div>
+              <div class="panel-detalle__seccion-cuerpo">
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Estado</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-estado">—</span>
+                </div>
+                <div class="panel-detalle__campo-stacked">
+                  <span class="panel-detalle__campo-label">Período consultado</span>
+                  <span class="panel-detalle__campo-valor" id="detalle-periodo">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección: Pagos registrados -->
+            <div class="panel-detalle__seccion panel-detalle__seccion--colapsable" data-colapsable
+              id="seccion-pagos-reg">
+              <div class="panel-detalle__seccion-titulo panel-detalle__seccion-titulo--flex" data-toggle-seccion>
+                <span>
+                  <svg viewBox="0 0 24 24" width="10" height="10" class="chevron-seccion">
+                    <path fill="currentColor" d="m6 9 6 6 6-6H6Z" />
+                  </svg>
+                  Pagos registrados
+                </span>
+                <span class="detalle-pagos-badge" id="detalle-pagos-badge">0</span>
+              </div>
+              <div class="panel-detalle__seccion-cuerpo" id="lista-pagos-com">
+                <p class="lista-pagos-com__vacia">Sin pagos registrados</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Panel de configuración de la tabla -->
+      <aside class="panel-detalle" id="panel-config-tabla" aria-label="Configuración de la tabla">
+        <div class="panel-detalle__card">
+          <div class="panel-detalle__header">
+            <span class="panel-detalle__vp-label">Configuración de la tabla</span>
+            <button class="panel-detalle__cerrar" data-cerrar-panel aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+              </svg>
+            </button>
+          </div>
+          <div class="panel-lateral__body">
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__seccion-titulo">Registros por página</div>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="25" checked /> 25 por
+                página</label>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="50" /> 50 por
+                página</label>
+              <label class="panel-lateral__radio"><input type="radio" name="tamano-pag" value="100" /> 100 por
+                página</label>
+            </div>
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__seccion-titulo">Altura de fila ⓘ</div>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="compacto" /> Compacto</label>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="default" checked /> Valor
+                predeterminado</label>
+              <label class="panel-lateral__radio"><input type="radio" name="altura" value="comodo" /> Cómodo</label>
+            </div>
+            <div class="panel-lateral__seccion">
+              <div class="panel-lateral__switch-row">
+                <span>Zebra striping ⓘ</span>
+                <div class="switch" id="switch-zebra"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ============================================================
        POPOVERS
        ============================================================ -->
 
-    <!-- Selector de objeto (módulos disponibles) -->
-    <!-- Popover: Usuario activo -->
-    <div class="popover" id="popover-usuario" hidden style="width:260px">
-      <div style="padding:var(--esp-4);border-bottom:1px solid var(--color-borde);">
-        <div style="font-weight:var(--font-peso-semibold);font-size:var(--font-tam-md);margin-bottom:2px;" id="user-pop-nombre">—</div>
-        <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="user-pop-email">—</div>
-        <div style="font-size:var(--font-tam-xs);color:var(--color-texto-debil);margin-top:4px;" id="user-pop-rol">—</div>
-      </div>
-      <div class="popover__lista">
-        <button class="popover__item" id="btn-perfil">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4Z"/></svg>
-          Mi perfil
-        </button>
-        <button class="popover__item" id="btn-ir-hubspot">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M14 3v2h4.6l-9.3 9.3 1.4 1.4L20 6.4V11h2V3h-8Zm-1 14H5V7h6V5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4h-2v4Z"/></svg>
-          Ir a HubSpot
-        </button>
-        <button class="popover__item" id="btn-logout" style="color:#dc2626">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M5 3h7v2H5v14h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm11 4 1.4 1.4L14.8 11H21v2h-6.2l2.6 2.6L16 17l-5-5 5-5Z"/></svg>
-          Cerrar sesión
-        </button>
-      </div>
+  <!-- Selector de objeto (módulos disponibles) -->
+  <!-- Popover: Usuario activo -->
+  <div class="popover" id="popover-usuario" hidden style="width:260px">
+    <div style="padding:var(--esp-4);border-bottom:1px solid var(--color-borde);">
+      <div style="font-weight:var(--font-peso-semibold);font-size:var(--font-tam-md);margin-bottom:2px;"
+        id="user-pop-nombre">—</div>
+      <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="user-pop-email">—</div>
+      <div style="font-size:var(--font-tam-xs);color:var(--color-texto-debil);margin-top:4px;" id="user-pop-rol">—</div>
     </div>
-
-    <div class="popover" id="popover-objetos" hidden style="width:240px">
-      <div class="popover__lista">
-        <div class="popover__grupo-titulo">Módulos disponibles</div>
-        <a href="index.html" class="popover__item" style="text-decoration:none">
-          <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M5 2h14v20H5V2Zm2 5h10V5H7v2Zm0 4h10V9H7v2Zm0 4h7v-2H7v2Z"/></svg></span>
-          Cotizaciones
-        </a>
-        <a href="caja.html" class="popover__item" style="text-decoration:none">
-          <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 7h18v12H3V7Zm2 2v8h14V9H5Zm7 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm-5 0h2v2H7v-2Zm10 0h2v2h-2v-2Z"/></svg></span>
-          Caja
-        </a>
-        <button class="popover__item popover__item--activo">
-          <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4ZM8 9l8 10-1.5 1.2L6.5 10.2 8 9Z"/></svg></span>
-          Comisiones
-        </button>
-      </div>
-    </div>
-
-    <!-- Tipo de vista -->
-    <div class="popover" id="popover-vista-tabla" hidden style="width:220px">
-      <div class="popover__lista">
-        <div class="popover__grupo-titulo">Tipo de vista</div>
-        <button class="popover__item popover__item--seleccionado" data-vista-tipo="tabla">
-          <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 5h18v3H3V5Zm0 5h18v3H3v-3Zm0 5h18v3H3v-3Z"/></svg></span>
-          Vista de tabla
-        </button>
-      </div>
-    </div>
-
-    <!-- Guardar (solo lectura) -->
-    <div class="popover popover--info" id="popover-guardar-readonly" hidden style="width:280px">
-      <div class="popover__cabecera-info"><div class="popover__titulo-info">Vista de solo lectura</div></div>
-      <div class="popover__nota popover__nota--info">Clona esta vista para guardar los cambios en filtros, orden o columnas.</div>
-    </div>
-
-    <!-- Tab menú -->
-    <div class="popover" id="popover-tab-menu" hidden style="width:240px">
-      <div class="popover__lista">
-        <button class="popover__item" type="button" data-accion="tab-rename">Cambiar nombre</button>
-        <button class="popover__item" type="button" data-accion="tab-clonar">Clonar</button>
-        <button class="popover__item popover__item--deshabilitado" type="button">Gestionar lo que se comparte</button>
-        <button class="popover__item" type="button" data-accion="tab-eliminar">Eliminar</button>
-      </div>
-    </div>
-
-    <!-- Tab + -->
-    <div class="popover" id="popover-tab-add" hidden style="width:200px">
-      <div class="popover__lista">
-        <button class="popover__item" data-accion="crear-vista">Crear nueva vista</button>
-        <button class="popover__item" data-accion="agregar-vista">Agregar vista (4/50)</button>
-      </div>
-    </div>
-
-    <!-- Cabecera menú -->
-    <div class="popover" id="popover-cabecera-menu" hidden style="width:280px">
-      <div class="popover__lista">
-        <button class="popover__item" data-accion="cab-config-comisiones">Configurar comisiones</button>
-        <button class="popover__item" data-accion="cab-exportar-visibles">Exportar vista actual</button>
-        <button class="popover__item" data-accion="cab-exportar-todos">Exportar todos los asesores</button>
-      </div>
-    </div>
-
-    <!-- Ordenar -->
-    <div class="popover popover-ordenar" id="popover-ordenar" hidden>
-      <div class="popover-ordenar__titulo">Ordenar por</div>
-      <div class="popover-ordenar__fila">
-        <select class="popover-ordenar__select" id="select-orden">
-          <option value="responsable">Asesor</option>
-          <option value="ingresos">Ingresos base</option>
-          <option value="teorico">Com. teórica</option>
-          <option value="registrado">Com. registrada</option>
-          <option value="diferencia">Diferencia</option>
-          <option value="estado">Estado</option>
-        </select>
-        <div class="popover-ordenar__dir">
-          <button data-dir="desc" class="activo">Z → A</button>
-          <button data-dir="asc">A → Z</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Filtro: Asesor -->
-    <div class="popover" id="popover-filtro-asesor" hidden style="width:260px">
-      <div class="popover__buscar">
-        <input type="search" class="popover__buscar-input" placeholder="Buscar asesor" />
-        <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
-          <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z" />
+    <div class="popover__lista">
+      <button class="popover__item" id="btn-perfil">
+        <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0">
+          <path fill="currentColor"
+            d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4Z" />
         </svg>
-      </div>
-      <div class="popover__lista" id="lista-asesores"></div>
-    </div>
-
-    <!-- Filtro: Estado -->
-    <div class="popover" id="popover-filtro-estado" hidden style="width:220px">
-      <div class="popover__lista">
-        <label class="check-lista__item"><input type="checkbox" data-filtro-val="pagado" /> Pagado</label>
-        <label class="check-lista__item"><input type="checkbox" data-filtro-val="parcial" /> Parcial</label>
-        <label class="check-lista__item"><input type="checkbox" data-filtro-val="pendiente" /> Pendiente</label>
-      </div>
-    </div>
-
-    <!-- Filtro: Fecha -->
-    <div class="popover popover--fecha" id="popover-filtro-fecha" hidden style="width:280px">
-      <div class="popover__grupo-titulo">Rangos predefinidos</div>
-      <div class="popover__lista">
-        <button class="popover__item" data-filtro-val="hoy">Hoy</button>
-        <button class="popover__item" data-filtro-val="ayer">Ayer</button>
-        <button class="popover__item" data-filtro-val="semana">Últimos 7 días</button>
-        <button class="popover__item" data-filtro-val="mes">Este mes</button>
-        <button class="popover__item" data-filtro-val="mes_pasado">Mes pasado</button>
-        <button class="popover__item" data-filtro-val="trimestre">Último trimestre</button>
-        <button class="popover__item" data-filtro-val="anio">Este año</button>
-      </div>
-      <div class="popover__seccion-fecha">
-        <div class="popover__grupo-titulo">Rango personalizado</div>
-        <div class="popover__rango-fila">
-          <input type="date" id="filtro-fecha-desde" class="form-input form-input--sm" aria-label="Desde" />
-          <span class="popover__rango-sep">→</span>
-          <input type="date" id="filtro-fecha-hasta" class="form-input form-input--sm" aria-label="Hasta" />
-        </div>
-        <div class="popover__rango-acciones">
-          <button class="btn btn--ghost btn--sm" data-fecha-accion="limpiar">Limpiar</button>
-          <button class="btn btn--naranja btn--sm" data-fecha-accion="aplicar">Aplicar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- + Agregar filtro -->
-    <div class="popover" id="popover-filtro-add" hidden style="width:280px">
-      <div class="popover__buscar">
-        <input type="search" class="popover__buscar-input" id="filtro-add-buscar" placeholder="Buscar" autocomplete="off" />
-        <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
-          <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+        Mi perfil
+      </button>
+      <button class="popover__item" id="btn-ir-hubspot">
+        <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0">
+          <path fill="currentColor"
+            d="M14 3v2h4.6l-9.3 9.3 1.4 1.4L20 6.4V11h2V3h-8Zm-1 14H5V7h6V5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4h-2v4Z" />
         </svg>
-      </div>
-      <div class="popover__lista" id="filtro-add-lista">
-        <div class="popover__grupo-titulo">Filtros de comisiones</div>
-        <button class="popover__item" data-pill-id="asesor"><span class="tipo-icono">👤</span>Asesor</button>
-        <button class="popover__item" data-pill-id="estado"><span class="tipo-icono">🔵</span>Estado</button>
-        <button class="popover__item" data-pill-id="fecha"><span class="tipo-icono">📅</span>Fecha</button>
+        Ir a HubSpot
+      </button>
+      <button class="popover__item" id="btn-logout" style="color:#dc2626">
+        <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0">
+          <path fill="currentColor"
+            d="M5 3h7v2H5v14h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm11 4 1.4 1.4L14.8 11H21v2h-6.2l2.6 2.6L16 17l-5-5 5-5Z" />
+        </svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </div>
+
+  <div class="popover" id="popover-objetos" hidden style="width:240px">
+    <div class="popover__lista">
+      <div class="popover__grupo-titulo">Módulos disponibles</div>
+      <a href="index.html" class="popover__item" style="text-decoration:none">
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M5 2h14v20H5V2Zm2 5h10V5H7v2Zm0 4h10V9H7v2Zm0 4h7v-2H7v2Z" />
+          </svg></span>
+        Cotizaciones
+      </a>
+      <a href="caja.html" class="popover__item" style="text-decoration:none">
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor"
+              d="M3 7h18v12H3V7Zm2 2v8h14V9H5Zm7 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm-5 0h2v2H7v-2Zm10 0h2v2h-2v-2Z" />
+          </svg></span>
+        Caja
+      </a>
+      <button class="popover__item popover__item--activo">
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor"
+              d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2Zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 12 4ZM8 9l8 10-1.5 1.2L6.5 10.2 8 9Z" />
+          </svg></span>
+        Comisiones
+      </button>
+    </div>
+  </div>
+
+  <!-- Tipo de vista -->
+  <div class="popover" id="popover-vista-tabla" hidden style="width:220px">
+    <div class="popover__lista">
+      <div class="popover__grupo-titulo">Tipo de vista</div>
+      <button class="popover__item popover__item--seleccionado" data-vista-tipo="tabla">
+        <span class="tipo-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 5h18v3H3V5Zm0 5h18v3H3v-3Zm0 5h18v3H3v-3Z" />
+          </svg></span>
+        Vista de tabla
+      </button>
+    </div>
+  </div>
+
+  <!-- Guardar (solo lectura) -->
+  <div class="popover popover--info" id="popover-guardar-readonly" hidden style="width:280px">
+    <div class="popover__cabecera-info">
+      <div class="popover__titulo-info">Vista de solo lectura</div>
+    </div>
+    <div class="popover__nota popover__nota--info">Clona esta vista para guardar los cambios en filtros, orden o
+      columnas.</div>
+  </div>
+
+  <!-- Tab menú -->
+  <div class="popover" id="popover-tab-menu" hidden style="width:240px">
+    <div class="popover__lista">
+      <button class="popover__item" type="button" data-accion="tab-rename">Cambiar nombre</button>
+      <button class="popover__item" type="button" data-accion="tab-clonar">Clonar</button>
+      <button class="popover__item popover__item--deshabilitado" type="button">Gestionar lo que se comparte</button>
+      <button class="popover__item" type="button" data-accion="tab-eliminar">Eliminar</button>
+    </div>
+  </div>
+
+  <!-- Tab + -->
+  <div class="popover" id="popover-tab-add" hidden style="width:200px">
+    <div class="popover__lista">
+      <button class="popover__item" data-accion="crear-vista">Crear nueva vista</button>
+      <button class="popover__item" data-accion="agregar-vista">Agregar vista (4/50)</button>
+    </div>
+  </div>
+
+  <!-- Cabecera menú -->
+  <div class="popover" id="popover-cabecera-menu" hidden style="width:280px">
+    <div class="popover__lista">
+      <button class="popover__item" data-accion="cab-config-comisiones">Configurar comisiones</button>
+      <button class="popover__item" data-accion="cab-exportar-visibles">Exportar vista actual</button>
+      <button class="popover__item" data-accion="cab-exportar-todos">Exportar todos los asesores</button>
+    </div>
+  </div>
+
+  <!-- Ordenar -->
+  <div class="popover popover-ordenar" id="popover-ordenar" hidden>
+    <div class="popover-ordenar__titulo">Ordenar por</div>
+    <div class="popover-ordenar__fila">
+      <select class="popover-ordenar__select" id="select-orden">
+        <option value="responsable">Asesor</option>
+        <option value="ingresos">Ingresos base</option>
+        <option value="teorico">Com. teórica</option>
+        <option value="registrado">Com. registrada</option>
+        <option value="diferencia">Diferencia</option>
+        <option value="estado">Estado</option>
+      </select>
+      <div class="popover-ordenar__dir">
+        <button data-dir="desc" class="activo">Z → A</button>
+        <button data-dir="asc">A → Z</button>
       </div>
     </div>
+  </div>
 
-    <!-- Exportar opciones -->
-    <div class="popover" id="popover-export-opciones" hidden style="width:320px">
-      <div class="popover__grupo-titulo">Exportar a CSV</div>
-      <div class="popover__nota">Se generará un archivo .csv con las comisiones por asesor.</div>
-      <div class="popover__lista">
-        <button class="popover__item popover__item--rico" data-export-alcance="visibles">
-          <div class="popover__item-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h12v2H3v-2Z"/></svg></div>
-          <div class="popover__item-cuerpo">
-            <div class="popover__item-titulo">Asesores visibles (con filtros)</div>
-            <div class="popover__item-sub" id="export-cnt-visibles">— filas</div>
-          </div>
-        </button>
-        <button class="popover__item popover__item--rico" data-export-alcance="todos">
-          <div class="popover__item-icono"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h16v4H4v-4Z"/></svg></div>
-          <div class="popover__item-cuerpo">
-            <div class="popover__item-titulo">Todos los asesores</div>
-            <div class="popover__item-sub" id="export-cnt-todos">— filas</div>
-          </div>
-        </button>
+  <!-- Filtro: Asesor -->
+  <div class="popover" id="popover-filtro-asesor" hidden style="width:260px">
+    <div class="popover__buscar">
+      <input type="search" class="popover__buscar-input" placeholder="Buscar asesor" />
+      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Z" />
+      </svg>
+    </div>
+    <div class="popover__lista" id="lista-asesores"></div>
+  </div>
+
+  <!-- Filtro: Estado -->
+  <div class="popover" id="popover-filtro-estado" hidden style="width:220px">
+    <div class="popover__lista">
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="pagado" /> Pagado</label>
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="parcial" /> Parcial</label>
+      <label class="check-lista__item"><input type="checkbox" data-filtro-val="pendiente" /> Pendiente</label>
+    </div>
+  </div>
+
+  <!-- Filtro: Fecha -->
+  <div class="popover popover--fecha" id="popover-filtro-fecha" hidden style="width:280px">
+    <div class="popover__grupo-titulo">Rangos predefinidos</div>
+    <div class="popover__lista">
+      <button class="popover__item" data-filtro-val="hoy">Hoy</button>
+      <button class="popover__item" data-filtro-val="ayer">Ayer</button>
+      <button class="popover__item" data-filtro-val="semana">Últimos 7 días</button>
+      <button class="popover__item" data-filtro-val="mes">Este mes</button>
+      <button class="popover__item" data-filtro-val="mes_pasado">Mes pasado</button>
+      <button class="popover__item" data-filtro-val="trimestre">Último trimestre</button>
+      <button class="popover__item" data-filtro-val="anio">Este año</button>
+    </div>
+    <div class="popover__seccion-fecha">
+      <div class="popover__grupo-titulo">Rango personalizado</div>
+      <div class="popover__rango-fila">
+        <input type="date" id="filtro-fecha-desde" class="form-input form-input--sm" aria-label="Desde" />
+        <span class="popover__rango-sep">→</span>
+        <input type="date" id="filtro-fecha-hasta" class="form-input form-input--sm" aria-label="Hasta" />
+      </div>
+      <div class="popover__rango-acciones">
+        <button class="btn btn--ghost btn--sm" data-fecha-accion="limpiar">Limpiar</button>
+        <button class="btn btn--naranja btn--sm" data-fecha-accion="aplicar">Aplicar</button>
       </div>
     </div>
+  </div>
 
-    <!-- Popover acciones del panel de detalle -->
-    <div class="popover" id="popover-detalle-com-acciones" hidden style="width:200px">
-      <div class="popover__lista">
-        <button class="popover__item" data-accion-com-menu="config">Configurar comisión</button>
-        <button class="popover__item" data-accion-com-menu="pago">Registrar pago</button>
-        <button class="popover__item" data-accion-com-menu="exportar">Exportar CSV</button>
-      </div>
+  <!-- + Agregar filtro -->
+  <div class="popover" id="popover-filtro-add" hidden style="width:280px">
+    <div class="popover__buscar">
+      <input type="search" class="popover__buscar-input" id="filtro-add-buscar" placeholder="Buscar"
+        autocomplete="off" />
+      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
+        <path fill="currentColor"
+          d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+      </svg>
     </div>
+    <div class="popover__lista" id="filtro-add-lista">
+      <div class="popover__grupo-titulo">Filtros de comisiones</div>
+      <button class="popover__item" data-pill-id="asesor"><span class="tipo-icono">👤</span>Asesor</button>
+      <button class="popover__item" data-pill-id="estado"><span class="tipo-icono">🔵</span>Estado</button>
+      <button class="popover__item" data-pill-id="fecha"><span class="tipo-icono">📅</span>Fecha</button>
+    </div>
+  </div>
 
-    <!-- ============================================================
+  <!-- Exportar opciones -->
+  <div class="popover" id="popover-export-opciones" hidden style="width:320px">
+    <div class="popover__grupo-titulo">Exportar a CSV</div>
+    <div class="popover__nota">Se generará un archivo .csv con las comisiones por asesor.</div>
+    <div class="popover__lista">
+      <button class="popover__item popover__item--rico" data-export-alcance="visibles">
+        <div class="popover__item-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h12v2H3v-2Z" />
+          </svg></div>
+        <div class="popover__item-cuerpo">
+          <div class="popover__item-titulo">Asesores visibles (con filtros)</div>
+          <div class="popover__item-sub" id="export-cnt-visibles">— filas</div>
+        </div>
+      </button>
+      <button class="popover__item popover__item--rico" data-export-alcance="todos">
+        <div class="popover__item-icono"><svg viewBox="0 0 24 24" width="14" height="14">
+            <path fill="currentColor" d="M4 4h16v4H4V4Zm0 6h16v4H4v-4Zm0 6h16v4H4v-4Z" />
+          </svg></div>
+        <div class="popover__item-cuerpo">
+          <div class="popover__item-titulo">Todos los asesores</div>
+          <div class="popover__item-sub" id="export-cnt-todos">— filas</div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Popover acciones del panel de detalle -->
+  <div class="popover" id="popover-detalle-com-acciones" hidden style="width:200px">
+    <div class="popover__lista">
+      <button class="popover__item" data-accion-com-menu="config">Configurar comisión</button>
+      <button class="popover__item" data-accion-com-menu="pago">Registrar pago</button>
+      <button class="popover__item" data-accion-com-menu="exportar">Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
        MODALES
        ============================================================ -->
 
-    <!-- Modal: Configurar comisiones -->
-    <div class="modal-overlay" id="modal-config-comisiones" hidden>
-      <div class="modal modal--ancho">
-        <div class="modal__header">
-          <div class="modal__titulo">Configurar comisiones</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-          </button>
+  <!-- Modal: Configurar comisiones -->
+  <div class="modal-overlay" id="modal-config-comisiones" hidden>
+    <div class="modal modal--ancho">
+      <div class="modal__header">
+        <div class="modal__titulo">Configurar comisiones</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p class="modal__intro">
+          Define el porcentaje de comisión por asesor y por producto. Las comisiones teóricas se calculan
+          automáticamente a partir de los ingresos registrados en Caja.
+        </p>
+        <div class="config-comisiones__tabs">
+          <button class="config-comisiones__tab config-comisiones__tab--activo" data-tab-comisiones="asesores">Por
+            asesor</button>
+          <button class="config-comisiones__tab" data-tab-comisiones="productos">Por producto</button>
         </div>
-        <div class="modal__body">
-          <p class="modal__intro">
-            Define el porcentaje de comisión por asesor y por producto. Las comisiones teóricas se calculan automáticamente a partir de los ingresos registrados en Caja.
-          </p>
-          <div class="config-comisiones__tabs">
-            <button class="config-comisiones__tab config-comisiones__tab--activo" data-tab-comisiones="asesores">Por asesor</button>
-            <button class="config-comisiones__tab" data-tab-comisiones="productos">Por producto</button>
-          </div>
 
-          <!-- Panel: Por asesor -->
-          <div data-panel-comisiones="asesores">
-            <table class="tabla-config-comisiones">
-              <thead>
-                <tr>
-                  <th>Asesor</th>
-                  <th>% Comisión</th>
-                  <th style="width:40px"></th>
-                </tr>
-              </thead>
-              <tbody id="config-comisiones-tbody-asesor">
-                <tr><td colspan="4" class="tabla-config-comisiones__vacio">Cargando asesores…</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Panel: Por producto -->
-          <div data-panel-comisiones="productos" hidden>
-            <div style="display:flex;align-items:center;gap:var(--esp-3);padding:var(--esp-3) 0 var(--esp-4);border-bottom:1px solid var(--color-borde);margin-bottom:var(--esp-3);">
-              <span style="font-size:13px;font-weight:500;white-space:nowrap;">Comisión general de productos</span>
-              <div class="input-pct" style="width:90px;flex-shrink:0;">
-                <input type="number" id="config-com-general-pct" class="form-input form-input--sm" min="0" max="100" step="0.1" value="5"/>
-                <span class="input-pct__suffix">%</span>
-              </div>
-              <span style="font-size:12px;color:var(--color-texto-suave);">Aplica a todos los productos. Agrega excepciones abajo para productos con tasa diferente.</span>
-            </div>
-            <table class="tabla-config-comisiones">
-              <thead>
-                <tr>
-                  <th>Excepción por producto</th>
-                  <th>% Comisión</th>
-                  <th style="width:40px"></th>
-                </tr>
-              </thead>
-              <tbody id="config-comisiones-tbody-producto">
-                <tr><td colspan="3" class="tabla-config-comisiones__vacio">Sin excepciones configuradas. Todos los productos usan la tasa general.</td></tr>
-              </tbody>
-            </table>
-            <div style="margin-top:var(--esp-3)">
-              <button class="btn btn--ghost" id="btn-agregar-producto-comision">
-                <svg viewBox="0 0 12 12" width="10" height="10" style="margin-right:4px"><path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z"/></svg>
-                Agregar excepción
-              </button>
-            </div>
-          </div>
+        <!-- Panel: Por asesor -->
+        <div data-panel-comisiones="asesores">
+          <table class="tabla-config-comisiones">
+            <thead>
+              <tr>
+                <th>Asesor</th>
+                <th>% Comisión</th>
+                <th style="width:40px"></th>
+              </tr>
+            </thead>
+            <tbody id="config-comisiones-tbody-asesor">
+              <tr>
+                <td colspan="4" class="tabla-config-comisiones__vacio">Cargando asesores…</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="modal__footer">
-          <button class="btn btn--primario" id="btn-guardar-config-comisiones">Guardar configuración</button>
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+
+        <!-- Panel: Por producto -->
+        <div data-panel-comisiones="productos" hidden>
+          <div
+            style="display:flex;align-items:center;gap:var(--esp-3);padding:var(--esp-3) 0 var(--esp-4);border-bottom:1px solid var(--color-borde);margin-bottom:var(--esp-3);">
+            <span style="font-size:13px;font-weight:500;white-space:nowrap;">Comisión general de productos</span>
+            <div class="input-pct" style="width:90px;flex-shrink:0;">
+              <input type="number" id="config-com-general-pct" class="form-input form-input--sm" min="0" max="100"
+                step="0.1" value="5" />
+              <span class="input-pct__suffix">%</span>
+            </div>
+            <span style="font-size:12px;color:var(--color-texto-suave);">Aplica a todos los productos. Agrega
+              excepciones abajo para productos con tasa diferente.</span>
+          </div>
+          <table class="tabla-config-comisiones">
+            <thead>
+              <tr>
+                <th>Excepción por producto</th>
+                <th>% Comisión</th>
+                <th style="width:40px"></th>
+              </tr>
+            </thead>
+            <tbody id="config-comisiones-tbody-producto">
+              <tr>
+                <td colspan="3" class="tabla-config-comisiones__vacio">Sin excepciones configuradas. Todos los productos
+                  usan la tasa general.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:var(--esp-3)">
+            <button class="btn btn--ghost" id="btn-agregar-producto-comision">
+              <svg viewBox="0 0 12 12" width="10" height="10" style="margin-right:4px">
+                <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
+              </svg>
+              Agregar excepción
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Modal: Registrar pago de comisión -->
-    <div class="modal-overlay" id="modal-registrar-pago-com" hidden>
-      <div class="modal">
-        <div class="modal__header">
-          <div class="modal__titulo">Registrar pago de comisión</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <form id="form-pago-com">
-            <div class="form-grupo">
-              <label class="form-label form-label--req" for="pago-com-asesor">Asesor</label>
-              <select id="pago-com-asesor" class="form-select">
-                <option value="">Seleccionar asesor…</option>
-              </select>
-            </div>
-            <div class="form-grupo form-grupo--fila">
-              <div>
-                <label class="form-label form-label--req" for="pago-com-valor">Valor del pago</label>
-                <input type="number" id="pago-com-valor" class="form-input" placeholder="0" min="0" step="1000" />
-              </div>
-              <div>
-                <label class="form-label form-label--req" for="pago-com-fecha">Fecha</label>
-                <input type="date" id="pago-com-fecha" class="form-input" />
-              </div>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="pago-com-metodo">Método de pago</label>
-              <select id="pago-com-metodo" class="form-select">
-                <option value="efectivo">Efectivo</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="tarjeta">Tarjeta</option>
-              </select>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="pago-com-descripcion">Descripción</label>
-              <input type="text" id="pago-com-descripcion" class="form-input" placeholder="Ej: Pago de comisión a Néstor Goyes" />
-            </div>
-            <p style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);margin-top:var(--esp-2)">
-              El pago se registrará en el módulo Caja como un gasto de categoría "Comisiones".
-            </p>
-          </form>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--primario" id="guardar-pago-com">Registrar pago</button>
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
-        </div>
+      <div class="modal__footer">
+        <button class="btn btn--primario" id="btn-guardar-config-comisiones">Guardar configuración</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
       </div>
     </div>
+  </div>
 
-    <!-- Modal: Editar pago de comisión -->
-    <div class="modal-overlay" id="modal-editar-pago-com" hidden>
-      <div class="modal">
-        <div class="modal__header">
-          <div class="modal__titulo">Editar pago de comisión</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <input type="hidden" id="editar-pago-id"/>
+  <!-- Modal: Registrar pago de comisión -->
+  <div class="modal-overlay" id="modal-registrar-pago-com" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo">Registrar pago de comisión</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <form id="form-pago-com">
           <div class="form-grupo">
-            <label class="form-label" for="editar-pago-asesor">Asesor</label>
-            <input type="text" id="editar-pago-asesor" class="form-input" readonly style="background:var(--color-fondo-suave);cursor:default"/>
+            <label class="form-label form-label--req" for="pago-com-asesor">Asesor</label>
+            <select id="pago-com-asesor" class="form-select">
+              <option value="">Seleccionar asesor…</option>
+            </select>
           </div>
           <div class="form-grupo form-grupo--fila">
             <div>
-              <label class="form-label form-label--req" for="editar-pago-valor">Valor</label>
-              <input type="number" id="editar-pago-valor" class="form-input" min="0" step="1000"/>
+              <label class="form-label form-label--req" for="pago-com-valor">Valor del pago</label>
+              <input type="number" id="pago-com-valor" class="form-input" placeholder="0" min="0" step="1000" />
             </div>
             <div>
-              <label class="form-label form-label--req" for="editar-pago-fecha">Fecha</label>
-              <input type="date" id="editar-pago-fecha" class="form-input"/>
+              <label class="form-label form-label--req" for="pago-com-fecha">Fecha</label>
+              <input type="date" id="pago-com-fecha" class="form-input" />
             </div>
           </div>
           <div class="form-grupo">
-            <label class="form-label" for="editar-pago-metodo">Método de pago</label>
-            <select id="editar-pago-metodo" class="form-select">
+            <label class="form-label" for="pago-com-metodo">Método de pago</label>
+            <select id="pago-com-metodo" class="form-select">
               <option value="efectivo">Efectivo</option>
               <option value="transferencia">Transferencia</option>
               <option value="tarjeta">Tarjeta</option>
-              <option value="cheque">Cheque</option>
             </select>
           </div>
           <div class="form-grupo">
-            <label class="form-label" for="editar-pago-descripcion">Descripción</label>
-            <input type="text" id="editar-pago-descripcion" class="form-input"/>
+            <label class="form-label" for="pago-com-descripcion">Descripción</label>
+            <input type="text" id="pago-com-descripcion" class="form-input"
+              placeholder="Ej: Pago de comisión a Néstor Goyes" />
+          </div>
+          <p style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);margin-top:var(--esp-2);">
+            Esta acción marcará como pagadas las comisiones pendientes del asesor dentro del período consultado.
+          </p>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--primario" id="guardar-pago-com">Registrar pago</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar pago de comisión -->
+  <div class="modal-overlay" id="modal-editar-pago-com" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo">Editar pago de comisión</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <input type="hidden" id="editar-pago-id" />
+        <div class="form-grupo">
+          <label class="form-label" for="editar-pago-asesor">Asesor</label>
+          <input type="text" id="editar-pago-asesor" class="form-input" readonly
+            style="background:var(--color-fondo-suave);cursor:default" />
+        </div>
+        <div class="form-grupo form-grupo--fila">
+          <div>
+            <label class="form-label form-label--req" for="editar-pago-valor">Valor</label>
+            <input type="number" id="editar-pago-valor" class="form-input" min="0" step="1000" />
+          </div>
+          <div>
+            <label class="form-label form-label--req" for="editar-pago-fecha">Fecha</label>
+            <input type="date" id="editar-pago-fecha" class="form-input" />
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label" for="editar-pago-metodo">Método de pago</label>
+          <select id="editar-pago-metodo" class="form-select">
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="tarjeta">Tarjeta</option>
+            <option value="cheque">Cheque</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label class="form-label" for="editar-pago-descripcion">Descripción</label>
+          <input type="text" id="editar-pago-descripcion" class="form-input" />
+        </div>
+        <div class="form-grupo">
+          <label class="form-label" for="editar-pago-observaciones">Observaciones</label>
+          <textarea id="editar-pago-observaciones" class="form-textarea" rows="2"
+            placeholder="Notas adicionales…"></textarea>
+        </div>
+        <div id="editar-pago-confirmar-eliminar" hidden
+          style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--radio-md);padding:var(--esp-3);margin-top:var(--esp-2);font-size:var(--font-tam-sm);">
+          ¿Eliminar este pago permanentemente?
+          <div style="display:flex;gap:var(--esp-2);margin-top:var(--esp-2)">
+            <button class="btn btn--ghost btn--peligro" id="confirmar-eliminar-pago-com" style="flex:1">Sí,
+              eliminar</button>
+            <button class="btn btn--ghost" id="cancelar-eliminar-pago-com" style="flex:1">Cancelar</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--naranja" id="guardar-editar-pago-com">Guardar cambios</button>
+        <button class="btn btn--ghost btn--peligro" id="eliminar-pago-com">Eliminar</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Agregar vista -->
+  <div class="modal-overlay" id="modal-agregar-vista" hidden>
+    <div class="modal modal--ancho">
+      <div class="modal__header">
+        <div class="modal__titulo">Vistas</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body modal__body--sin-padding">
+        <div class="modal-vistas">
+          <div class="modal-vistas__col modal-vistas__col--lista">
+            <div class="modal-vistas__head">
+              <div class="modal-vistas__buscar-wrap">
+                <svg class="modal-vistas__buscar-ico" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor"
+                    d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
+                </svg>
+                <input type="search" id="modal-vistas-buscar" class="modal-vistas__buscar-input"
+                  placeholder="Buscar vista..." />
+              </div>
+            </div>
+            <div class="modal-vistas__lista" id="modal-vistas-lista">
+              <div class="modal-vistas__grupo" data-grupo="sistema">Proporcionado por el sistema</div>
+              <div class="modal-vistas__item" data-vista="todos" data-categoria="sistema">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
+                </svg>
+                <span class="modal-vistas__item-nombre">Todos los asesores</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
+              </div>
+              <div class="modal-vistas__item" data-vista="pendientes" data-categoria="sistema">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
+                </svg>
+                <span class="modal-vistas__item-nombre">Pendientes de pago</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
+              </div>
+              <div class="modal-vistas__item" data-vista="pagados" data-categoria="sistema">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
+                </svg>
+                <span class="modal-vistas__item-nombre">Pagados</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
+              </div>
+              <div class="modal-vistas__item" data-vista="activos" data-categoria="sistema">
+                <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
+                  <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
+                </svg>
+                <span class="modal-vistas__item-nombre">Solo activos</span>
+                <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--primario" id="confirmar-agregar-vista">Agregar vista</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar columnas -->
+  <div class="modal-overlay" id="modal-editar-columnas" hidden>
+    <div class="modal modal--ancho">
+      <div class="modal__header">
+        <div class="modal__titulo">Editar columnas (<span id="contador-cols">8</span> seleccionadas)</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <div class="editar-columnas">
+          <div class="editar-columnas__col">
+            <div class="editar-columnas__titulo">Disponibles</div>
+            <div class="editar-columnas__buscar">
+              <input type="search" id="input-buscar-columnas" class="campo-busqueda__input"
+                placeholder="Buscar columna" />
+            </div>
+            <div class="editar-columnas__lista" id="cols-disponibles">
+              <label class="editar-columnas__opt" data-col="responsable"><input type="checkbox" checked />
+                Asesor</label>
+              <label class="editar-columnas__opt" data-col="ingresos"><input type="checkbox" checked /> Ingresos
+                base</label>
+              <label class="editar-columnas__opt" data-col="porcentaje"><input type="checkbox" checked /> %
+                Comisión</label>
+              <label class="editar-columnas__opt" data-col="teorico"><input type="checkbox" checked /> Com.
+                teórica</label>
+              <label class="editar-columnas__opt" data-col="registrado"><input type="checkbox" checked /> Com.
+                registrada</label>
+              <label class="editar-columnas__opt" data-col="pagos"><input type="checkbox" checked /> # Pagos</label>
+              <label class="editar-columnas__opt" data-col="diferencia"><input type="checkbox" checked />
+                Diferencia</label>
+              <label class="editar-columnas__opt" data-col="estado"><input type="checkbox" checked /> Estado</label>
+            </div>
+          </div>
+          <div class="editar-columnas__col">
+            <div class="editar-columnas__titulo">En la tabla (arrastra para reordenar)</div>
+            <div class="editar-columnas__seleccionadas" id="cols-seleccionadas"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--primario" id="btn-aplicar-columnas">Aplicar</button>
+        <a href="#" class="btn btn--link">Eliminar todas</a>
+        <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar filtros -->
+  <div class="modal-overlay" id="modal-editar-filtros" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <div class="modal__titulo">Filtros rápidos (<span id="contador-filtros">3</span>)</div>
+        <button class="modal__cerrar" data-cerrar-modal>
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <div id="lista-filtros-edit"></div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" id="btn-agregar-filtro-rapido">+ Agregar filtro</button>
+        <button class="btn btn--ghost" data-limpiar-valores>Limpiar valores</button>
+        <button class="btn btn--ghost" data-cerrar-modal>Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Mi perfil / Cambiar contraseña -->
+  <div class="modal-overlay" id="modal-perfil" hidden>
+    <div class="modal" style="max-width:400px;">
+      <div class="modal__header">
+        <h3 class="modal__titulo">Mi perfil</h3>
+        <button class="modal__cerrar" data-cerrar-modal aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <div style="margin-bottom:var(--esp-4);padding-bottom:var(--esp-4);border-bottom:1px solid var(--color-borde);">
+          <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);margin-bottom:2px;">Usuario</div>
+          <div style="font-weight:var(--font-peso-semibold);" id="perfil-nombre">—</div>
+          <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="perfil-email">—</div>
+        </div>
+        <form id="form-cambiar-password" novalidate>
+          <p
+            style="font-size:var(--font-tam-sm);font-weight:var(--font-peso-semibold);margin:0 0 var(--esp-3);color:var(--color-texto);">
+            Cambiar contraseña
+          </p>
+          <div class="form-grupo">
+            <label class="form-label" for="perfil-pwd-actual">Contraseña actual</label>
+            <div class="input-pwd-wrap">
+              <input type="password" id="perfil-pwd-actual" class="form-input" autocomplete="current-password"
+                required />
+              <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-actual"
+                aria-label="Mostrar contraseña">
+                <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor"
+                    d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+                </svg>
+                <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor"
+                    d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="form-grupo">
-            <label class="form-label" for="editar-pago-observaciones">Observaciones</label>
-            <textarea id="editar-pago-observaciones" class="form-textarea" rows="2" placeholder="Notas adicionales…"></textarea>
-          </div>
-          <div id="editar-pago-confirmar-eliminar" hidden style="background:#fef2f2;border:1px solid #fca5a5;border-radius:var(--radio-md);padding:var(--esp-3);margin-top:var(--esp-2);font-size:var(--font-tam-sm);">
-            ¿Eliminar este pago permanentemente?
-            <div style="display:flex;gap:var(--esp-2);margin-top:var(--esp-2)">
-              <button class="btn btn--ghost btn--peligro" id="confirmar-eliminar-pago-com" style="flex:1">Sí, eliminar</button>
-              <button class="btn btn--ghost" id="cancelar-eliminar-pago-com" style="flex:1">Cancelar</button>
+            <label class="form-label" for="perfil-pwd-nueva">Nueva contraseña</label>
+            <div class="input-pwd-wrap">
+              <input type="password" id="perfil-pwd-nueva" class="form-input" autocomplete="new-password" required />
+              <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-nueva"
+                aria-label="Mostrar contraseña">
+                <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor"
+                    d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+                </svg>
+                <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor"
+                    d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2" />
+                </svg>
+              </button>
             </div>
+            <div class="form-ayuda">Mínimo 8 caracteres</div>
           </div>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--naranja" id="guardar-editar-pago-com">Guardar cambios</button>
-          <button class="btn btn--ghost btn--peligro" id="eliminar-pago-com">Eliminar</button>
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Agregar vista -->
-    <div class="modal-overlay" id="modal-agregar-vista" hidden>
-      <div class="modal modal--ancho">
-        <div class="modal__header">
-          <div class="modal__titulo">Vistas</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-          </button>
-        </div>
-        <div class="modal__body modal__body--sin-padding">
-          <div class="modal-vistas">
-            <div class="modal-vistas__col modal-vistas__col--lista">
-              <div class="modal-vistas__head">
-                <div class="modal-vistas__buscar-wrap">
-                  <svg class="modal-vistas__buscar-ico" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/></svg>
-                  <input type="search" id="modal-vistas-buscar" class="modal-vistas__buscar-input" placeholder="Buscar vista..." />
-                </div>
-              </div>
-              <div class="modal-vistas__lista" id="modal-vistas-lista">
-                <div class="modal-vistas__grupo" data-grupo="sistema">Proporcionado por el sistema</div>
-                <div class="modal-vistas__item" data-vista="todos" data-categoria="sistema">
-                  <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z"/></svg>
-                  <span class="modal-vistas__item-nombre">Todos los asesores</span>
-                  <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
-                </div>
-                <div class="modal-vistas__item" data-vista="pendientes" data-categoria="sistema">
-                  <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z"/></svg>
-                  <span class="modal-vistas__item-nombre">Pendientes de pago</span>
-                  <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
-                </div>
-                <div class="modal-vistas__item" data-vista="pagados" data-categoria="sistema">
-                  <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z"/></svg>
-                  <span class="modal-vistas__item-nombre">Pagados</span>
-                  <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
-                </div>
-                <div class="modal-vistas__item" data-vista="activos" data-categoria="sistema">
-                  <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z"/></svg>
-                  <span class="modal-vistas__item-nombre">Solo activos</span>
-                  <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
-                </div>
-              </div>
+          <div class="form-grupo">
+            <label class="form-label" for="perfil-pwd-confirma">Confirmar nueva contraseña</label>
+            <div class="input-pwd-wrap">
+              <input type="password" id="perfil-pwd-confirma" class="form-input" autocomplete="new-password" required />
+              <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-confirma"
+                aria-label="Mostrar contraseña">
+                <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor"
+                    d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+                </svg>
+                <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor"
+                    d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2" />
+                </svg>
+              </button>
             </div>
           </div>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--primario" id="confirmar-agregar-vista">Agregar vista</button>
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
-        </div>
+          <div id="perfil-error" class="form-error" hidden></div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secundario" data-cerrar-modal>Cancelar</button>
+        <button class="btn btn--primario" id="btn-perfil-guardar" form="form-cambiar-password" type="submit">
+          Guardar contraseña
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- Modal: Editar columnas -->
-    <div class="modal-overlay" id="modal-editar-columnas" hidden>
-      <div class="modal modal--ancho">
-        <div class="modal__header">
-          <div class="modal__titulo">Editar columnas (<span id="contador-cols">8</span> seleccionadas)</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <div class="editar-columnas">
-            <div class="editar-columnas__col">
-              <div class="editar-columnas__titulo">Disponibles</div>
-              <div class="editar-columnas__buscar">
-                <input type="search" id="input-buscar-columnas" class="campo-busqueda__input" placeholder="Buscar columna" />
-              </div>
-              <div class="editar-columnas__lista" id="cols-disponibles">
-                <label class="editar-columnas__opt" data-col="responsable"><input type="checkbox" checked /> Asesor</label>
-                <label class="editar-columnas__opt" data-col="ingresos"><input type="checkbox" checked /> Ingresos base</label>
-                <label class="editar-columnas__opt" data-col="porcentaje"><input type="checkbox" checked /> % Comisión</label>
-                <label class="editar-columnas__opt" data-col="teorico"><input type="checkbox" checked /> Com. teórica</label>
-                <label class="editar-columnas__opt" data-col="registrado"><input type="checkbox" checked /> Com. registrada</label>
-                <label class="editar-columnas__opt" data-col="pagos"><input type="checkbox" checked /> # Pagos</label>
-                <label class="editar-columnas__opt" data-col="diferencia"><input type="checkbox" checked /> Diferencia</label>
-                <label class="editar-columnas__opt" data-col="estado"><input type="checkbox" checked /> Estado</label>
-              </div>
-            </div>
-            <div class="editar-columnas__col">
-              <div class="editar-columnas__titulo">En la tabla (arrastra para reordenar)</div>
-              <div class="editar-columnas__seleccionadas" id="cols-seleccionadas"></div>
-            </div>
-          </div>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--primario" id="btn-aplicar-columnas">Aplicar</button>
-          <a href="#" class="btn btn--link">Eliminar todas</a>
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Editar filtros -->
-    <div class="modal-overlay" id="modal-editar-filtros" hidden>
-      <div class="modal">
-        <div class="modal__header">
-          <div class="modal__titulo">Filtros rápidos (<span id="contador-filtros">3</span>)</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/></svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <div id="lista-filtros-edit"></div>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--ghost" id="btn-agregar-filtro-rapido">+ Agregar filtro</button>
-          <button class="btn btn--ghost" data-limpiar-valores>Limpiar valores</button>
-          <button class="btn btn--ghost" data-cerrar-modal>Cerrar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Mi perfil / Cambiar contraseña -->
-    <div class="modal-overlay" id="modal-perfil" hidden>
-      <div class="modal" style="max-width:400px;">
-        <div class="modal__header">
-          <h3 class="modal__titulo">Mi perfil</h3>
-          <button class="modal__cerrar" data-cerrar-modal aria-label="Cerrar">
-            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <div style="margin-bottom:var(--esp-4);padding-bottom:var(--esp-4);border-bottom:1px solid var(--color-borde);">
-            <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);margin-bottom:2px;">Usuario</div>
-            <div style="font-weight:var(--font-peso-semibold);" id="perfil-nombre">—</div>
-            <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="perfil-email">—</div>
-          </div>
-          <form id="form-cambiar-password" novalidate>
-            <p style="font-size:var(--font-tam-sm);font-weight:var(--font-peso-semibold);margin:0 0 var(--esp-3);color:var(--color-texto);">
-              Cambiar contraseña
-            </p>
-            <div class="form-grupo">
-              <label class="form-label" for="perfil-pwd-actual">Contraseña actual</label>
-              <div class="input-pwd-wrap">
-                <input type="password" id="perfil-pwd-actual" class="form-input" autocomplete="current-password" required />
-                <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-actual" aria-label="Mostrar contraseña">
-                  <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
-                  <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2"/></svg>
-                </button>
-              </div>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="perfil-pwd-nueva">Nueva contraseña</label>
-              <div class="input-pwd-wrap">
-                <input type="password" id="perfil-pwd-nueva" class="form-input" autocomplete="new-password" required />
-                <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-nueva" aria-label="Mostrar contraseña">
-                  <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
-                  <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2"/></svg>
-                </button>
-              </div>
-              <div class="form-ayuda">Mínimo 8 caracteres</div>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="perfil-pwd-confirma">Confirmar nueva contraseña</label>
-              <div class="input-pwd-wrap">
-                <input type="password" id="perfil-pwd-confirma" class="form-input" autocomplete="new-password" required />
-                <button type="button" class="input-pwd-toggle" data-toggle-pwd="perfil-pwd-confirma" aria-label="Mostrar contraseña">
-                  <svg class="pwd-eye-show" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7Zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
-                  <svg class="pwd-eye-hide hidden" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M2 2l20 20M6.7 6.7A10 10 0 0 0 1 12c1.7 3.9 6 7 11 7 2.1 0 4-.6 5.7-1.6M9.9 9.9A3 3 0 0 0 12 15a3 3 0 0 0 2.1-.9M17.4 17.4A10 10 0 0 0 23 12c-1.7-3.9-6-7-11-7a10 10 0 0 0-4.7 1.2"/></svg>
-                </button>
-              </div>
-            </div>
-            <div id="perfil-error" class="form-error" hidden></div>
-          </form>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--secundario" data-cerrar-modal>Cancelar</button>
-          <button class="btn btn--primario" id="btn-perfil-guardar" form="form-cambiar-password" type="submit">
-            Guardar contraseña
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================
+  <!-- ============================================================
        SCRIPTS
        ============================================================ -->
-    <script src="js/app-session.js"></script>
-<script src="js/perfil.js"></script>
-    <script src="js/api-client.js"></script>
-    <script src="js/hubspot-api.js"></script>
-    <script src="js/comisiones-main.js"></script>
-    <script src="js/sidebar.js"></script>
-    <script src="js/comisiones-views.js"></script>
-    <script src="js/comisiones-table.js"></script>
-    <script src="js/comisiones-filters.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-    <script src="js/comisiones-interactions.js"></script>
-  </body>
+  <script src="js/app-session.js"></script>
+  <script src="js/perfil.js"></script>
+  <script src="js/api-client.js"></script>
+  <script src="js/hubspot-api.js"></script>
+  <script src="js/comisiones-main.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/comisiones-views.js"></script>
+  <script src="js/comisiones-table.js"></script>
+  <script src="js/comisiones-filters.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="js/comisiones-interactions.js"></script>
+</body>
+
 </html>
