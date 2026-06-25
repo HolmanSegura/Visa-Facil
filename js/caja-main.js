@@ -175,40 +175,22 @@ function mostrarToast(mensaje, duracion = 2800) {
  * o "↓ X% vs mes ant." de forma dinámica en cada tarjeta.
  */
 function actualizarDashboard() {
-  const datos = estadoApp.datosVisibles;
-  const hoy = new Date();
+  const datos = estadoApp.datosVisibles || [];
 
-  // Claves "YYYY-M" para clasificar movimientos por mes
-  const claveDe = (f) => `${f.getFullYear()}-${f.getMonth()}`;
-  const claveActual = claveDe(hoy);
-  const claveAnterior = claveDe(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1));
-  const enMes = (m, clave) => claveDe(new Date(m.fecha)) === clave;
+  const gastos = datos.filter(m => m.tipo === "gasto");
+  const ingresos = datos.filter(m => m.tipo === "ingreso");
+  const pendientes = datos.filter(m => m.estado === "pendiente");
 
-  // Mes actual
-  const gastosMes   = datos.filter(m => m.tipo === "gasto"   && enMes(m, claveActual));
-  const ingresosMes = datos.filter(m => m.tipo === "ingreso" && enMes(m, claveActual));
-  const pendientes  = datos.filter(m => m.estado === "pendiente");
+  const totalGastos = gastos.reduce((s, m) => s + (Number(m.valor) || 0), 0);
+  const totalIngresos = ingresos.reduce((s, m) => s + (Number(m.valor) || 0), 0);
+  const totalPendientes = pendientes.reduce((s, m) => s + (Number(m.valor) || 0), 0);
+  const balance = totalIngresos - totalGastos;
 
-  // Mes anterior (para comparativo)
-  const gastosMesAnt   = datos.filter(m => m.tipo === "gasto"   && enMes(m, claveAnterior));
-  const ingresosMesAnt = datos.filter(m => m.tipo === "ingreso" && enMes(m, claveAnterior));
+  document.getElementById("card-gastos").textContent = formatearMoneda(totalGastos, "COP");
+  document.getElementById("card-gastos-count").textContent = gastos.length;
 
-  // Totales mes actual
-  const totalGastos     = gastosMes.reduce((s, m) => s + m.valor, 0);
-  const totalIngresos   = ingresosMes.reduce((s, m) => s + m.valor, 0);
-  const totalPendientes = pendientes.reduce((s, m) => s + m.valor, 0);
-  const balance         = totalIngresos - totalGastos;
-
-  // Totales mes anterior
-  const totalGastosAnt   = gastosMesAnt.reduce((s, m) => s + m.valor, 0);
-  const totalIngresosAnt = ingresosMesAnt.reduce((s, m) => s + m.valor, 0);
-  const balanceAnt       = totalIngresosAnt - totalGastosAnt;
-
-  // ----- Valores principales -----
-  document.getElementById("card-gastos").textContent         = formatearMoneda(totalGastos, "COP");
-  document.getElementById("card-gastos-count").textContent   = gastosMes.length;
-  document.getElementById("card-ingresos").textContent       = formatearMoneda(totalIngresos, "COP");
-  document.getElementById("card-ingresos-count").textContent = ingresosMes.length;
+  document.getElementById("card-ingresos").textContent = formatearMoneda(totalIngresos, "COP");
+  document.getElementById("card-ingresos-count").textContent = ingresos.length;
 
   const elBalance = document.getElementById("card-balance");
   elBalance.textContent = formatearMoneda(balance, "COP");
@@ -216,16 +198,29 @@ function actualizarDashboard() {
   if (balance > 0) elBalance.classList.add("tarjeta-resumen__valor--positivo");
   if (balance < 0) elBalance.classList.add("tarjeta-resumen__valor--negativo");
 
-  document.getElementById("card-pendientes").textContent       = formatearMoneda(totalPendientes, "COP");
+  document.getElementById("card-pendientes").textContent = formatearMoneda(totalPendientes, "COP");
   document.getElementById("card-pendientes-count").textContent = pendientes.length;
 
-  // ----- Cambios % vs mes anterior -----
-  pintarCambio("card-gastos-cambio",   totalGastos,   totalGastosAnt);
-  pintarCambio("card-ingresos-cambio", totalIngresos, totalIngresosAnt);
-  pintarCambio("card-balance-cambio",  balance,       balanceAnt);
-
-  // ----- Pendientes: estado neutro, sólo cambia el texto según count -----
+  const elGastosCambio = document.getElementById("card-gastos-cambio");
+  const elIngresosCambio = document.getElementById("card-ingresos-cambio");
+  const elBalanceCambio = document.getElementById("card-balance-cambio");
   const elPend = document.getElementById("card-pendientes-cambio");
+
+  if (elGastosCambio) {
+    elGastosCambio.classList.remove("tarjeta-resumen__cambio--up", "tarjeta-resumen__cambio--down");
+    elGastosCambio.textContent = `${gastos.length} movimientos`;
+  }
+
+  if (elIngresosCambio) {
+    elIngresosCambio.classList.remove("tarjeta-resumen__cambio--up", "tarjeta-resumen__cambio--down");
+    elIngresosCambio.textContent = `${ingresos.length} movimientos`;
+  }
+
+  if (elBalanceCambio) {
+    elBalanceCambio.classList.remove("tarjeta-resumen__cambio--up", "tarjeta-resumen__cambio--down");
+    elBalanceCambio.textContent = balance > 0 ? "Balance positivo" : balance < 0 ? "Balance negativo" : "Balance en cero";
+  }
+
   if (elPend) {
     elPend.classList.remove("tarjeta-resumen__cambio--up", "tarjeta-resumen__cambio--down");
     elPend.textContent = pendientes.length > 0 ? "Requiere atención" : "Sin pendientes";
