@@ -45,8 +45,16 @@
 
     let timer = null;
 
-    function mostrar(resultados) {
-      if (!resultados.length) { ocultar(); return; }
+    function mostrar(resultados, termino) {
+      if (!resultados.length) {
+        listaEl.innerHTML = `<li class="contacto-sugerencias__vacio">
+          Sin resultados para <strong>${escHtml(termino || "")}</strong>.
+          <span class="contacto-sug__hint">Si lo creaste en HubSpot hace menos de 2 min, espera y vuelve a buscar. También puedes escribir el nombre directamente.</span>
+        </li>`;
+        listaEl.hidden = false;
+        inputEl.setAttribute("aria-expanded", "true");
+        return;
+      }
 
       listaEl.innerHTML = resultados.map((c, i) => {
         const esEmpresa = c.tipo === "empresa";
@@ -92,9 +100,9 @@
           ...(Array.isArray(contactos) ? contactos : []),
           ...(Array.isArray(empresas)  ? empresas  : []),
         ];
-        mostrar(resultados.length ? resultados : mocksFiltrados(termino));
+        mostrar(resultados, termino);
       } catch (_) {
-        mostrar(mocksFiltrados(termino));
+        mostrar(mocksFiltrados(termino), termino);
       }
     }
 

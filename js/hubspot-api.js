@@ -118,24 +118,10 @@
   async function buscarContactos(termino) {
     const body = {
       filterGroups: [
-        {
-          filters: [
-            {
-              propertyName: "email",
-              operator: "CONTAINS_TOKEN",
-              value: termino,
-            },
-          ],
-        },
-        {
-          filters: [
-            {
-              propertyName: "firstname",
-              operator: "CONTAINS_TOKEN",
-              value: termino,
-            },
-          ],
-        },
+        { filters: [{ propertyName: "email",     operator: "CONTAINS_TOKEN", value: termino }] },
+        { filters: [{ propertyName: "firstname",  operator: "CONTAINS_TOKEN", value: termino }] },
+        { filters: [{ propertyName: "lastname",   operator: "CONTAINS_TOKEN", value: termino }] },
+        { filters: [{ propertyName: "company",    operator: "CONTAINS_TOKEN", value: termino }] },
       ],
       properties: PROPS_CONTACTO.split(","),
       limit: 20,
@@ -248,6 +234,27 @@
       fechaCierre: p.closedate || "",
       propietarioId: p.hubspot_owner_id || "",
     };
+  }
+
+  // Obtiene el deal con sus asociaciones de contactos y empresas en un solo request.
+  // Devuelve { deal, contactIds: [], companyIds: [] }.
+  async function obtenerAsociacionesDeal(dealId) {
+    const data = await req(
+      "GET",
+      `/crm/v3/objects/deals/${dealId}?properties=${PROPS_DEAL}&associations=contacts,companies`,
+    );
+    const deal       = normalizarDeal(data);
+    const contactIds = (data.associations?.contacts?.results  || []).map(r => r.id);
+    const companyIds = (data.associations?.companies?.results || []).map(r => r.id);
+    return { deal, contactIds, companyIds };
+  }
+
+  async function obtenerEmpresaPorId(id) {
+    const data = await req(
+      "GET",
+      `/crm/v3/objects/companies/${id}?properties=${PROPS_EMPRESA}`,
+    );
+    return normalizarEmpresa(data);
   }
 
   // -----------------------------------------------------------------
@@ -611,6 +618,8 @@
       // Deals / Negocios
       buscarDeals,
       obtenerDeals,
+      obtenerAsociacionesDeal,
+      obtenerEmpresaPorId,
 
       // Owners / Asesores
       obtenerOwners,

@@ -6,13 +6,17 @@
    Al seleccionar un deal:
    - Rellena #cot-negocio con el nombre del deal.
    - Guarda el ID de HubSpot en #cot-deal-id (hidden).
-   - Muestra etapa y monto como contexto visual.
+   - Busca contactos/empresas asociados al deal en HubSpot y
+     autocompleta #cot-cliente si está vacío.
+   - Muestra un hint debajo del campo de negocio con el estado
+     de la vinculación al cliente.
 
    DOM esperado (index.html):
      #negocio-autocomplete-wrap  → contenedor con position:relative
      #cot-negocio                → input de texto
      #negocio-sugerencias        → <ul> dropdown
      #cot-deal-id                → <input hidden> para el ID del deal
+     #deal-cliente-hint          → <p> para mostrar feedback de asociación
 
    Fallback: si HubSpotAPI falla (CORS, token, etc.), muestra
    DEALS_MOCK para no bloquear el flujo.
@@ -57,11 +61,20 @@
   // RENDER DEL DROPDOWN
   // -----------------------------------------------------------------
 
-  function mostrarSugerencias(lista, resultados) {
+  function mostrarSugerencias(lista, resultados, termino) {
     const input = document.getElementById("cot-negocio");
 
     if (!resultados || resultados.length === 0) {
-      ocultarSugerencias(lista, input);
+      if (termino) {
+        lista.innerHTML = `<li class="contacto-sugerencias__vacio">
+          Sin resultados para <strong>${escHtml(termino)}</strong>.
+          <span class="contacto-sug__hint">Si lo creaste en HubSpot hace menos de 2 min, espera y vuelve a buscar.</span>
+        </li>`;
+        lista.hidden = false;
+        input?.setAttribute("aria-expanded", "true");
+      } else {
+        ocultarSugerencias(lista, input);
+      }
       return;
     }
 
@@ -90,7 +103,20 @@
   }
 
   // -----------------------------------------------------------------
-  // SELECCIÓN DE UN DEAL
+  // HINT DE CLIENTE VINCULADO
+  // -----------------------------------------------------------------
+
+  function setHint(texto, tipo) {
+    const el = document.getElementById("deal-cliente-hint");
+    if (!el) return;
+    if (!texto) { el.hidden = true; el.textContent = ""; return; }
+    el.className = "form-hint deal-hint" + (tipo ? " deal-hint--" + tipo : "");
+    el.innerHTML = texto;
+    el.hidden = false;
+  }
+
+  // -----------------------------------------------------------------
+  // SELECCIÓN DE UN DEAL + CARGA DE ASOCIACIONES
   // -----------------------------------------------------------------
 
   function seleccionarDeal(deal) {
@@ -105,6 +131,87 @@
     ocultarSugerencias();
 
     console.info(`[DealsAutocomplete] Deal seleccionado: "${deal.nombre}" (ID: ${deal.id})`);
+
+    // Intentar vincular el cliente automáticamente (solo con API real)
+    const esMock = String(deal.id).startsWith("mock-");
+    if (!esMock && window.HubSpotAPI) {
+      cargarAsociacionesDeal(deal);
+    }
+  }
+
+  async function cargarAsociacionesDeal(deal) {
+    setHint("Buscando contacto del negocio…", "cargando");
+
+    try {
+      const { contactIds, companyIds } = await window.HubSpotAPI.obtenerAsociacionesDeal(deal.id);
+
+      // 1. Intentar contactos primero
+      if (contactIds.length > 0) {
+        const contacto = await window.HubSpotAPI.obtenerContactoPorId(contactIds[0]);
+        if (contacto) {
+          poblarCliente(contacto.nombre || contacto.email, contacto.id, contacto.email);
+          const nombre = escHtml(contacto.nombre || contacto.email);
+          setHint(
+            `Contacto vinculado desde el negocio: <strong>${nombre}</strong>
+             <button type="button" class="deal-hint__limpiar" id="deal-desvincular-cliente">Cambiar</button>`,
+            "ok"
+          );
+          document.getElementById("deal-desvincular-cliente")?.addEventListener("click", () => {
+            limpiarClienteVinculado();
+            setHint("Cliente desvinculado. Puedes escribir otro.", "info");
+          });
+          return;
+        }
+      }
+
+      // 2. Fallback a empresa
+      if (companyIds.length > 0) {
+        const empresa = await window.HubSpotAPI.obtenerEmpresaPorId(companyIds[0]);
+        if (empresa) {
+          poblarCliente(empresa.nombre, empresa.id, "");
+          const nombre = escHtml(empresa.nombre);
+          setHint(
+            `Empresa vinculada desde el negocio: <strong>${nombre}</strong>
+             <button type="button" class="deal-hint__limpiar" id="deal-desvincular-cliente">Cambiar</button>`,
+            "ok"
+          );
+          document.getElementById("deal-desvincular-cliente")?.addEventListener("click", () => {
+            limpiarClienteVinculado();
+            setHint("Cliente desvinculado. Puedes escribir otro.", "info");
+          });
+          return;
+        }
+      }
+
+      // 3. Sin asociaciones
+      setHint(
+        "Este negocio no tiene contactos asociados en HubSpot. " +
+        "Puedes escribir el cliente manualmente en el campo de arriba.",
+        "aviso"
+      );
+    } catch (e) {
+      console.warn("[Deals] No se pudieron cargar asociaciones:", e.message);
+      setHint("", null);
+    }
+  }
+
+  function poblarCliente(nombre, id, email) {
+    const inputNombre = document.getElementById("cot-cliente");
+    const inputId     = document.getElementById("cot-contacto-id");
+    const inputEmail  = document.getElementById("cot-email-destinatario");
+
+    // Solo autocompleta si el campo está vacío (no pisamos lo que el usuario escribió)
+    if (inputNombre && !inputNombre.value.trim()) inputNombre.value = nombre || "";
+    if (inputId     && !inputId.value)            inputId.value     = id     || "";
+    if (inputEmail  && email && !inputEmail.value) inputEmail.value = email;
+  }
+
+  function limpiarClienteVinculado() {
+    const inputNombre = document.getElementById("cot-cliente");
+    const inputId     = document.getElementById("cot-contacto-id");
+    if (inputNombre) inputNombre.value = "";
+    if (inputId)     inputId.value     = "";
+    inputNombre?.focus();
   }
 
   // -----------------------------------------------------------------
@@ -122,7 +229,7 @@
 
     if (!window.HubSpotAPI) {
       console.warn("[Deals] HubSpotAPI no disponible — mostrando mocks.");
-      mostrarSugerencias(lista, mocksFiltrados(termino));
+      mostrarSugerencias(lista, mocksFiltrados(termino), termino);
       return;
     }
 
@@ -134,11 +241,11 @@
       }
 
       console.log(`[Deals] ${resultados.length} resultado(s) para "${termino}":`, resultados);
-      mostrarSugerencias(lista, resultados.length > 0 ? resultados : mocksFiltrados(termino));
+      mostrarSugerencias(lista, resultados.length > 0 ? resultados : [], termino);
 
     } catch (e) {
       console.error("[Deals] Error de API (fallback a mocks):", e);
-      mostrarSugerencias(lista, mocksFiltrados(termino));
+      mostrarSugerencias(lista, mocksFiltrados(termino), termino);
     }
   }
 
@@ -158,6 +265,7 @@
       // Limpiar el deal ID si el usuario escribe manualmente
       const idEl = document.getElementById("cot-deal-id");
       if (idEl) idEl.value = "";
+      setHint("", null);
 
       const q = input.value.trim();
       if (q.length < 2) { ocultarSugerencias(lista, input); return; }
@@ -219,6 +327,7 @@
           dealSeleccionado = null;
           const idEl = document.getElementById("cot-deal-id");
           if (idEl) idEl.value = "";
+          setHint("", null);
           ocultarSugerencias(lista, input);
         }
       }).observe(modal, { attributes: true, attributeFilter: ["hidden"] });
@@ -240,6 +349,7 @@
         const inputId     = document.getElementById("cot-deal-id");
         if (inputNombre) inputNombre.value = "";
         if (inputId)     inputId.value     = "";
+        setHint("", null);
         ocultarSugerencias();
       },
     };

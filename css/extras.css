@@ -834,6 +834,78 @@
   color: #1a73e8;
 }
 
+.contacto-sugerencias__vacio {
+  padding: 10px 14px;
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  line-height: 1.4;
+  cursor: default;
+}
+
+.contacto-sug__hint {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-debil);
+}
+
+/* ============================================================
+   HINT DE CLIENTE VINCULADO DESDE DEAL
+   ============================================================ */
+
+.form-hint {
+  margin: var(--esp-1) 0 0;
+  font-size: var(--font-tam-xs);
+  line-height: 1.5;
+  color: var(--color-texto-suave);
+}
+
+.deal-hint {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: var(--esp-1) var(--esp-2);
+  border-radius: var(--radio-sm);
+}
+
+.deal-hint--cargando {
+  color: var(--color-texto-suave);
+}
+
+.deal-hint--ok {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+.deal-hint--aviso {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.deal-hint--info {
+  color: var(--color-texto-suave);
+  background: var(--color-fondo-suave);
+}
+
+.deal-hint__limpiar {
+  margin-left: var(--esp-2);
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: inherit;
+  background: transparent;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.deal-hint__limpiar:hover {
+  opacity: 1;
+}
+
 /* ============================================================
    AUTOCOMPLETE DE PRODUCTOS — cotizaciones (dropdown flotante)
    ============================================================ */

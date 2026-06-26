@@ -47,16 +47,15 @@ try {
         $usuarioId  = !empty($_GET['usuario_id']) ? (int) $_GET['usuario_id'] : null;
 
         /*
-         * Fuente de verdad: movimientos_caja tipo=gasto, categoria=comisiones.
+         * Comisiones: fuente = movimientos_caja tipo=gasto, categoria=comisiones.
+         *   pendiente → devengada (factura HubSpot pagada, no transferida aún)
+         *   pagado    → ya transferida al asesor
          *
-         * Estado 'pendiente' → comisión devengada (factura HubSpot pagada, aún no
-         *                       transferida al asesor). Creado automáticamente por
-         *                       api/hubspot-webhook.php.
-         * Estado 'pagado'    → comisión ya transferida al asesor.
-         *
-         * teorico    = devengado total (pendiente + pagado)
-         * registrado = sólo lo ya pagado al asesor
+         * Ventas: fuente = ingresos_factura (todos los métodos de pago).
+         *   Permite mostrar la base real de comisión sin back-calcular.
          */
+
+        // Comisiones devengadas y pagadas
         $sqlCom = "
             SELECT m.responsable_id,
                    SUM(m.valor)                                  AS total_devengado,
@@ -85,37 +84,70 @@ try {
             ];
         }
 
+        // Ventas reales por asesor desde ingresos_factura
+        $sqlIng = "
+            SELECT asesor_id,
+                   SUM(monto)                                         AS total_ventas,
+                   SUM(IF(metodo_pago = 'efectivo', monto, 0))        AS ventas_efectivo,
+                   SUM(IF(metodo_pago != 'efectivo', monto, 0))       AS ventas_no_efectivo,
+                   COUNT(*)                                           AS n_facturas
+            FROM ingresos_factura
+            WHERE estado = 'activo'
+              AND fecha_pago BETWEEN ? AND ?
+        ";
+        $paramsI = [$desde, $hasta];
+        if ($usuarioId) { $sqlIng .= " AND asesor_id = ?"; $paramsI[] = $usuarioId; }
+        $sqlIng .= " GROUP BY asesor_id";
+        $stmtI = $db->prepare($sqlIng);
+        $stmtI->execute($paramsI);
+        $ventasPorAsesor = [];
+        foreach ($stmtI->fetchAll() as $r) {
+            $ventasPorAsesor[$r['asesor_id']] = [
+                'total'          => (float) $r['total_ventas'],
+                'efectivo'       => (float) $r['ventas_efectivo'],
+                'no_efectivo'    => (float) $r['ventas_no_efectivo'],
+                'n_facturas'     => (int)   $r['n_facturas'],
+            ];
+        }
+
         // Config de comisiones
         $configs = $db->query("SELECT * FROM config_comisiones_asesores")->fetchAll();
         $configMap = [];
         foreach ($configs as $c) { $configMap[$c['usuario_id']] = $c; }
 
-        // Todos los asesores con actividad en el período
+        // Combinar: mostrar asesores con comisiones Y/O ventas en el período
         $stmtU = $db->query("SELECT id, nombre FROM usuarios WHERE deleted_at IS NULL ORDER BY nombre");
         $filas = [];
         foreach ($stmtU->fetchAll() as $u) {
-            $uid = (int) $u['id'];
-            $com = $comisionesPorAsesor[$uid] ?? null;
-            if (!$com) continue;
+            $uid  = (int) $u['id'];
+            $com  = $comisionesPorAsesor[$uid] ?? null;
+            $vtas = $ventasPorAsesor[$uid]     ?? null;
+            if (!$com && !$vtas) continue;
 
-            $cfg      = $configMap[$uid] ?? null;
-            $pct      = $cfg ? (float) $cfg['porcentaje'] : 0;
-            $activo   = $cfg ? (bool)  $cfg['activo']     : true;
-            $teorico  = $com['devengado'];
-            $registrado = $com['pagado'];
-            // ingresos aproximado: si porcentaje > 0, inferir base; si no, 0
-            $ingresos = ($pct > 0) ? round($teorico / ($pct / 100)) : 0;
+            $cfg        = $configMap[$uid] ?? null;
+            $pct        = $cfg ? (float) $cfg['porcentaje'] : 0;
+            $activo     = $cfg ? (bool)  $cfg['activo']     : true;
+            $teorico    = $com ? $com['devengado'] : 0;
+            $registrado = $com ? $com['pagado']    : 0;
+
+            // Ventas reales desde ingresos_factura; fallback a back-cálculo si no hay datos aún
+            $ingresos = $vtas
+                ? $vtas['total']
+                : (($pct > 0 && $teorico > 0) ? round($teorico / ($pct / 100)) : 0);
 
             $filas[] = [
-                'usuario_id'  => $uid,
-                'responsable' => $u['nombre'],
-                'activo'      => $activo,
-                'ingresos'    => $ingresos,
-                'porcentaje'  => $pct,
-                'teorico'     => round($teorico, 2),
-                'registrado'  => round($registrado, 2),
-                'pagos'       => $com['pagados'],
-                'diferencia'  => round($registrado - $teorico, 2),
+                'usuario_id'      => $uid,
+                'responsable'     => $u['nombre'],
+                'activo'          => $activo,
+                'ingresos'        => round($ingresos, 2),
+                'ventas_efectivo' => round($vtas ? $vtas['efectivo']    : 0, 2),
+                'ventas_otros'    => round($vtas ? $vtas['no_efectivo'] : 0, 2),
+                'n_facturas'      => $vtas ? $vtas['n_facturas'] : 0,
+                'porcentaje'      => $pct,
+                'teorico'         => round($teorico, 2),
+                'registrado'      => round($registrado, 2),
+                'pagos'           => $com ? $com['pagados'] : 0,
+                'diferencia'      => round($registrado - $teorico, 2),
             ];
         }
 
@@ -127,6 +159,110 @@ try {
             'hasta' => $hasta,
             'filas' => $filas,
         ]);
+    }
+
+    // ── GET facturas con comisión sugerida y ajuste vigente ──
+    if ($method === 'GET' && !empty($_GET['ajustes'])) {
+        $desde     = $_GET['desde']      ?? date('Y-01-01');
+        $hasta     = $_GET['hasta']      ?? date('Y-m-d');
+        $usuarioId = !empty($_GET['asesor_id']) ? (int) $_GET['asesor_id'] : null;
+
+        $sql = "
+            SELECT inf.id,
+                   inf.hubspot_inv_id,
+                   inf.referencia,
+                   inf.fecha_pago,
+                   inf.monto,
+                   inf.moneda,
+                   inf.metodo_pago,
+                   inf.titulo,
+                   inf.asesor_id,
+                   u.nombre                                         AS asesor,
+                   cca.porcentaje,
+                   ROUND(inf.monto * COALESCE(cca.porcentaje, 0) / 100, 0)  AS comision_sugerida,
+                   (SELECT ca.comision_ajustada
+                      FROM comisiones_ajustes ca
+                     WHERE ca.ingreso_factura_id = inf.id
+                     ORDER BY ca.created_at DESC LIMIT 1)           AS comision_ajustada,
+                   (SELECT ca.created_at
+                      FROM comisiones_ajustes ca
+                     WHERE ca.ingreso_factura_id = inf.id
+                     ORDER BY ca.created_at DESC LIMIT 1)           AS ultimo_ajuste_at,
+                   (SELECT COUNT(*)
+                      FROM comisiones_ajustes ca
+                     WHERE ca.ingreso_factura_id = inf.id)          AS n_ajustes
+            FROM ingresos_factura inf
+            LEFT JOIN usuarios u                   ON u.id   = inf.asesor_id
+            LEFT JOIN config_comisiones_asesores cca
+                   ON cca.usuario_id = inf.asesor_id AND cca.activo = 1
+            WHERE inf.estado = 'activo'
+              AND inf.fecha_pago BETWEEN :desde AND :hasta
+        ";
+        $params = [':desde' => $desde, ':hasta' => $hasta];
+        if ($usuarioId) { $sql .= " AND inf.asesor_id = :asesor"; $params[':asesor'] = $usuarioId; }
+        $sql .= " ORDER BY inf.fecha_pago DESC, inf.id DESC";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        jsonResponse(['ok' => true, 'desde' => $desde, 'hasta' => $hasta, 'data' => $stmt->fetchAll()]);
+    }
+
+    // ── POST ajuste manual de comisión ────────────────────────
+    if ($method === 'POST' && !empty($_GET['ajuste'])) {
+        $b          = getBody();
+        $facturaId  = (int) ($b['ingreso_factura_id'] ?? 0);
+        $ajustada   = isset($b['comision_ajustada']) ? (float) $b['comision_ajustada'] : null;
+        $motivo     = trim($b['motivo'] ?? '');
+        $usuarioId  = !empty($b['usuario_id']) ? (int) $b['usuario_id'] : null;
+
+        if (!$facturaId)      errorResponse('ingreso_factura_id requerido', 400);
+        if ($ajustada === null || $ajustada < 0) errorResponse('comision_ajustada debe ser >= 0', 400);
+
+        // Leer estado actual
+        $stmtI = $db->prepare("
+            SELECT inf.monto,
+                   COALESCE(cca.porcentaje, 0) AS porcentaje,
+                   (SELECT ca.comision_ajustada
+                      FROM comisiones_ajustes ca
+                     WHERE ca.ingreso_factura_id = inf.id
+                     ORDER BY ca.created_at DESC LIMIT 1) AS ultima
+            FROM ingresos_factura inf
+            LEFT JOIN config_comisiones_asesores cca
+                   ON cca.usuario_id = inf.asesor_id AND cca.activo = 1
+            WHERE inf.id = ?
+        ");
+        $stmtI->execute([$facturaId]);
+        $row = $stmtI->fetch();
+        if (!$row) errorResponse('Factura no encontrada', 404);
+
+        $sugerida = round((float) $row['monto'] * (float) $row['porcentaje'] / 100, 0);
+        $anterior = $row['ultima'] !== null ? (float) $row['ultima'] : null;
+
+        $db->prepare("
+            INSERT INTO comisiones_ajustes
+              (ingreso_factura_id, comision_sugerida, comision_anterior, comision_ajustada, motivo, usuario_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ")->execute([$facturaId, $sugerida, $anterior, $ajustada, $motivo ?: null, $usuarioId]);
+
+        jsonResponse(['ok' => true, 'id' => (int) $db->lastInsertId()]);
+    }
+
+    // ── GET historial de ajustes de una factura ───────────────
+    if ($method === 'GET' && !empty($_GET['historial'])) {
+        $facturaId = (int) ($_GET['factura_id'] ?? 0);
+        if (!$facturaId) errorResponse('factura_id requerido', 400);
+
+        $stmt = $db->prepare("
+            SELECT ca.id, ca.comision_sugerida, ca.comision_anterior,
+                   ca.comision_ajustada, ca.motivo, ca.created_at,
+                   u.nombre AS usuario
+            FROM comisiones_ajustes ca
+            LEFT JOIN usuarios u ON u.id = ca.usuario_id
+            WHERE ca.ingreso_factura_id = ?
+            ORDER BY ca.created_at DESC
+        ");
+        $stmt->execute([$facturaId]);
+        jsonResponse(['ok' => true, 'data' => $stmt->fetchAll()]);
     }
 
     // ── PUT (guardar config completa) ────────────────────────

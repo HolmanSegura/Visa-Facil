@@ -61,11 +61,16 @@
   // RENDER DEL DROPDOWN
   // -----------------------------------------------------------------
 
-  function mostrarSugerencias(lista, resultados) {
+  function mostrarSugerencias(lista, resultados, terminoBusqueda) {
     const input = document.getElementById("cot-cliente");
 
     if (!resultados.length) {
-      ocultarSugerencias(lista, input);
+      lista.innerHTML = `<li class="contacto-sugerencias__vacio">
+        Sin resultados para <strong>${escHtml(terminoBusqueda || "")}</strong>.
+        <span class="contacto-sug__hint">Si lo creaste en HubSpot hace menos de 2 min, espera y vuelve a buscar. También puedes escribir el nombre directamente.</span>
+      </li>`;
+      lista.hidden = false;
+      input?.setAttribute("aria-expanded", "true");
       return;
     }
 
@@ -153,10 +158,10 @@
       // HubSpotAPI ya agrega tipo:'contacto' y tipo:'empresa' en sus normalizadores
       const resultados = [...contactos, ...empresas];
       console.log(`[Contactos] ${contactos.length} contacto(s) + ${empresas.length} empresa(s) para "${termino}"`);
-      mostrarSugerencias(lista, resultados);
+      mostrarSugerencias(lista, resultados, termino);
     } catch (e) {
       console.error("[Contactos] Error de API (fallback a datos de prueba):", e);
-      mostrarSugerencias(lista, mocksFiltrados(termino));
+      mostrarSugerencias(lista, mocksFiltrados(termino), termino);
     }
   }
 

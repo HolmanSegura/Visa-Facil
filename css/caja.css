@@ -947,3 +947,181 @@
   background: #fef3c7;
   border-color: #fcd34d;
 }
+
+/* ============================================================
+   REPORTE DE COMISIONES — TABS (Resumen / Ingresos facturados)
+   ============================================================ */
+
+.rep-com__tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-borde);
+  margin: var(--esp-3) 0 var(--esp-4);
+}
+
+.rep-com__tab {
+  padding: var(--esp-2) var(--esp-4);
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto-suave);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--trans-rapida), border-color var(--trans-rapida);
+  white-space: nowrap;
+}
+
+.rep-com__tab:hover {
+  color: var(--color-texto);
+}
+
+.rep-com__tab--activo {
+  color: var(--color-acento);
+  border-bottom-color: var(--color-acento);
+}
+
+/* ============================================================
+   TABLA INGRESOS FACTURADOS — filas de factura + editor
+   ============================================================ */
+
+.tabla-facturas-comision .factura-titulo {
+  display: block;
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-medio);
+  color: var(--color-texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.tabla-facturas-comision .factura-ref {
+  display: block;
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-debil);
+  font-family: monospace;
+}
+
+.tabla-facturas-comision .fecha-celda {
+  font-size: var(--font-tam-sm);
+  white-space: nowrap;
+  color: var(--color-texto-suave);
+}
+
+/* Badge "Ajustado" — aparece junto al valor de comisión final */
+.badge-ajustado {
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 6px;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: var(--font-peso-semibold);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--color-acento);
+  background: var(--color-acento-claro);
+  border-radius: var(--radio-pill);
+  vertical-align: middle;
+}
+
+/* Celda de comisión final — contiene display y editor */
+.com-celda-ajustada {
+  min-width: 200px;
+}
+
+/* Editor inline dentro de la celda */
+.com-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  padding: var(--esp-1) 0;
+}
+
+/* Botones de acción de la fila (editar, historial) */
+.com-acciones {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.com-acciones .btn-icono-mini {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Contador de ajustes junto al botón de historial */
+.historial-cnt {
+  font-size: 10px;
+  font-weight: var(--font-peso-bold);
+  color: var(--color-acento);
+  line-height: 1;
+}
+
+/* ============================================================
+   HISTORIAL DE AJUSTES — fila expansible debajo de cada factura
+   ============================================================ */
+
+.historial-row td {
+  background: var(--color-fondo-suave);
+  border-top: none;
+  padding: 0 var(--esp-3) var(--esp-3);
+}
+
+.historial-comision {
+  padding: var(--esp-3);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo-panel);
+  border: 1px solid var(--color-borde);
+}
+
+.historial-comision__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-tam-xs);
+}
+
+.historial-comision__tabla th,
+.historial-comision__tabla td {
+  padding: var(--esp-1) var(--esp-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.historial-comision__tabla th {
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+}
+
+.historial-comision__tabla .num {
+  text-align: right;
+}
+
+.historial-comision__tabla tr:last-child td {
+  border-bottom: none;
+}
+
+.historial-comision__estado {
+  padding: var(--esp-3);
+  font-size: var(--font-tam-sm);
+  color: var(--color-texto-suave);
+  text-align: center;
+}
+
+.historial-comision__estado--error {
+  color: #dc2626;
+}
+
+/* Texto "Inicial" en ajuste anterior cuando es el primer ajuste */
+.com-estado-texto {
+  font-size: 10px;
+  color: var(--color-texto-debil);
+  font-style: italic;
+}

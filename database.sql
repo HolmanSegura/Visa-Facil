@@ -345,6 +345,59 @@ CREATE TABLE IF NOT EXISTS `envios_email` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- 15. INGRESOS_FACTURA
+--     Registro centralizado de todos los pagos de facturas HubSpot,
+--     independientemente del método de pago.
+--     Es la fuente de verdad para el cálculo de comisiones.
+--     Los pagos en efectivo también crean una entrada en movimientos_caja
+--     (Caja Menor), referenciada por mov_caja_id.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `ingresos_factura` (
+  `id`             INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  `hubspot_inv_id` VARCHAR(32)     NOT NULL             COMMENT 'objectId de la Invoice en HubSpot',
+  `referencia`     VARCHAR(50)     NOT NULL             COMMENT 'hs-inv-{id}',
+  `fecha_pago`     DATE            NOT NULL,
+  `monto`          DECIMAL(15, 2)  NOT NULL,
+  `moneda`         VARCHAR(3)      NOT NULL DEFAULT 'COP',
+  `metodo_pago`    VARCHAR(20)     NOT NULL DEFAULT ''  COMMENT 'efectivo | transferencia | tarjeta | cheque | …',
+  `titulo`         VARCHAR(255)    NULL,
+  `punto_venta`    VARCHAR(100)    NULL,
+  `asesor_id`      INT UNSIGNED    NULL,
+  `mov_caja_id`    INT UNSIGNED    NULL                 COMMENT 'FK a movimientos_caja cuando método=efectivo',
+  `estado`         ENUM('activo','anulado') NOT NULL DEFAULT 'activo',
+  `created_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ingfact_ref`      (`referencia`),
+  KEY `idx_ingfact_asesor`         (`asesor_id`),
+  KEY `idx_ingfact_fecha`          (`fecha_pago`),
+  KEY `idx_ingfact_estado`         (`estado`),
+  CONSTRAINT `fk_ingfact_asesor`   FOREIGN KEY (`asesor_id`)   REFERENCES `usuarios` (`id`)          ON DELETE SET NULL,
+  CONSTRAINT `fk_ingfact_movcaja`  FOREIGN KEY (`mov_caja_id`) REFERENCES `movimientos_caja` (`id`)  ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 16. COMISIONES_AJUSTES
+--     Historial de ajustes manuales de comisión por factura.
+--     El registro más reciente por ingreso_factura_id es el vigente.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS `comisiones_ajustes` (
+  `id`                   INT UNSIGNED   NOT NULL AUTO_INCREMENT,
+  `ingreso_factura_id`   INT UNSIGNED   NOT NULL,
+  `comision_sugerida`    DECIMAL(15, 2) NOT NULL  COMMENT 'Calculada automáticamente al momento del ajuste',
+  `comision_anterior`    DECIMAL(15, 2) NULL       COMMENT 'Valor vigente antes de este ajuste (NULL = primero)',
+  `comision_ajustada`    DECIMAL(15, 2) NOT NULL   COMMENT 'Nuevo valor aplicado',
+  `motivo`               VARCHAR(500)   NULL,
+  `usuario_id`           INT UNSIGNED   NULL,
+  `created_at`           TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_cajuste_factura`  (`ingreso_factura_id`),
+  KEY `idx_cajuste_usuario`  (`usuario_id`),
+  CONSTRAINT `fk_cajuste_factura`  FOREIGN KEY (`ingreso_factura_id`) REFERENCES `ingresos_factura` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cajuste_usuario`  FOREIGN KEY (`usuario_id`)         REFERENCES `usuarios` (`id`)         ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
 -- Reactivar FK checks
 -- ============================================================
 SET FOREIGN_KEY_CHECKS = 1;

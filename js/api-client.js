@@ -80,9 +80,17 @@
 
   // ── Comisiones ────────────────────────────────────────────
   const comisiones = {
-    obtenerConfig: ()      => request("GET", "/comisiones.php"),
-    guardarConfig: (datos) => request("PUT", "/comisiones.php", datos),
-    reporte: (filtros)     => request("GET", "/comisiones.php", undefined, { reporte: 1, ...filtros }),
+    obtenerConfig: ()           => request("GET",  "/comisiones.php"),
+    guardarConfig: (datos)      => request("PUT",  "/comisiones.php", datos),
+    reporte:    (filtros)       => request("GET",  "/comisiones.php", undefined, { reporte: 1, ...filtros }),
+    ajustes:    (filtros)       => request("GET",  "/comisiones.php", undefined, { ajustes: 1, ...filtros }),
+    ajustar:    (datos)         => request("POST", "/comisiones.php", datos,     { ajuste: 1 }),
+    historial:  (factura_id)    => request("GET",  "/comisiones.php", undefined, { historial: 1, factura_id }),
+  };
+
+  const ingresos = {
+    listar:  (filtros = {}) => request("GET", "/ingresos.php", undefined, filtros),
+    resumen: (filtros = {}) => request("GET", "/ingresos.php", undefined, { resumen: 1, ...filtros }),
   };
 
   // ── Upload ────────────────────────────────────────────────
@@ -122,7 +130,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    window.Api = { cotizaciones, caja, productos, comisiones, usuarios, categorias, subirAdjunto };
+    window.Api = { cotizaciones, caja, productos, comisiones, ingresos, usuarios, categorias, subirAdjunto };
     console.info("[API Client] Listo. Endpoints base:", BASE);
     cargarEnvConfig();
   });

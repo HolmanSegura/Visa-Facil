@@ -8,20 +8,25 @@
  * Acciones según el evento recibido:
  *
  *   hs_invoice_status = paid
- *     → Upsert comisión del asesor   (gasto,   pendiente, ref: hs-inv-com-{id})
- *     → Upsert ingreso en efectivo   (ingreso, pagado,    ref: hs-inv-ing-{id})
- *       solo si metodo_pago = "efectivo"
+ *     → Upsert comisión del asesor   (movimientos_caja gasto, pendiente,
+ *                                      ref: hs-inv-com-{id})
+ *     → Upsert ingreso en ingresos_factura para TODOS los métodos de pago
+ *                                      (ref: hs-inv-{id})
+ *     → Upsert ingreso en Caja Menor  (movimientos_caja ingreso, pagado,
+ *                                      ref: hs-inv-ing-{id})
+ *                                      SOLO si método de pago = "efectivo"
  *
  *   hs_invoice_status = cancelled | voided
- *     → Soft-delete de ambos registros anteriores
+ *     → Soft-delete comisión e ingreso en movimientos_caja
+ *     → Marcar ingresos_factura.estado = 'anulado'
  *
  *   hs_amount_billed  (cualquier valor)
- *     → Si la factura sigue pagada, actualiza montos (upsert)
+ *     → Si la factura sigue pagada, actualiza montos (re-procesa)
  *
  * Suscripciones necesarias en la app HubSpot (Webhooks):
  *   Objeto: Factura (0-53) · Evento: Propiedad cambiada
  *     Propiedad 1: hs_invoice_status
- *     Propiedad 2: hs_amount_billed   ← para sincronizar ediciones de monto
+ *     Propiedad 2: hs_amount_billed
  *
  * .env:
  *   HUBSPOT_TOKEN          = pat-nal-...   (Token de acceso)
@@ -94,8 +99,9 @@ exit;
 
 /**
  * Procesa (o re-procesa) una factura pagada:
- *  - Upsert comisión del asesor   (gasto, pendiente)
- *  - Upsert ingreso en efectivo   (ingreso, pagado) — solo si metodo_pago = efectivo
+ *  1. Upsert comisión del asesor en movimientos_caja (gasto, pendiente)
+ *  2. Upsert ingreso en ingresos_factura — TODOS los métodos de pago
+ *  3. Upsert ingreso en movimientos_caja  — SOLO si método = efectivo (Caja Menor)
  */
 function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
 {
@@ -116,7 +122,6 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
     $moneda     = $p['hs_currency_code']   ?? 'COP';
     $metodoPago = strtolower(trim($p['metodo_pago'] ?? ''));
 
-    // Solo procesar si la factura sigue pagada en HubSpot
     if ($status !== 'paid') {
         error_log("[Webhook] Factura #{$invoiceId} no está pagada (status={$status}), ignorando.");
         return;
@@ -127,60 +132,68 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
         return;
     }
 
-    // ── Comisión del asesor ───────────────────────────────
+    // ── 1. Comisión del asesor ────────────────────────────
+    $asesorId = null;
+
     if ($ownerId) {
         $usuario = buscarUsuarioConComision($db, 'hubspot_owner_id', $ownerId);
 
         if (!$usuario) {
-            // Fallback: buscar por email del owner en HubSpot
             $owner = hsGet("/crm/v3/owners/{$ownerId}", $token);
             if ($owner && !empty($owner['email'])) {
                 $usuario = buscarUsuarioConComision($db, 'email', $owner['email']);
                 if ($usuario) {
-                    // Guardar para evitar esta llamada en el futuro
                     $db->prepare('UPDATE usuarios SET hubspot_owner_id = ? WHERE id = ?')
                        ->execute([$ownerId, $usuario['uid']]);
                 }
             }
         }
 
-        if ($usuario && (float) $usuario['porcentaje'] > 0) {
-            $comision = (int) round($monto * ((float) $usuario['porcentaje'] / 100));
-            if ($comision > 0) {
-                upsertMovimiento($db, [
-                    'referencia'     => "hs-inv-com-{$invoiceId}",
-                    'tipo'           => 'gasto',
-                    'descripcion'    => sprintf('Comisión %s%% — %s', $usuario['porcentaje'], $titulo),
-                    'valor'          => $comision,
-                    'moneda'         => $moneda,
-                    'estado'         => 'pendiente',
-                    'responsable_id' => $usuario['uid'],
-                    'observaciones'  => sprintf(
-                        'Factura HubSpot #%s · Base: %s %s · %s%%',
-                        $invoiceId,
-                        number_format($monto, 0, '.', '.'),
-                        $moneda,
-                        $usuario['porcentaje']
-                    ),
-                    'punto_venta'    => $pdv,
-                    'categoria_id'   => buscarCategoria($db, 'comisiones'),
-                ]);
-                error_log(sprintf(
-                    '[Webhook] Comisión %s: %s %s para %s (%s%% de %s) — Factura #%s',
-                    upsertEsNuevo($db, "hs-inv-com-{$invoiceId}") ? 'registrada' : 'actualizada',
-                    number_format($comision, 0, '.', '.'), $moneda,
-                    $usuario['nombre'], $usuario['porcentaje'],
-                    number_format($monto, 0, '.', '.'), $invoiceId
-                ));
+        if ($usuario) {
+            $asesorId = (int) $usuario['uid'];
+
+            if ((float) $usuario['porcentaje'] > 0) {
+                $comision = (int) round($monto * ((float) $usuario['porcentaje'] / 100));
+                if ($comision > 0) {
+                    upsertMovimiento($db, [
+                        'referencia'     => "hs-inv-com-{$invoiceId}",
+                        'tipo'           => 'gasto',
+                        'descripcion'    => sprintf('Comisión %s%% — %s', $usuario['porcentaje'], $titulo),
+                        'valor'          => $comision,
+                        'moneda'         => $moneda,
+                        'estado'         => 'pendiente',
+                        'responsable_id' => $asesorId,
+                        'metodo_pago'    => null,
+                        'observaciones'  => sprintf(
+                            'Factura HubSpot #%s · Base: %s %s · %s%%',
+                            $invoiceId,
+                            number_format($monto, 0, '.', '.'),
+                            $moneda,
+                            $usuario['porcentaje']
+                        ),
+                        'punto_venta'    => $pdv,
+                        'categoria_id'   => buscarCategoria($db, 'comisiones'),
+                    ]);
+                    error_log(sprintf(
+                        '[Webhook] Comisión: %s %s para %s (%s%% de %s) — Factura #%s',
+                        number_format($comision, 0, '.', '.'), $moneda,
+                        $usuario['nombre'], $usuario['porcentaje'],
+                        number_format($monto, 0, '.', '.'), $invoiceId
+                    ));
+                }
+            } else {
+                error_log("[Webhook] Asesor #{$ownerId} sin comisión activa — omitida para factura #{$invoiceId}.");
             }
         } else {
-            error_log("[Webhook] Owner #{$ownerId} sin comisión activa — omitida para factura #{$invoiceId}.");
+            // Sin config de comisión, igual buscamos el asesor_id para el ingreso
+            $asesorId = buscarUsuarioId($db, $ownerId);
         }
     }
 
-    // ── Ingreso en efectivo ───────────────────────────────
+    // ── 2. Ingreso Caja Menor — SOLO para efectivo ────────
+    $movCajaId = null;
+
     if ($metodoPago === 'efectivo') {
-        $respId = $ownerId ? buscarUsuarioId($db, $ownerId) : null;
         upsertMovimiento($db, [
             'referencia'     => "hs-inv-ing-{$invoiceId}",
             'tipo'           => 'ingreso',
@@ -188,43 +201,73 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
             'valor'          => (int) round($monto),
             'moneda'         => $moneda,
             'estado'         => 'pagado',
-            'responsable_id' => $respId,
+            'responsable_id' => $asesorId,
+            'metodo_pago'    => 'efectivo',
             'observaciones'  => "Factura HubSpot #{$invoiceId} · Método: efectivo",
             'punto_venta'    => $pdv,
             'categoria_id'   => buscarCategoriaIngreso($db),
         ]);
+        $movCajaId = buscarMovimientoId($db, "hs-inv-ing-{$invoiceId}");
         error_log(sprintf(
-            '[Webhook] Ingreso efectivo: %s %s — Factura #%s',
+            '[Webhook] Ingreso efectivo Caja Menor: %s %s — Factura #%s',
             number_format($monto, 0, '.', '.'), $moneda, $invoiceId
         ));
-    } elseif ($metodoPago !== '') {
-        error_log("[Webhook] Factura #{$invoiceId}: método de pago '{$metodoPago}' — sin ingreso en caja.");
+    } else {
+        error_log(sprintf(
+            '[Webhook] Factura #%s método "%s" — solo ingreso en ingresos_factura, no en Caja Menor.',
+            $invoiceId, $metodoPago ?: '(sin método)'
+        ));
     }
+
+    // ── 3. Ingreso en ingresos_factura — TODOS los métodos ─
+    upsertIngreso($db, [
+        'hubspot_inv_id' => $invoiceId,
+        'referencia'     => "hs-inv-{$invoiceId}",
+        'monto'          => $monto,
+        'moneda'         => $moneda,
+        'metodo_pago'    => $metodoPago,
+        'titulo'         => $titulo,
+        'punto_venta'    => $pdv,
+        'asesor_id'      => $asesorId,
+        'mov_caja_id'    => $movCajaId,
+    ]);
+    error_log(sprintf(
+        '[Webhook] ingresos_factura: %s %s (método: %s) — Factura #%s',
+        number_format($monto, 0, '.', '.'), $moneda,
+        $metodoPago ?: '(sin método)', $invoiceId
+    ));
 }
 
 /**
- * Soft-delete de comisión e ingreso cuando la factura es cancelada o anulada.
+ * Soft-delete de comisión e ingreso en movimientos_caja;
+ * marca ingresos_factura como anulado.
  */
 function procesarAnulacion(PDO $db, string $invoiceId): void
 {
-    $total = 0;
+    $totalMov = 0;
     foreach (["hs-inv-com-{$invoiceId}", "hs-inv-ing-{$invoiceId}"] as $ref) {
         $stmt = $db->prepare(
             'UPDATE movimientos_caja SET deleted_at = NOW() WHERE referencia = ? AND deleted_at IS NULL'
         );
         $stmt->execute([$ref]);
-        $total += $stmt->rowCount();
+        $totalMov += $stmt->rowCount();
     }
-    if ($total > 0) {
-        error_log("[Webhook] Anulados {$total} registro(s) para factura #{$invoiceId}");
-    } else {
-        error_log("[Webhook] Factura #{$invoiceId} anulada pero no había registros activos.");
-    }
+
+    $stmtIng = $db->prepare(
+        "UPDATE ingresos_factura SET estado = 'anulado', updated_at = NOW() WHERE referencia = ?"
+    );
+    $stmtIng->execute(["hs-inv-{$invoiceId}"]);
+    $totalIng = $stmtIng->rowCount();
+
+    error_log(sprintf(
+        '[Webhook] Anulación factura #%s: %d mov_caja + %d ingresos_factura afectados.',
+        $invoiceId, $totalMov, $totalIng
+    ));
 }
 
 /**
  * INSERT si no existe registro activo con esa referencia; UPDATE si ya existe.
- * En el UPDATE solo modifica valor, descripcion y observaciones (no estado ni fecha).
+ * En el UPDATE solo modifica valor, descripcion, observaciones y punto_venta.
  */
 function upsertMovimiento(PDO $db, array $d): void
 {
@@ -237,10 +280,10 @@ function upsertMovimiento(PDO $db, array $d): void
     if ($row) {
         $db->prepare('
             UPDATE movimientos_caja
-               SET valor        = :valor,
-                   descripcion  = :desc,
+               SET valor         = :valor,
+                   descripcion   = :desc,
                    observaciones = :obs,
-                   punto_venta  = :pdv
+                   punto_venta   = :pdv
              WHERE id = :id
         ')->execute([
             ':valor' => $d['valor'],
@@ -253,10 +296,10 @@ function upsertMovimiento(PDO $db, array $d): void
         $db->prepare('
             INSERT INTO movimientos_caja
               (fecha, tipo, descripcion, valor, moneda, estado,
-               responsable_id, referencia, observaciones, punto_venta, categoria_id)
+               responsable_id, referencia, observaciones, punto_venta, categoria_id, metodo_pago)
             VALUES
               (CURDATE(), :tipo, :desc, :valor, :moneda, :estado,
-               :resp, :ref, :obs, :pdv, :cat)
+               :resp, :ref, :obs, :pdv, :cat, :metodo)
         ')->execute([
             ':tipo'   => $d['tipo'],
             ':desc'   => $d['descripcion'],
@@ -268,18 +311,65 @@ function upsertMovimiento(PDO $db, array $d): void
             ':obs'    => $d['observaciones'],
             ':pdv'    => $d['punto_venta'],
             ':cat'    => $d['categoria_id'],
+            ':metodo' => $d['metodo_pago'] ?? null,
         ]);
     }
 }
 
-/** Retorna true si el registro con esa referencia ya existía (para logging). */
-function upsertEsNuevo(PDO $db, string $referencia): bool
+/**
+ * Upsert en ingresos_factura (fuente de verdad para comisiones).
+ * Al re-procesar una factura ya existente, actualiza monto, método y asesor;
+ * reactiva el registro si estaba anulado.
+ */
+function upsertIngreso(PDO $db, array $d): void
 {
-    $stmt = $db->prepare(
-        'SELECT id FROM movimientos_caja WHERE referencia = ? AND deleted_at IS NULL LIMIT 1'
+    $existing = $db->prepare(
+        'SELECT id FROM ingresos_factura WHERE referencia = ? LIMIT 1'
     );
-    $stmt->execute([$referencia]);
-    return !$stmt->fetch();
+    $existing->execute([$d['referencia']]);
+    $row = $existing->fetch();
+
+    if ($row) {
+        $db->prepare('
+            UPDATE ingresos_factura
+               SET monto       = :monto,
+                   metodo_pago = :metodo,
+                   titulo      = :titulo,
+                   punto_venta = :pdv,
+                   asesor_id   = :asesor,
+                   mov_caja_id = COALESCE(:caja, mov_caja_id),
+                   estado      = "activo",
+                   updated_at  = NOW()
+             WHERE id = :id
+        ')->execute([
+            ':monto'  => $d['monto'],
+            ':metodo' => $d['metodo_pago'],
+            ':titulo' => $d['titulo'],
+            ':pdv'    => $d['punto_venta'],
+            ':asesor' => $d['asesor_id'],
+            ':caja'   => $d['mov_caja_id'],
+            ':id'     => $row['id'],
+        ]);
+    } else {
+        $db->prepare('
+            INSERT INTO ingresos_factura
+              (hubspot_inv_id, referencia, fecha_pago, monto, moneda, metodo_pago,
+               titulo, punto_venta, asesor_id, mov_caja_id, estado)
+            VALUES
+              (:inv, :ref, CURDATE(), :monto, :moneda, :metodo,
+               :titulo, :pdv, :asesor, :caja, "activo")
+        ')->execute([
+            ':inv'    => $d['hubspot_inv_id'],
+            ':ref'    => $d['referencia'],
+            ':monto'  => $d['monto'],
+            ':moneda' => $d['moneda'],
+            ':metodo' => $d['metodo_pago'],
+            ':titulo' => $d['titulo'],
+            ':pdv'    => $d['punto_venta'],
+            ':asesor' => $d['asesor_id'],
+            ':caja'   => $d['mov_caja_id'],
+        ]);
+    }
 }
 
 // ── Helpers ───────────────────────────────────────────────
@@ -302,6 +392,16 @@ function buscarUsuarioId(PDO $db, string $ownerId): ?int
 {
     $stmt = $db->prepare('SELECT id FROM usuarios WHERE hubspot_owner_id = ? AND activo = 1 LIMIT 1');
     $stmt->execute([$ownerId]);
+    $row = $stmt->fetch();
+    return $row ? (int) $row['id'] : null;
+}
+
+function buscarMovimientoId(PDO $db, string $referencia): ?int
+{
+    $stmt = $db->prepare(
+        'SELECT id FROM movimientos_caja WHERE referencia = ? AND deleted_at IS NULL LIMIT 1'
+    );
+    $stmt->execute([$referencia]);
     $row = $stmt->fetch();
     return $row ? (int) $row['id'] : null;
 }
