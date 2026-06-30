@@ -272,7 +272,9 @@ CREATE TABLE IF NOT EXISTS `adjuntos` (
 CREATE TABLE IF NOT EXISTS `config_comisiones_asesores` (
   `id`           INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   `usuario_id`   INT UNSIGNED    NOT NULL,
-  `porcentaje`   DECIMAL(5, 2)   NOT NULL DEFAULT '5.00',
+  `tipo`         ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' COMMENT 'porcentaje = % sobre el monto; fijo = valor absoluto por venta',
+  `porcentaje`   DECIMAL(5, 2)   NOT NULL DEFAULT '5.00'  COMMENT 'Usado cuando tipo = porcentaje',
+  `valor_fijo`   DECIMAL(15, 2)  NULL     DEFAULT NULL    COMMENT 'Usado cuando tipo = fijo',
   `base`         ENUM('ventas_cerradas','ingresos','por_venta') NOT NULL DEFAULT 'ingresos',
   `activo`       TINYINT(1)      NOT NULL DEFAULT 1,
   `created_at`   TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -282,6 +284,10 @@ CREATE TABLE IF NOT EXISTS `config_comisiones_asesores` (
   CONSTRAINT `fk_comis_asesor` FOREIGN KEY (`usuario_id`)
     REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `config_comisiones_asesores`
+  ADD COLUMN IF NOT EXISTS `tipo`       ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' AFTER `usuario_id`,
+  ADD COLUMN IF NOT EXISTS `valor_fijo` DECIMAL(15, 2) NULL DEFAULT NULL AFTER `porcentaje`;
 
 -- ============================================================
 -- 12. CONFIG_COMISIONES_PRODUCTOS
@@ -294,7 +300,9 @@ CREATE TABLE IF NOT EXISTS `config_comisiones_productos` (
   `producto_id`         INT UNSIGNED   NULL DEFAULT NULL,
   `hubspot_product_id`  VARCHAR(80)    NULL DEFAULT NULL,
   `nombre_producto`     VARCHAR(300)   NOT NULL COMMENT 'Copia del nombre en el momento de configurar',
-  `porcentaje`          DECIMAL(5, 2)  NOT NULL DEFAULT '5.00',
+  `tipo`                ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' COMMENT 'porcentaje = % sobre el monto; fijo = valor absoluto por venta',
+  `porcentaje`          DECIMAL(5, 2)  NOT NULL DEFAULT '5.00'  COMMENT 'Usado cuando tipo = porcentaje',
+  `valor_fijo`          DECIMAL(15, 2) NULL     DEFAULT NULL    COMMENT 'Usado cuando tipo = fijo',
   `created_at`          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -302,6 +310,10 @@ CREATE TABLE IF NOT EXISTS `config_comisiones_productos` (
   CONSTRAINT `fk_comis_prod` FOREIGN KEY (`producto_id`)
     REFERENCES `productos` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `config_comisiones_productos`
+  ADD COLUMN IF NOT EXISTS `tipo`       ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' AFTER `nombre_producto`,
+  ADD COLUMN IF NOT EXISTS `valor_fijo` DECIMAL(15, 2) NULL DEFAULT NULL AFTER `porcentaje`;
 
 -- ============================================================
 -- 13. VISTAS_GUARDADAS
@@ -354,8 +366,8 @@ CREATE TABLE IF NOT EXISTS `envios_email` (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS `ingresos_factura` (
   `id`             INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  `hubspot_inv_id` VARCHAR(32)     NOT NULL             COMMENT 'objectId de la Invoice en HubSpot',
-  `referencia`     VARCHAR(50)     NOT NULL             COMMENT 'hs-inv-{id}',
+  `hubspot_inv_id` VARCHAR(32)     NULL                 COMMENT 'objectId de la Invoice en HubSpot; NULL para ingresos manuales de caja',
+  `referencia`     VARCHAR(50)     NOT NULL             COMMENT 'hs-inv-{id} o caja-ref-{mov_id} para ingresos manuales',
   `fecha_pago`     DATE            NOT NULL,
   `monto`          DECIMAL(15, 2)  NOT NULL,
   `moneda`         VARCHAR(3)      NOT NULL DEFAULT 'COP',
@@ -375,6 +387,9 @@ CREATE TABLE IF NOT EXISTS `ingresos_factura` (
   CONSTRAINT `fk_ingfact_asesor`   FOREIGN KEY (`asesor_id`)   REFERENCES `usuarios` (`id`)          ON DELETE SET NULL,
   CONSTRAINT `fk_ingfact_movcaja`  FOREIGN KEY (`mov_caja_id`) REFERENCES `movimientos_caja` (`id`)  ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Permitir hubspot_inv_id NULL para ingresos manuales de caja
+ALTER TABLE `ingresos_factura` MODIFY COLUMN `hubspot_inv_id` VARCHAR(32) NULL COMMENT 'objectId de la Invoice en HubSpot; NULL para ingresos manuales de caja';
 
 -- ============================================================
 -- 16. COMISIONES_AJUSTES

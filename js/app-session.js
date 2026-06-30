@@ -22,8 +22,13 @@
     user: null,       // { id, nombre, email, rol }
     _checked: false,
 
-    /** Verifica sesión contra el backend. Redirige al login si no hay sesión. */
+    /** Verifica sesión contra el backend. Redirige a HubSpot OAuth si no hay sesión. */
     async check() {
+      // Mostrar error OAuth si viene en la URL (ej: usuario incorrecto)
+      const params = new URLSearchParams(window.location.search);
+      const hsErr  = params.get('hs_error');
+      if (hsErr) this._mostrarErrorOAuth(hsErr, params.get('email'));
+
       try {
         const res  = await fetch(BASE + '/api/auth.php?action=check', { credentials: 'same-origin' });
         const data = await res.json();
@@ -38,13 +43,12 @@
         console.warn('[Session] No se pudo verificar sesión:', e.message);
       }
 
-      // Sin sesión → redirigir a login
-      const next = encodeURIComponent(window.location.href);
-      window.location.href = BASE + '/login.html?next=' + next;
+      // Sin sesión → redirigir a HubSpot OAuth
+      window.location.href = BASE + '/api/auth.php?action=hs_login';
       return false;
     },
 
-    /** Cierra la sesión actual y redirige a login. */
+    /** Cierra la sesión actual y redirige a HubSpot para que vuelva a autenticarse. */
     async logout() {
       try {
         await fetch(BASE + '/api/auth.php?action=logout', {
@@ -52,7 +56,27 @@
           credentials: 'same-origin',
         });
       } catch (_) { /* continúa igual */ }
-      window.location.href = BASE + '/login.html';
+      window.location.href = BASE + '/api/auth.php?action=hs_login';
+    },
+
+    /** Muestra un toast con el motivo del error OAuth. */
+    _mostrarErrorOAuth(error, email) {
+      const MENSAJES = {
+        wrong_portal:         'Esta cuenta de HubSpot no corresponde al portal de Visa Fácil.',
+        user_not_registered:  `El usuario ${email || ''} no está registrado en el sistema. Contacta al administrador.`,
+        token_exchange_failed:'No se pudo completar la autenticación con HubSpot. Intenta de nuevo.',
+        invalid_state:        'Sesión de autenticación inválida. Intenta de nuevo.',
+        hs_session_expired:   'Tu sesión de HubSpot expiró. Vuelve a iniciar sesión.',
+      };
+      const msg = MENSAJES[error] || `Error de autenticación: ${error}`;
+      // Limpiar el parámetro de la URL sin recargar
+      history.replaceState({}, '', window.location.pathname);
+      // Mostrar con el sistema de toasts si está disponible, si no alerta básica
+      if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast('⚠ ' + msg, 'error');
+      } else {
+        alert(msg);
+      }
     },
 
     /** Actualiza el toolbar y el popover de usuario con los datos del usuario activo. */

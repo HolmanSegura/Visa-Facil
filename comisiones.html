@@ -100,7 +100,7 @@
     <section class="dashboard-comisiones" aria-label="Resumen de comisiones">
       <div class="tarjeta-resumen" data-card="teorico">
         <div class="tarjeta-resumen__cabecera">
-          <div class="tarjeta-resumen__titulo">Comisión teórica</div>
+          <div class="tarjeta-resumen__titulo">Total facturado</div>
           <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor"
@@ -116,7 +116,7 @@
 
       <div class="tarjeta-resumen" data-card="registrado">
         <div class="tarjeta-resumen__cabecera">
-          <div class="tarjeta-resumen__titulo">Comisión pagada</div>
+          <div class="tarjeta-resumen__titulo">Com. sugerida</div>
           <div class="tarjeta-resumen__icono tarjeta-resumen__icono--verde">
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
@@ -131,7 +131,7 @@
 
       <div class="tarjeta-resumen" data-card="diferencia">
         <div class="tarjeta-resumen__cabecera">
-          <div class="tarjeta-resumen__titulo">Diferencia</div>
+          <div class="tarjeta-resumen__titulo">Com. ajustada</div>
           <div class="tarjeta-resumen__icono tarjeta-resumen__icono--azul">
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor" d="M3 4h18v6H3V4Zm0 10h18v6H3v-6Z" />
@@ -146,16 +146,16 @@
 
       <div class="tarjeta-resumen" data-card="pendientes">
         <div class="tarjeta-resumen__cabecera">
-          <div class="tarjeta-resumen__titulo">Por liquidar</div>
+          <div class="tarjeta-resumen__titulo">Con ajustes</div>
           <div class="tarjeta-resumen__icono tarjeta-resumen__icono--naranja">
             <svg viewBox="0 0 24 24" width="16" height="16">
               <path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-2V6h2v7Zm0 4h-2v-2h2v2Z" />
             </svg>
           </div>
         </div>
-        <div class="tarjeta-resumen__valor tarjeta-resumen__valor--negativo" id="card-pendientes">COP 0</div>
+        <div class="tarjeta-resumen__valor" id="card-pendientes">0</div>
         <div class="tarjeta-resumen__detalle">
-          <span><span id="card-pendientes-count">0</span> sin liquidar</span>
+          <span id="card-pendientes-count">factura(s) ajustada(s) manualmente</span>
         </div>
       </div>
     </section>
@@ -292,12 +292,6 @@
               <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-          <button class="filtro-pill" data-popover="popover-filtro-estado" data-filtro="estado">
-            Estado
-            <svg viewBox="0 0 8 8" width="8" height="8">
-              <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
-            </svg>
-          </button>
           <button class="filtro-pill" data-popover="popover-filtro-fecha" data-filtro="fecha">
             Fecha
             <svg viewBox="0 0 8 8" width="8" height="8">
@@ -329,19 +323,19 @@
             <table class="tabla-cotizaciones tabla-comisiones" id="tabla-comisiones">
               <thead>
                 <tr>
-                  <th data-columna="responsable" class="th">ASESOR</th>
-                  <th data-columna="ingresos" class="th th--num">INGRESOS BASE</th>
+                  <th data-columna="asesor" class="th">ASESOR</th>
+                  <th data-columna="titulo" class="th">FACTURA</th>
+                  <th data-columna="fecha_pago" class="th">FECHA PAGO</th>
+                  <th data-columna="monto" class="th th--num">FACTURADO</th>
                   <th data-columna="porcentaje" class="th th--num">% COM.</th>
-                  <th data-columna="teorico" class="th th--num">COM. TEÓRICA</th>
-                  <th data-columna="registrado" class="th th--num">COM. REGISTRADA</th>
-                  <th data-columna="pagos" class="th th--num"># PAGOS</th>
-                  <th data-columna="diferencia" data-orden="asc" class="th th--num th--orden">
-                    <span>DIFERENCIA</span>
+                  <th data-columna="comision_sugerida" class="th th--num">COM. SUGERIDA</th>
+                  <th data-columna="comision_final" data-orden="desc" class="th th--num th--orden">
+                    <span>COM. FINAL</span>
                     <span class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10">
                         <path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6" />
                       </svg></span>
                   </th>
-                  <th data-columna="estado" class="th">ESTADO</th>
+                  <th class="th"></th>
                 </tr>
               </thead>
               <tbody id="tbody-comisiones"></tbody>
@@ -677,12 +671,12 @@
     <div class="popover-ordenar__titulo">Ordenar por</div>
     <div class="popover-ordenar__fila">
       <select class="popover-ordenar__select" id="select-orden">
-        <option value="responsable">Asesor</option>
-        <option value="ingresos">Ingresos base</option>
-        <option value="teorico">Com. teórica</option>
-        <option value="registrado">Com. registrada</option>
-        <option value="diferencia">Diferencia</option>
-        <option value="estado">Estado</option>
+        <option value="asesor">Asesor</option>
+        <option value="titulo">Factura</option>
+        <option value="fecha_pago">Fecha de pago</option>
+        <option value="monto">Valor facturado</option>
+        <option value="comision_sugerida">Com. sugerida</option>
+        <option value="comision_final">Com. final</option>
       </select>
       <div class="popover-ordenar__dir">
         <button data-dir="desc" class="activo">Z → A</button>
@@ -1023,38 +1017,38 @@
             </div>
             <div class="modal-vistas__lista" id="modal-vistas-lista">
               <div class="modal-vistas__grupo" data-grupo="sistema">Proporcionado por el sistema</div>
-              <div class="modal-vistas__item" data-vista="todos" data-categoria="sistema">
+              <div class="modal-vistas__item" data-vista="todas" data-categoria="sistema">
                 <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
                   <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                <span class="modal-vistas__item-nombre">Todos los asesores</span>
+                <span class="modal-vistas__item-nombre">Todas las facturas</span>
                 <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
                   <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
                 </svg>
               </div>
-              <div class="modal-vistas__item" data-vista="pendientes" data-categoria="sistema">
+              <div class="modal-vistas__item" data-vista="ajustadas" data-categoria="sistema">
                 <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
                   <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                <span class="modal-vistas__item-nombre">Pendientes de pago</span>
+                <span class="modal-vistas__item-nombre">Con ajuste manual</span>
                 <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
                   <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
                 </svg>
               </div>
-              <div class="modal-vistas__item" data-vista="pagados" data-categoria="sistema">
+              <div class="modal-vistas__item" data-vista="sin_ajuste" data-categoria="sistema">
                 <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
                   <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                <span class="modal-vistas__item-nombre">Pagados</span>
+                <span class="modal-vistas__item-nombre">Sin ajustar</span>
                 <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
                   <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
                 </svg>
               </div>
-              <div class="modal-vistas__item" data-vista="activos" data-categoria="sistema">
+              <div class="modal-vistas__item" data-vista="con_pct" data-categoria="sistema">
                 <svg class="modal-vistas__item-icono" viewBox="0 0 24 24" width="14" height="14">
                   <path fill="currentColor" d="M3 3h18v18H3V3Zm2 2v14h14V5H5Z" />
                 </svg>
-                <span class="modal-vistas__item-nombre">Solo activos</span>
+                <span class="modal-vistas__item-nombre">Con % configurado</span>
                 <svg class="modal-vistas__item-check" viewBox="0 0 24 24" width="13" height="13">
                   <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
                 </svg>
@@ -1090,20 +1084,14 @@
                 placeholder="Buscar columna" />
             </div>
             <div class="editar-columnas__lista" id="cols-disponibles">
-              <label class="editar-columnas__opt" data-col="responsable"><input type="checkbox" checked />
-                Asesor</label>
-              <label class="editar-columnas__opt" data-col="ingresos"><input type="checkbox" checked /> Ingresos
-                base</label>
-              <label class="editar-columnas__opt" data-col="porcentaje"><input type="checkbox" checked /> %
-                Comisión</label>
-              <label class="editar-columnas__opt" data-col="teorico"><input type="checkbox" checked /> Com.
-                teórica</label>
-              <label class="editar-columnas__opt" data-col="registrado"><input type="checkbox" checked /> Com.
-                registrada</label>
-              <label class="editar-columnas__opt" data-col="pagos"><input type="checkbox" checked /> # Pagos</label>
-              <label class="editar-columnas__opt" data-col="diferencia"><input type="checkbox" checked />
-                Diferencia</label>
-              <label class="editar-columnas__opt" data-col="estado"><input type="checkbox" checked /> Estado</label>
+              <label class="editar-columnas__opt" data-col="asesor"><input type="checkbox" checked /> Asesor</label>
+              <label class="editar-columnas__opt" data-col="titulo"><input type="checkbox" checked /> Factura</label>
+              <label class="editar-columnas__opt" data-col="fecha_pago"><input type="checkbox" checked /> Fecha de pago</label>
+              <label class="editar-columnas__opt" data-col="monto"><input type="checkbox" checked /> Valor facturado</label>
+              <label class="editar-columnas__opt" data-col="porcentaje"><input type="checkbox" checked /> % Comisión</label>
+              <label class="editar-columnas__opt" data-col="comision_sugerida"><input type="checkbox" checked /> Com. sugerida</label>
+              <label class="editar-columnas__opt" data-col="comision_final"><input type="checkbox" checked /> Com. final</label>
+              <label class="editar-columnas__opt" data-col="acciones"><input type="checkbox" checked /> Acciones</label>
             </div>
           </div>
           <div class="editar-columnas__col">

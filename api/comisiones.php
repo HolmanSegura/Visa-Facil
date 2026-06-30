@@ -178,8 +178,13 @@ try {
                    inf.titulo,
                    inf.asesor_id,
                    u.nombre                                         AS asesor,
+                   cca.tipo,
                    cca.porcentaje,
-                   ROUND(inf.monto * COALESCE(cca.porcentaje, 0) / 100, 0)  AS comision_sugerida,
+                   cca.valor_fijo,
+                   CASE cca.tipo
+                     WHEN 'fijo' THEN COALESCE(cca.valor_fijo, 0)
+                     ELSE ROUND(inf.monto * COALESCE(cca.porcentaje, 0) / 100, 0)
+                   END                                                        AS comision_sugerida,
                    (SELECT ca.comision_ajustada
                       FROM comisiones_ajustes ca
                      WHERE ca.ingreso_factura_id = inf.id
@@ -273,10 +278,12 @@ try {
 
         if (isset($b['porAsesor']) && is_array($b['porAsesor'])) {
             $stmt = $db->prepare("
-                INSERT INTO config_comisiones_asesores (usuario_id, porcentaje, base, activo)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO config_comisiones_asesores (usuario_id, tipo, porcentaje, valor_fijo, base, activo)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE
+                  tipo       = VALUES(tipo),
                   porcentaje = VALUES(porcentaje),
+                  valor_fijo = VALUES(valor_fijo),
                   base       = VALUES(base),
                   activo     = VALUES(activo),
                   updated_at = NOW()
@@ -289,9 +296,12 @@ try {
                     $a['usuario_id'] = $r ? $r['id'] : null;
                 }
                 if (empty($a['usuario_id'])) continue;
+                $tipo = in_array($a['tipo'] ?? '', ['porcentaje', 'fijo']) ? $a['tipo'] : 'porcentaje';
                 $stmt->execute([
                     $a['usuario_id'],
+                    $tipo,
                     $a['porcentaje'] ?? 5,
+                    isset($a['valor_fijo']) && $a['valor_fijo'] !== null ? (float) $a['valor_fijo'] : null,
                     $a['base']       ?? 'ingresos',
                     isset($a['activo']) ? (int)(bool)$a['activo'] : 1,
                 ]);
@@ -302,15 +312,18 @@ try {
             $db->exec("DELETE FROM config_comisiones_productos");
             $stmt = $db->prepare("
                 INSERT INTO config_comisiones_productos
-                  (producto_id, hubspot_product_id, nombre_producto, porcentaje)
-                VALUES (?, ?, ?, ?)
+                  (producto_id, hubspot_product_id, nombre_producto, tipo, porcentaje, valor_fijo)
+                VALUES (?, ?, ?, ?, ?, ?)
             ");
             foreach ($b['porProducto'] as $p) {
+                $tipo = in_array($p['tipo'] ?? '', ['porcentaje', 'fijo']) ? $p['tipo'] : 'porcentaje';
                 $stmt->execute([
                     $p['producto_id']        ?? null,
                     $p['hubspot_product_id'] ?? $p['productoId'] ?? null,
                     $p['nombre_producto']    ?? $p['producto']   ?? '',
+                    $tipo,
                     $p['porcentaje']         ?? 5,
+                    isset($p['valor_fijo']) && $p['valor_fijo'] !== null ? (float) $p['valor_fijo'] : null,
                 ]);
             }
         }

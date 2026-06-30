@@ -118,22 +118,18 @@
       const vista = est.vistas.find(v => v.id === est.vistaActivaId) || est.vistas[0];
       let r = est.datosOriginales.filter(vista.filtro);
 
-      // Búsqueda por nombre de asesor
+      // Búsqueda por asesor o título de factura
       if (est.busquedaActual.trim()) {
         const q = est.busquedaActual.trim().toLowerCase();
         r = r.filter(row =>
-          (row.responsable || "").toLowerCase().includes(q)
+          (row.asesor  || "").toLowerCase().includes(q) ||
+          (row.titulo  || "").toLowerCase().includes(q)
         );
       }
 
       // Filtro asesor
       if (est.filtros.asesor && est.filtros.asesor.length > 0) {
-        r = r.filter(row => est.filtros.asesor.includes(row.responsable));
-      }
-
-      // Filtro estado
-      if (est.filtros.estado && est.filtros.estado.length > 0) {
-        r = r.filter(row => est.filtros.estado.includes(row.estado));
+        r = r.filter(row => est.filtros.asesor.includes(row.asesor));
       }
 
       est.datosVisibles = r;

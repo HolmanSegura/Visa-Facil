@@ -190,6 +190,21 @@ try {
         ]);
         $newId = (int) $db->lastInsertId();
 
+        // Si es ingreso pagado, registrar en ingresos_factura para comisiones
+        if (($b['tipo'] ?? '') === 'ingreso' && ($b['estado'] ?? 'pagado') === 'pagado') {
+            sincronizarIngresoFactura($db, $newId, [
+                'hubspot_inv_id' => "caja-{$newId}",
+                'referencia'     => "caja-ref-{$newId}",
+                'fecha_pago'     => $b['fecha']       ?? date('Y-m-d'),
+                'monto'          => $b['valor']        ?? 0,
+                'moneda'         => $b['moneda']       ?? 'COP',
+                'metodo_pago'    => $b['metodo_pago']  ?? 'efectivo',
+                'titulo'         => $b['descripcion']  ?? '',
+                'punto_venta'    => $b['punto_venta']  ?? null,
+                'asesor_id'      => $responsableId,
+            ]);
+        }
+
         jsonResponse(['ok' => true, 'id' => $newId, 'referencia' => $referencia], 201);
     }
 
@@ -198,6 +213,12 @@ try {
         $b      = getBody();
         $campos = [];
         $vals   = [];
+
+        // Leer el estado actual antes de modificar
+        $actual = $db->prepare("SELECT tipo, estado, fecha, valor, moneda, metodo_pago, descripcion, punto_venta, responsable_id FROM movimientos_caja WHERE id = ? AND deleted_at IS NULL");
+        $actual->execute([$id]);
+        $mov = $actual->fetch();
+        if (!$mov) errorResponse('Movimiento no encontrado', 404);
 
         $permitidos = [
             'fecha','tipo','descripcion','valor','moneda',
@@ -225,12 +246,68 @@ try {
         $db->prepare("UPDATE movimientos_caja SET " . implode(', ', $campos) . " WHERE id = ? AND deleted_at IS NULL")
            ->execute($vals);
 
+        // Sincronizar ingresos_factura según el nuevo estado resultante
+        $nuevoTipo   = $b['tipo']   ?? $mov['tipo'];
+        $nuevoEstado = $b['estado'] ?? $mov['estado'];
+
+        if ($nuevoTipo === 'ingreso' && $nuevoEstado === 'pagado') {
+            // Verificar si ya existe entrada en ingresos_factura para este movimiento
+            $existe = $db->prepare("SELECT id, hubspot_inv_id, referencia FROM ingresos_factura WHERE mov_caja_id = ? LIMIT 1");
+            $existe->execute([$id]);
+            $inf = $existe->fetch();
+
+            if ($inf) {
+                // Actualizar campos que pudieron cambiar
+                $db->prepare("
+                    UPDATE ingresos_factura SET
+                      fecha_pago   = ?,
+                      monto        = ?,
+                      moneda       = ?,
+                      metodo_pago  = ?,
+                      titulo       = ?,
+                      punto_venta  = ?,
+                      asesor_id    = ?,
+                      estado       = 'activo'
+                    WHERE mov_caja_id = ?
+                ")->execute([
+                    $b['fecha']        ?? $mov['fecha'],
+                    $b['valor']        ?? $mov['valor'],
+                    $b['moneda']       ?? $mov['moneda'],
+                    $b['metodo_pago']  ?? $mov['metodo_pago'],
+                    $b['descripcion']  ?? $mov['descripcion'],
+                    $b['punto_venta']  ?? $mov['punto_venta'],
+                    $b['responsable_id'] ?? $mov['responsable_id'],
+                    $id,
+                ]);
+            } else {
+                // Crear nueva entrada (el ingreso ahora está pagado por primera vez)
+                sincronizarIngresoFactura($db, $id, [
+                    'hubspot_inv_id' => "caja-{$id}",
+                    'referencia'     => "caja-ref-{$id}",
+                    'fecha_pago'     => $b['fecha']       ?? $mov['fecha'],
+                    'monto'          => $b['valor']       ?? $mov['valor'],
+                    'moneda'         => $b['moneda']      ?? $mov['moneda'],
+                    'metodo_pago'    => $b['metodo_pago'] ?? $mov['metodo_pago'],
+                    'titulo'         => $b['descripcion'] ?? $mov['descripcion'],
+                    'punto_venta'    => $b['punto_venta'] ?? $mov['punto_venta'],
+                    'asesor_id'      => $b['responsable_id'] ?? $mov['responsable_id'],
+                ]);
+            }
+        } elseif ($nuevoTipo === 'gasto' || $nuevoEstado === 'anulado') {
+            // Ya no es ingreso o fue anulado → marcar la factura como anulada
+            $db->prepare("UPDATE ingresos_factura SET estado = 'anulado' WHERE mov_caja_id = ?")
+               ->execute([$id]);
+        }
+
         jsonResponse(['ok' => true]);
     }
 
     // ── DELETE (soft delete) ─────────────────────────────────
     if ($method === 'DELETE' && $id) {
         $db->prepare("UPDATE movimientos_caja SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL")
+           ->execute([$id]);
+        // Marcar la factura de comisión como anulada
+        $db->prepare("UPDATE ingresos_factura SET estado = 'anulado' WHERE mov_caja_id = ?")
            ->execute([$id]);
         jsonResponse(['ok' => true]);
     }
@@ -243,6 +320,40 @@ try {
 }
 
 // ── Helpers ──────────────────────────────────────────────────
+
+/**
+ * Inserta o actualiza un registro en ingresos_factura para un
+ * movimiento de caja de tipo ingreso. Permite que los ingresos
+ * manuales (efectivo) aparezcan en el módulo de Comisiones.
+ */
+function sincronizarIngresoFactura(PDO $db, int $movCajaId, array $d): void {
+    $db->prepare("
+        INSERT INTO ingresos_factura
+          (hubspot_inv_id, referencia, fecha_pago, monto, moneda,
+           metodo_pago, titulo, punto_venta, asesor_id, mov_caja_id, estado)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo')
+        ON DUPLICATE KEY UPDATE
+          fecha_pago  = VALUES(fecha_pago),
+          monto       = VALUES(monto),
+          moneda      = VALUES(moneda),
+          metodo_pago = VALUES(metodo_pago),
+          titulo      = VALUES(titulo),
+          punto_venta = VALUES(punto_venta),
+          asesor_id   = VALUES(asesor_id),
+          estado      = 'activo'
+    ")->execute([
+        $d['hubspot_inv_id'],
+        $d['referencia'],
+        $d['fecha_pago'],
+        $d['monto'],
+        $d['moneda']      ?? 'COP',
+        $d['metodo_pago'] ?? 'efectivo',
+        $d['titulo']      ?? '',
+        $d['punto_venta'] ?? null,
+        $d['asesor_id']   ?? null,
+        $movCajaId,
+    ]);
+}
 
 function resolverUsuarioId(PDO $db, array $b): ?int {
     if (!empty($b['responsable_id'])) return (int) $b['responsable_id'];

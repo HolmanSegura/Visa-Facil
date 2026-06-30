@@ -1,103 +1,41 @@
 /* ============================================================
    COMISIONES-MAIN.JS
    Estado global y utilidades del módulo de Comisiones.
-   Carga datos desde API (comisiones.php?reporte=1) o usa
-   datos de ejemplo cuando el backend no está disponible.
+   Fuente de datos: ingresos_factura con comision_sugerida
+   y ajuste manual via comisiones_ajustes.
    ============================================================ */
 
 const vistasInicialesCom = [
   {
-    id: "todos",
-    nombre: "Todos los asesores",
+    id: "todas",
+    nombre: "Todas las facturas",
     filtro: () => true,
     filtrosPill: {},
     activa: true
   },
   {
-    id: "pendientes",
-    nombre: "Pendientes de pago",
-    filtro: (r) => r.estado !== "pagado",
-    filtrosPill: { estado: ["pendiente", "parcial"] },
+    id: "ajustadas",
+    nombre: "Con ajuste manual",
+    filtro: (r) => r.comision_ajustada !== null && r.comision_ajustada !== undefined,
+    filtrosPill: {},
     activa: false
   },
   {
-    id: "pagados",
-    nombre: "Pagados",
-    filtro: (r) => r.estado === "pagado",
-    filtrosPill: { estado: ["pagado"] },
-    activa: false
-  },
-  {
-    id: "activos",
-    nombre: "Solo activos",
-    filtro: (r) => r.activo !== false,
+    id: "sin_ajuste",
+    nombre: "Sin ajustar",
+    filtro: (r) => r.comision_ajustada === null || r.comision_ajustada === undefined,
     filtrosPill: {},
     activa: false
   }
 ];
 
-// Datos estáticos de ejemplo para modo sin backend
+// Mock para modo sin backend
 const datosEjemploCom = [
-  {
-    id: 1,
-    responsable: "Néstor Goyes",
-    ingresos: 15000000,
-    porcentaje: 5,
-    teorico: 750000,
-    registrado: 750000,
-    pagos: 2,
-    diferencia: 0,
-    estado: "pagado",
-    activo: true
-  },
-  {
-    id: 2,
-    responsable: "Laura Herrera",
-    ingresos: 8500000,
-    porcentaje: 5,
-    teorico: 425000,
-    registrado: 200000,
-    pagos: 1,
-    diferencia: -225000,
-    estado: "parcial",
-    activo: true
-  },
-  {
-    id: 3,
-    responsable: "Carlos Mejía",
-    ingresos: 12000000,
-    porcentaje: 5,
-    teorico: 600000,
-    registrado: 600000,
-    pagos: 3,
-    diferencia: 0,
-    estado: "pagado",
-    activo: true
-  },
-  {
-    id: 4,
-    responsable: "Ana Rodríguez",
-    ingresos: 5200000,
-    porcentaje: 3,
-    teorico: 156000,
-    registrado: 0,
-    pagos: 0,
-    diferencia: -156000,
-    estado: "pendiente",
-    activo: true
-  },
-  {
-    id: 5,
-    responsable: "David Castillo",
-    ingresos: 0,
-    porcentaje: 5,
-    teorico: 0,
-    registrado: 0,
-    pagos: 0,
-    diferencia: 0,
-    estado: "pagado",
-    activo: false
-  }
+  { id: 1, hubspot_inv_id: "hs-001", titulo: "Sitio web Acme Corp",    fecha_pago: "2026-06-05", monto: 4500000, porcentaje: 5, comision_sugerida: 225000, comision_ajustada: null,   asesor: "Néstor Goyes",   n_ajustes: 0 },
+  { id: 2, hubspot_inv_id: "hs-002", titulo: "CRM HubSpot JMF",        fecha_pago: "2026-06-10", monto: 8200000, porcentaje: 5, comision_sugerida: 410000, comision_ajustada: 350000, asesor: "Néstor Goyes",   n_ajustes: 1 },
+  { id: 3, hubspot_inv_id: "hs-003", titulo: "Shopify Work for Treats", fecha_pago: "2026-06-12", monto: 3500000, porcentaje: 5, comision_sugerida: 175000, comision_ajustada: null,   asesor: "Laura Herrera",  n_ajustes: 0 },
+  { id: 4, hubspot_inv_id: "hs-004", titulo: "Mantenimiento VTEX",      fecha_pago: "2026-06-18", monto: 1200000, porcentaje: 3, comision_sugerida:  36000, comision_ajustada: null,   asesor: "Carlos Mejía",   n_ajustes: 0 },
+  { id: 5, hubspot_inv_id: "hs-005", titulo: "Auditoría UX Virtud SAS", fecha_pago: "2026-06-20", monto: 4200000, porcentaje: 5, comision_sugerida: 210000, comision_ajustada: 200000, asesor: "Ana Rodríguez",  n_ajustes: 2 },
 ];
 
 const estadoApp = {
@@ -105,19 +43,18 @@ const estadoApp = {
   datosVisibles: [],
   paginaActual: 1,
   registrosPorPagina: 25,
-  ordenColumna: "responsable",
-  ordenDireccion: "asc",
+  ordenColumna: "fecha_pago",
+  ordenDireccion: "desc",
   busquedaActual: "",
   filtros: {
     asesor: [],
-    estado: [],
     fecha: null
   },
   vistas: vistasInicialesCom,
-  vistaActivaId: "todos",
+  vistaActivaId: "todas",
   periodoActual: { desde: "", hasta: "" },
   configTabla: { altura: "default", zebra: false },
-  columnasActivas: ["responsable", "ingresos", "porcentaje", "teorico", "registrado", "pagos", "diferencia", "estado"]
+  columnasActivas: ["asesor", "titulo", "fecha_pago", "monto", "porcentaje", "comision_sugerida", "comision_final", "acciones"]
 };
 
 /* ============================================================
@@ -125,29 +62,25 @@ const estadoApp = {
    ============================================================ */
 function formatearMoneda(monto, moneda) {
   const prefijo = moneda === "USD" ? "US$" : (moneda || "COP");
-  return `${prefijo} ${new Intl.NumberFormat("es-CO").format(monto)}`;
+  return `${prefijo} ${new Intl.NumberFormat("es-CO").format(Math.round(monto || 0))}`;
 }
 
 function formatearFecha(fechaIso) {
   if (!fechaIso) return "";
   const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
-  const f = new Date(fechaIso);
+  const f = new Date(fechaIso + "T12:00:00");
   return `${f.getDate()} de ${meses[f.getMonth()]} de ${f.getFullYear()}`;
 }
 
 function fechaCorta(fechaIso) {
   if (!fechaIso) return "";
   const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-  const f = new Date(fechaIso);
+  const f = new Date(fechaIso + "T12:00:00");
   return `${f.getDate()} ${meses[f.getMonth()]} ${f.getFullYear()}`;
 }
 
 function obtenerIniciales(nombre) {
-  return nombre.split(" ").filter(Boolean).slice(0, 2).map(p => p[0]).join("");
-}
-
-function etiquetaEstado(estado) {
-  return ({ pagado: "Pagado", pendiente: "Pendiente", parcial: "Parcial" })[estado] || estado;
+  return (nombre || "?").split(" ").filter(Boolean).slice(0, 2).map(p => p[0]).join("").toUpperCase();
 }
 
 function mostrarToast(mensaje, duracion = 2800) {
@@ -164,33 +97,27 @@ function mostrarToast(mensaje, duracion = 2800) {
   toast._timer = setTimeout(() => toast.classList.remove("visible"), duracion);
 }
 
-function derivarEstado(row) {
-  const teorico = parseFloat(row.teorico) || 0;
-  const registrado = parseFloat(row.registrado) || 0;
-
-  if (teorico <= 0) return "pagado";
-  if (registrado <= 0) return "pendiente";
-  if (registrado >= teorico) return "pagado";
-  return "parcial";
-}
-
-function normalizarFilaCom(f, idx) {
-  const registrado = parseFloat(f.registrado) || 0;
-  const teorico = parseFloat(f.teorico) || 0;
-  const diferencia = registrado - teorico;
-  const row = {
-    id: f.usuario_id ?? (idx + 1),
-    responsable: f.responsable || "",
-    ingresos: parseFloat(f.ingresos) || 0,
-    porcentaje: parseFloat(f.porcentaje) || 0,
-    teorico,
-    registrado,
-    pagos: parseInt(f.pagos, 10) || 0,
-    diferencia,
-    activo: f.activo !== false
+function normalizarFactura(f) {
+  const sugerida  = parseFloat(f.comision_sugerida) || 0;
+  const ajustada  = f.comision_ajustada !== null && f.comision_ajustada !== undefined
+                    ? parseFloat(f.comision_ajustada) : null;
+  return {
+    id:                 f.id,
+    hubspot_inv_id:     f.hubspot_inv_id || "",
+    titulo:             f.titulo || f.hubspot_inv_id || "—",
+    fecha_pago:         f.fecha_pago || "",
+    monto:              parseFloat(f.monto) || 0,
+    moneda:             f.moneda || "COP",
+    metodo_pago:        f.metodo_pago || "",
+    asesor:             f.asesor || "—",
+    asesor_id:          f.asesor_id || null,
+    porcentaje:         parseFloat(f.porcentaje) || 0,
+    comision_sugerida:  sugerida,
+    comision_ajustada:  ajustada,
+    comision_final:     ajustada !== null ? ajustada : sugerida,
+    ultimo_ajuste_at:   f.ultimo_ajuste_at || null,
+    n_ajustes:          parseInt(f.n_ajustes, 10) || 0,
   };
-  row.estado = derivarEstado(row);
-  return row;
 }
 
 function primerDiaMes(d) {
@@ -208,52 +135,49 @@ function fechaIsoHoy() {
 function actualizarDashboard() {
   const datos = estadoApp.datosVisibles;
 
-  const totTeorico = datos.reduce((s, r) => s + r.teorico, 0);
-  const totRegistrado = datos.reduce((s, r) => s + r.registrado, 0);
-  const totDif = totRegistrado - totTeorico;
-  const conDeuda = datos.filter(r => r.estado !== "pagado");
-  const montoDeuda = conDeuda.reduce((s, r) => s + Math.max(0, r.teorico - r.registrado), 0);
+  const totFacturado  = datos.reduce((s, r) => s + r.monto, 0);
+  const totSugerida   = datos.reduce((s, r) => s + r.comision_sugerida, 0);
+  const totFinal      = datos.reduce((s, r) => s + r.comision_final, 0);
+  const conAjuste     = datos.filter(r => r.comision_ajustada !== null).length;
+  const difAjuste     = totFinal - totSugerida;
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-  set("card-teorico", formatearMoneda(totTeorico, "COP"));
-  set("card-teorico-count", `${datos.filter(r => r.activo).length} asesor(es)`);
+  set("card-teorico",          formatearMoneda(totFacturado, "COP"));
+  set("card-teorico-count",    `${datos.length} factura(s)`);
 
-  set("card-registrado", formatearMoneda(totRegistrado, "COP"));
-  set("card-registrado-count", `${datos.filter(r => r.estado === "pagado").length} pagado(s)`);
+  set("card-registrado",       formatearMoneda(totSugerida, "COP"));
+  set("card-registrado-count", `${datos.filter(r => r.porcentaje > 0).length} con % configurado`);
 
-  const elDif = document.getElementById("card-diferencia");
-  if (elDif) {
-    elDif.textContent = (totDif >= 0 ? "+" : "") + formatearMoneda(totDif, "COP");
-    elDif.className = "tarjeta-resumen__valor" +
-      (totDif > 0 ? " tarjeta-resumen__valor--positivo" :
-        totDif < 0 ? " tarjeta-resumen__valor--negativo" : "");
+  const elFinal = document.getElementById("card-diferencia");
+  if (elFinal) {
+    elFinal.textContent = formatearMoneda(totFinal, "COP");
+    elFinal.className   = "tarjeta-resumen__valor";
   }
-  set("card-dif-sub", totDif >= 0 ? "Con excedente" : "Con déficit");
+  set("card-dif-sub", difAjuste !== 0
+    ? (difAjuste > 0 ? "+" : "") + formatearMoneda(difAjuste, "COP") + " vs sugerida"
+    : "Sin diferencia");
 
-  set("card-pendientes", formatearMoneda(montoDeuda, "COP"));
-  set("card-pendientes-count", conDeuda.length);
+  set("card-pendientes",       conAjuste > 0 ? conAjuste.toString() : "0");
+  set("card-pendientes-count", `factura(s) ajustada(s) manualmente`);
 }
 
 /* ============================================================
    INIT
    ============================================================ */
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("[Comisiones] Iniciando módulo de Comisiones...");
+  console.log("[Comisiones] Iniciando módulo de Comisiones (facturas)...");
 
-  window.estadoApp = estadoApp;
-  window.formatearMoneda = formatearMoneda;
-  window.formatearFecha = formatearFecha;
-  window.fechaCorta = fechaCorta;
+  window.estadoApp        = estadoApp;
+  window.formatearMoneda  = formatearMoneda;
+  window.formatearFecha   = formatearFecha;
+  window.fechaCorta       = fechaCorta;
   window.obtenerIniciales = obtenerIniciales;
-  window.etiquetaEstado = etiquetaEstado;
-  window.mostrarToast = mostrarToast;
+  window.mostrarToast     = mostrarToast;
   window.actualizarDashboard = actualizarDashboard;
-  window.derivarEstado = derivarEstado;
-  window.normalizarFilaCom = normalizarFilaCom;
+  window.normalizarFactura   = normalizarFactura;
 
-  // Período por defecto: mes actual
-  const hoy = new Date();
+  const hoy   = new Date();
   const desde = primerDiaMes(hoy);
   const hasta = fechaIsoHoy();
   estadoApp.periodoActual = { desde, hasta };
@@ -262,24 +186,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     if (window.Api) {
-      const res = await window.Api.comisiones.reporte({ desde, hasta });
-      if (res && res.ok && Array.isArray(res.filas) && res.filas.length > 0) {
-        estadoApp.datosOriginales = res.filas.map(normalizarFilaCom);
-        // Merge owners de HubSpot que ya cargaron (evita condición de carrera donde
-        // hubspot:owners-loaded dispara antes de que la API responda y luego es sobreescrito)
-        if (Array.isArray(window.ownersCatalogo)) {
-          window.ownersCatalogo.forEach((owner, i) => {
-            if (!estadoApp.datosOriginales.find(r => r.responsable === owner.nombre)) {
-              estadoApp.datosOriginales.push(normalizarFilaCom(
-                { responsable: owner.nombre, ingresos: 0, porcentaje: 0, teorico: 0, registrado: 0, pagos: 0, activo: true },
-                estadoApp.datosOriginales.length + i
-              ));
-            }
-          });
-        }
-        estadoApp.datosVisibles = [...estadoApp.datosOriginales];
+      const res = await window.Api.comisiones.ajustes({ desde, hasta });
+      if (res?.ok && Array.isArray(res.data)) {
+        estadoApp.datosOriginales = res.data.map(normalizarFactura);
+        estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
         cargadoDesdeAPI = true;
-        console.info(`[Comisiones] ${estadoApp.datosOriginales.length} asesores cargados desde API.`);
+        console.info(`[Comisiones] ${estadoApp.datosOriginales.length} facturas cargadas desde API.`);
       }
     }
   } catch (e) {
@@ -287,73 +199,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   if (!cargadoDesdeAPI) {
-    estadoApp.datosOriginales = datosEjemploCom;
-    estadoApp.datosVisibles = [...datosEjemploCom];
+    estadoApp.datosOriginales = datosEjemploCom.map(normalizarFactura);
+    estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
   }
 
-  if (window.vistasInstance) window.vistasInstance.renderizar();
+  if (window.vistasInstance)  window.vistasInstance.renderizar();
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
-
-  // Cargar pagos individuales de comisión para el panel detalle
-  window.cajaPagosComisiones = [];
-  try {
-    if (window.Api) {
-      const resPagos = await window.Api.caja.listar({ tipo: "gasto", categoria: "comisiones", por_pagina: 200 });
-      if (resPagos.ok && Array.isArray(resPagos.data)) {
-        window.cajaPagosComisiones = resPagos.data.map(m => ({
-          id: m.id,
-          fecha: m.fecha,
-          descripcion: m.descripcion || "",
-          responsable: m.responsable || "",
-          valor: parseFloat(m.valor) || 0,
-          moneda: m.moneda || "COP",
-          metodo_pago: m.metodo_pago || "efectivo",
-          observaciones: m.observaciones || "",
-          estado: m.estado || "pagado",
-        }));
-        console.info(`[Comisiones] ${window.cajaPagosComisiones.length} pagos individuales cargados.`);
-      }
-    }
-  } catch (e) {
-    console.warn("[Comisiones] No se pudieron cargar pagos individuales:", e.message);
-  }
-});
-
-/* ============================================================
-   MERGE HUBSPOT OWNERS → tabla principal
-   Cuando lleguen los owners de HubSpot, agregar los que no
-   tienen actividad en BD para que aparezcan en el listado.
-   ============================================================ */
-document.addEventListener("hubspot:owners-loaded", ({ detail }) => {
-  const owners = detail?.owners;
-  if (!Array.isArray(owners) || owners.length === 0) return;
-
-  let modificado = false;
-  owners.forEach(owner => {
-    const existe = estadoApp.datosOriginales.find(
-      r => r.responsable === owner.nombre
-    );
-    if (!existe) {
-      estadoApp.datosOriginales.push(normalizarFilaCom({
-        responsable: owner.nombre,
-        ingresos: 0,
-        porcentaje: 0,
-        teorico: 0,
-        registrado: 0,
-        pagos: 0,
-        activo: true
-      }, estadoApp.datosOriginales.length));
-      modificado = true;
-    }
-  });
-
-  if (modificado) {
-    if (window.vistasInstance) window.vistasInstance.renderizar();
-    if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
-    actualizarDashboard();
-    console.info(`[Comisiones] Owners HubSpot fusionados: ${estadoApp.datosOriginales.length} total.`);
-  }
 });
 
 /* ============================================================
@@ -363,22 +215,11 @@ window.recargarComisiones = async function (desde, hasta) {
   estadoApp.periodoActual = { desde, hasta };
   try {
     if (window.Api) {
-      const res = await window.Api.comisiones.reporte({ desde, hasta });
-      if (res && res.ok && Array.isArray(res.filas)) {
-        estadoApp.datosOriginales = res.filas.map(normalizarFilaCom);
-        // Preservar owners de HubSpot sin actividad en el período
-        if (Array.isArray(window.ownersCatalogo)) {
-          window.ownersCatalogo.forEach((owner, i) => {
-            if (!estadoApp.datosOriginales.find(r => r.responsable === owner.nombre)) {
-              estadoApp.datosOriginales.push(normalizarFilaCom(
-                { responsable: owner.nombre, ingresos: 0, porcentaje: 0, teorico: 0, registrado: 0, pagos: 0, activo: true },
-                estadoApp.datosOriginales.length + i
-              ));
-            }
-          });
-        }
-        estadoApp.datosVisibles = [...estadoApp.datosOriginales];
-        if (window.vistasInstance) window.vistasInstance.renderizar();
+      const res = await window.Api.comisiones.ajustes({ desde, hasta });
+      if (res?.ok && Array.isArray(res.data)) {
+        estadoApp.datosOriginales = res.data.map(normalizarFactura);
+        estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
+        if (window.vistasInstance)  window.vistasInstance.renderizar();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
         actualizarDashboard();
         return;
@@ -388,7 +229,6 @@ window.recargarComisiones = async function (desde, hasta) {
     mostrarToast("⚠ No se pudo recargar el período seleccionado");
     console.warn("[Comisiones] recargarComisiones falló:", e.message);
   }
-  // Sin API: solo re-aplicar filtros sobre los datos actuales
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
 };

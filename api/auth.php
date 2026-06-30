@@ -46,6 +46,14 @@ switch ($action) {
         jsonResponse(buildSessionResponse());
         break;
 
+    case 'hs_login':
+        handleHubSpotLogin();
+        break;
+
+    case 'hs_callback':
+        handleHubSpotCallback();
+        break;
+
     case 'login':
         handleLogin();
         break;
@@ -65,11 +73,201 @@ switch ($action) {
 /* ── HELPERS ───────────────────────────────────────────── */
 
 function buildSessionResponse(): array {
-    if (!empty($_SESSION['user_id']) && !empty($_SESSION['user'])) {
-        return ['ok' => true, 'user' => $_SESSION['user']];
+    if (empty($_SESSION['user_id']) || empty($_SESSION['user'])) {
+        return ['ok' => false];
     }
-    return ['ok' => false];
+
+    // Auto-refrescar el access token de HubSpot si está próximo a vencer
+    if (!empty($_SESSION['hs_expires_at']) && time() > $_SESSION['hs_expires_at']) {
+        $refreshed = hsRefreshToken($_SESSION['hs_refresh_token'] ?? '');
+        if ($refreshed) {
+            $_SESSION['hs_access_token'] = $refreshed['access_token'];
+            $_SESSION['hs_expires_at']   = time() + ($refreshed['expires_in'] ?? 1800) - 60;
+            if (!empty($refreshed['refresh_token'])) {
+                $_SESSION['hs_refresh_token'] = $refreshed['refresh_token'];
+            }
+        } else {
+            // Refresh falló → sesión expirada, forzar re-login con HubSpot
+            session_destroy();
+            return ['ok' => false, 'reason' => 'hs_session_expired'];
+        }
+    }
+
+    return ['ok' => true, 'user' => $_SESSION['user']];
 }
+
+/* ── HUBSPOT OAUTH ──────────────────────────────────────── */
+
+function handleHubSpotLogin(): void {
+    $clientId    = $_ENV['HUBSPOT_CLIENT_ID']    ?? '';
+    $redirectUri = $_ENV['HUBSPOT_REDIRECT_URI'] ?? '';
+
+    if (!$clientId) {
+        errorResponse('HUBSPOT_CLIENT_ID no configurado', 500);
+    }
+
+    // Token CSRF para verificar el callback
+    $state = bin2hex(random_bytes(16));
+    $_SESSION['hs_oauth_state'] = $state;
+
+    $url = 'https://app.hubspot.com/oauth/authorize?' . http_build_query([
+        'client_id'    => $clientId,
+        'redirect_uri' => $redirectUri,
+        'scope'        => 'crm.objects.owners.read crm.objects.contacts.read',
+        'state'        => $state,
+    ]);
+
+    header("Location: {$url}");
+    exit;
+}
+
+function handleHubSpotCallback(): void {
+    $code        = $_GET['code']  ?? '';
+    $state       = $_GET['state'] ?? '';
+    $errorParam  = $_GET['error'] ?? '';
+
+    // Error explícito de HubSpot (ej: usuario canceló)
+    if ($errorParam) {
+        header('Location: /?hs_error=' . urlencode($errorParam));
+        exit;
+    }
+
+    // Verificar CSRF state
+    if (!$state || $state !== ($_SESSION['hs_oauth_state'] ?? '')) {
+        header('Location: /?hs_error=invalid_state');
+        exit;
+    }
+    unset($_SESSION['hs_oauth_state']);
+
+    // Canjear código por tokens
+    $tokens = hsExchangeCode($code);
+    if (!$tokens || empty($tokens['access_token'])) {
+        header('Location: /?hs_error=token_exchange_failed');
+        exit;
+    }
+
+    // Verificar que el portal sea el de Visa Fácil
+    $userInfo  = hsGetTokenInfo($tokens['access_token']);
+    $portalId  = (int) ($_ENV['HUBSPOT_PORTAL_ID'] ?? 0);
+
+    if (!$userInfo) {
+        header('Location: /?hs_error=cannot_get_user_info');
+        exit;
+    }
+    if ($portalId && (int)($userInfo['hub_id'] ?? 0) !== $portalId) {
+        header('Location: /?hs_error=wrong_portal');
+        exit;
+    }
+
+    $hsEmail = $userInfo['user'] ?? '';   // email del usuario de HubSpot
+
+    // Buscar usuario local por email
+    try {
+        $db   = getDB();
+        $stmt = $db->prepare(
+            "SELECT id, nombre, email, rol FROM usuarios
+             WHERE email = ? AND activo = 1 AND deleted_at IS NULL LIMIT 1"
+        );
+        $stmt->execute([$hsEmail]);
+        $user = $stmt->fetch();
+    } catch (\PDOException $e) {
+        error_log('[auth.php] hs_callback DB error: ' . $e->getMessage());
+        header('Location: /?hs_error=db_error');
+        exit;
+    }
+
+    if (!$user) {
+        // El email de HubSpot no tiene cuenta en Visa Fácil
+        header('Location: /?hs_error=user_not_registered&email=' . urlencode($hsEmail));
+        exit;
+    }
+
+    // Crear sesión
+    session_regenerate_id(true);
+
+    $_SESSION['user_id']          = (int) $user['id'];
+    $_SESSION['user']             = [
+        'id'     => (int) $user['id'],
+        'nombre' => $user['nombre'],
+        'email'  => $user['email'],
+        'rol'    => $user['rol'],
+    ];
+    $_SESSION['hs_access_token']  = $tokens['access_token'];
+    $_SESSION['hs_refresh_token'] = $tokens['refresh_token']  ?? '';
+    $_SESSION['hs_expires_at']    = time() + ($tokens['expires_in'] ?? 1800) - 60;
+
+    header('Location: /');
+    exit;
+}
+
+/* ── HTTP helpers HubSpot ───────────────────────────────── */
+
+function hsExchangeCode(string $code): ?array {
+    $clientId     = $_ENV['HUBSPOT_CLIENT_ID']     ?? '';
+    $clientSecret = $_ENV['HUBSPOT_CLIENT_SECRET'] ?? '';
+    $redirectUri  = $_ENV['HUBSPOT_REDIRECT_URI']  ?? '';
+
+    $ch = curl_init('https://api.hubapi.com/oauth/v1/token');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => http_build_query([
+            'grant_type'    => 'authorization_code',
+            'client_id'     => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect_uri'  => $redirectUri,
+            'code'          => $code,
+        ]),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_TIMEOUT    => 10,
+    ]);
+    $resp = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($code !== 200 || !$resp) return null;
+    return json_decode($resp, true) ?: null;
+}
+
+function hsRefreshToken(string $refreshToken): ?array {
+    if (!$refreshToken) return null;
+
+    $ch = curl_init('https://api.hubapi.com/oauth/v1/token');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => http_build_query([
+            'grant_type'    => 'refresh_token',
+            'client_id'     => $_ENV['HUBSPOT_CLIENT_ID']     ?? '',
+            'client_secret' => $_ENV['HUBSPOT_CLIENT_SECRET'] ?? '',
+            'refresh_token' => $refreshToken,
+        ]),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_TIMEOUT    => 10,
+    ]);
+    $resp     = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$resp) return null;
+    return json_decode($resp, true) ?: null;
+}
+
+function hsGetTokenInfo(string $accessToken): ?array {
+    $ch = curl_init("https://api.hubapi.com/oauth/v1/access-tokens/{$accessToken}");
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+    ]);
+    $resp     = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200 || !$resp) return null;
+    return json_decode($resp, true) ?: null;
+}
+
+/* ── LOGIN INTERNO (fallback) ───────────────────────────── */
 
 function handleLogin(): void {
     $body     = getBody();

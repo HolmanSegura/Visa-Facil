@@ -1,37 +1,69 @@
 /* ============================================================
    COMISIONES-TABLE.JS
-   Tabla de comisiones: render, orden y paginación.
-   Columnas: responsable, ingresos, porcentaje, teorico,
-             registrado, pagos, diferencia, estado.
+   Tabla de ingresos facturados con comisión sugerida y ajuste
+   manual inline.
+   Columnas: asesor, titulo, fecha_pago, monto, porcentaje,
+             comision_sugerida, comision_final, acciones
    ============================================================ */
 (function () {
 
+  function escHtml(s) {
+    return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const f = new Date(iso + "T12:00:00");
+    return `${f.getDate()} ${meses[f.getMonth()]} ${f.getFullYear()}`;
+  }
+
   const COLUMNAS = {
-    responsable: {
+    asesor: {
       th: "ASESOR", thClass: "th",
+      sort: r => (r.asesor || "").toLowerCase(),
       render(r) {
         const td = document.createElement("td");
-        const badge = r.activo === false
-          ? `<span class="badge-inactivo" style="margin-left:6px">Inactivo</span>`
-          : "";
         td.innerHTML = `<div class="celda-avatar">
-          <span class="celda-avatar__circulo">${window.obtenerIniciales(r.responsable || "?")}</span>
-          <span class="celda-avatar__nombre">${r.responsable || "—"}${badge}</span>
+          <span class="celda-avatar__circulo">${window.obtenerIniciales(r.asesor)}</span>
+          <span class="celda-avatar__nombre">${escHtml(r.asesor)}</span>
         </div>`;
         return td;
       }
     },
-    ingresos: {
-      th: "INGRESOS BASE", thClass: "th th--num",
+    titulo: {
+      th: "FACTURA", thClass: "th",
+      sort: r => (r.titulo || "").toLowerCase(),
+      render(r) {
+        const td = document.createElement("td");
+        td.innerHTML = `<span class="factura-titulo">${escHtml(r.titulo)}</span>
+          <span class="factura-ref">${escHtml(r.hubspot_inv_id)}</span>`;
+        return td;
+      }
+    },
+    fecha_pago: {
+      th: "FECHA PAGO", thClass: "th",
+      sort: r => r.fecha_pago || "",
+      render(r) {
+        const td = document.createElement("td");
+        td.className = "fecha-celda";
+        td.textContent = fmtDate(r.fecha_pago);
+        return td;
+      }
+    },
+    monto: {
+      th: "FACTURADO", thClass: "th th--num",
+      sort: r => r.monto,
       render(r) {
         const td = document.createElement("td");
         td.className = "celda--num";
-        td.innerHTML = `<span class="valor-celda">${window.formatearMoneda(r.ingresos, "COP")}</span>`;
+        td.innerHTML = `<span class="valor-celda">${window.formatearMoneda(r.monto, r.moneda || "COP")}</span>`;
         return td;
       }
     },
     porcentaje: {
       th: "% COM.", thClass: "th th--num",
+      sort: r => r.porcentaje,
       render(r) {
         const td = document.createElement("td");
         td.className = "celda--num";
@@ -39,74 +71,78 @@
         return td;
       }
     },
-    teorico: {
-      th: "COM. TEÓRICA", thClass: "th th--num",
+    comision_sugerida: {
+      th: "COM. SUGERIDA", thClass: "th th--num",
+      sort: r => r.comision_sugerida,
       render(r) {
         const td = document.createElement("td");
         td.className = "celda--num";
-        td.innerHTML = `<span class="valor-celda">${window.formatearMoneda(r.teorico, "COP")}</span>`;
+        td.innerHTML = `<span class="valor-celda">${window.formatearMoneda(r.comision_sugerida, "COP")}</span>`;
         return td;
       }
     },
-    registrado: {
-      th: "COM. REGISTRADA", thClass: "th th--num",
+    comision_final: {
+      th: "COM. FINAL", thClass: "th th--num",
+      sort: r => r.comision_final,
       render(r) {
         const td = document.createElement("td");
-        td.className = "celda--num";
-        td.innerHTML = `<span class="valor-celda">${window.formatearMoneda(r.registrado, "COP")}</span>`;
+        td.className = "celda--num com-celda-ajustada";
+        const esAjustada = r.comision_ajustada !== null && Math.round(r.comision_ajustada) !== Math.round(r.comision_sugerida);
+        const badge      = esAjustada
+          ? `<span class="badge-ajustado" title="Ajustado manualmente">Ajustado</span>`
+          : "";
+        td.innerHTML = `
+          <span class="com-valor-display">${window.formatearMoneda(r.comision_final, "COP")}${badge}</span>
+          <div class="com-editor" hidden>
+            <input type="number" class="form-input form-input--sm com-input-ajuste"
+                   value="${r.comision_final}" min="0" step="1000" style="width:130px" />
+            <input type="text" class="form-input form-input--sm com-input-motivo"
+                   placeholder="Motivo…" style="width:180px" />
+            <button class="btn btn--xs btn--naranja com-btn-guardar">Guardar</button>
+            <button class="btn btn--xs btn--ghost com-btn-cancelar">Cancelar</button>
+          </div>`;
         return td;
       }
     },
-    pagos: {
-      th: "# PAGOS", thClass: "th th--num",
+    acciones: {
+      th: "", thClass: "th",
+      sort: null,
       render(r) {
         const td = document.createElement("td");
-        td.className = "celda--num";
-        td.textContent = r.pagos;
-        return td;
-      }
-    },
-    diferencia: {
-      th: "DIFERENCIA", thClass: "th th--num",
-      render(r) {
-        const td  = document.createElement("td");
-        td.className = "celda--num";
-        const cls = r.diferencia > 0 ? "valor-celda--pos"
-                  : r.diferencia < 0 ? "valor-celda--neg"
-                  : "valor-celda--cero";
-        const signo = r.diferencia > 0 ? "+" : "";
-        td.innerHTML = `<span class="valor-celda ${cls}">${signo}${window.formatearMoneda(r.diferencia, "COP")}</span>`;
-        return td;
-      }
-    },
-    estado: {
-      th: "ESTADO", thClass: "th",
-      render(r) {
-        const td = document.createElement("td");
-        td.innerHTML = `<span class="estado-badge"><span class="estado-dot estado-dot--${r.estado}"></span>${window.etiquetaEstado(r.estado)}</span>`;
+        td.className = "com-acciones";
+        const btnHist = r.n_ajustes > 0
+          ? `<button class="btn-icono-mini com-btn-historial" title="Ver historial (${r.n_ajustes})">
+               <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v3l4-4-4-4v3Zm-1 5v5l4.25 2.52.77-1.33-3.52-2.09V8H12Z"/></svg>
+               <span class="historial-cnt">${r.n_ajustes}</span>
+             </button>`
+          : "";
+        td.innerHTML = `
+          <button class="btn-icono-mini com-btn-editar" title="Ajustar comisión">
+            <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
+          </button>
+          ${btnHist}`;
         return td;
       }
     }
   };
 
+  const COLUMNAS_DEFECTO = ["asesor", "titulo", "fecha_pago", "monto", "porcentaje", "comision_sugerida", "comision_final", "acciones"];
+
   const MAPA_TEXTO = {
-    responsable: "Asesor",
-    ingresos:    "Ingresos base",
-    porcentaje:  "% Comisión",
-    teorico:     "Com. teórica",
-    registrado:  "Com. registrada",
-    pagos:       "# Pagos",
-    diferencia:  "Diferencia",
-    estado:      "Estado"
+    asesor:            "Asesor",
+    titulo:            "Factura",
+    fecha_pago:        "Fecha de pago",
+    monto:             "Valor facturado",
+    porcentaje:        "% Comisión",
+    comision_sugerida: "Com. sugerida",
+    comision_final:    "Com. final",
+    acciones:          ""
   };
 
-  const COLUMNAS_DEFECTO = ["responsable", "ingresos", "porcentaje", "teorico", "registrado", "pagos", "diferencia", "estado"];
-
-  /* ---- Clase principal ---- */
   class TablaComisiones {
     constructor() {
-      this.tbody  = document.getElementById("tbody-comisiones");
-      this.tabla  = document.getElementById("tabla-comisiones");
+      this.tbody   = document.getElementById("tbody-comisiones");
+      this.tabla   = document.getElementById("tabla-comisiones");
       this.contPag = document.getElementById("pag-numeros");
       if (!this.tbody || !this.tabla) return;
       this.escucharEventos();
@@ -120,27 +156,42 @@
       const cols = est.columnasActivas || COLUMNAS_DEFECTO;
 
       theadRow.innerHTML = cols.map(key => {
-        const col       = COLUMNAS[key];
+        const col = COLUMNAS[key];
         if (!col) return `<th class="th">${key}</th>`;
-        const esOrden   = est.ordenColumna === key;
+        if (!col.sort) return `<th class="${col.thClass}">${col.th}</th>`;
+        const esOrden    = est.ordenColumna === key;
         const claseExtra = esOrden ? " th--orden" : "";
         const dataOrden  = esOrden ? ` data-orden="${est.ordenDireccion}"` : "";
-        const iconoOrden = esOrden
+        const icono      = esOrden
           ? `<span class="th__icono-orden"><svg viewBox="0 0 24 24" width="10" height="10"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 4v15M6 14l6 6 6-6"/></svg></span>`
           : "";
-        return `<th data-columna="${key}" class="${col.thClass}${claseExtra}"${dataOrden}>${col.th}${iconoOrden}</th>`;
+        return `<th data-columna="${key}" class="${col.thClass}${claseExtra}"${dataOrden}>${col.th}${icono}</th>`;
       }).join("");
     }
 
-    construirFila(r) {
-      const tr   = document.createElement("tr");
-      tr.dataset.id = r.id;
-      const cols = window.estadoApp.columnasActivas || COLUMNAS_DEFECTO;
+    // Devuelve [trDatos, trHistorial] para cada factura
+    construirFilas(r) {
+      const cols  = window.estadoApp.columnasActivas || COLUMNAS_DEFECTO;
+      const trD   = document.createElement("tr");
+      trD.dataset.facturaId = r.id;
       cols.forEach(key => {
         const col = COLUMNAS[key];
-        tr.appendChild(col ? col.render(r) : document.createElement("td"));
+        trD.appendChild(col ? col.render(r) : document.createElement("td"));
       });
-      return tr;
+
+      const trH   = document.createElement("tr");
+      trH.className         = "historial-row";
+      trH.dataset.forFactura = r.id;
+      trH.hidden            = true;
+      const tdH = document.createElement("td");
+      tdH.colSpan = cols.length;
+      const div   = document.createElement("div");
+      div.className = "historial-comision";
+      div.id        = `historial-${r.id}`;
+      tdH.appendChild(div);
+      trH.appendChild(tdH);
+
+      return [trD, trH];
     }
 
     renderizar() {
@@ -158,7 +209,7 @@
         const td = document.createElement("td");
         td.colSpan = cols.length;
         td.style.cssText = "padding:60px 16px;text-align:center;color:var(--color-texto-suave);";
-        td.textContent   = "No se encontraron registros de comisiones.";
+        td.textContent   = "No se encontraron facturas para este período.";
         tr.appendChild(td);
         this.tbody.appendChild(tr);
         this.actualizarPaginacion();
@@ -166,7 +217,7 @@
       }
 
       const frag = document.createDocumentFragment();
-      subset.forEach(r => frag.appendChild(this.construirFila(r)));
+      subset.forEach(r => this.construirFilas(r).forEach(tr => frag.appendChild(tr)));
       this.tbody.appendChild(frag);
 
       this.aplicarConfigTabla();
@@ -182,32 +233,19 @@
 
     ordenarPorColumna(columna) {
       const est = window.estadoApp;
-      if (est.ordenColumna === columna) {
-        est.ordenDireccion = est.ordenDireccion === "asc" ? "desc" : "asc";
-      } else {
-        est.ordenColumna   = columna;
-        est.ordenDireccion = "asc";
-      }
+      if (!COLUMNAS[columna]?.sort) return;
+      est.ordenDireccion = est.ordenColumna === columna && est.ordenDireccion === "asc" ? "desc" : "asc";
+      est.ordenColumna   = columna;
       this.aplicarOrden();
     }
 
     aplicarOrden() {
       const est = window.estadoApp;
-      const extractor = {
-        responsable: it => (it.responsable || "").toLowerCase(),
-        ingresos:    it => it.ingresos,
-        porcentaje:  it => it.porcentaje,
-        teorico:     it => it.teorico,
-        registrado:  it => it.registrado,
-        pagos:       it => it.pagos,
-        diferencia:  it => it.diferencia,
-        estado:      it => it.estado
-      };
-      const fn  = extractor[est.ordenColumna];
-      if (!fn) return;
+      const col = COLUMNAS[est.ordenColumna];
+      if (!col?.sort) return;
       const dir = est.ordenDireccion === "asc" ? 1 : -1;
       est.datosVisibles.sort((a, b) => {
-        const va = fn(a), vb = fn(b);
+        const va = col.sort(a), vb = col.sort(b);
         if (va < vb) return -1 * dir;
         if (va > vb) return  1 * dir;
         return 0;
@@ -225,9 +263,9 @@
       this.contPag.innerHTML = "";
       for (let i = 1; i <= total; i++) {
         const btn = document.createElement("button");
-        btn.className = "pag-num" + (i === est.paginaActual ? " pag-num--activo" : "");
-        if (i === est.paginaActual) btn.setAttribute("aria-current", "page");
+        btn.className   = "pag-num" + (i === est.paginaActual ? " pag-num--activo" : "");
         btn.textContent = i;
+        if (i === est.paginaActual) btn.setAttribute("aria-current", "page");
         this.contPag.appendChild(btn);
       }
       const [bAnt, bSig] = document.querySelectorAll(".pag-btn--nav");
@@ -271,6 +309,6 @@
     window.COLUMNAS_COM         = COLUMNAS;
     window.COLUMNAS_DEFECTO_COM = COLUMNAS_DEFECTO;
     window.MAPA_TEXTO_COM       = MAPA_TEXTO;
-    window.tablaInstance = new TablaComisiones();
+    window.tablaInstance        = new TablaComisiones();
   });
 })();

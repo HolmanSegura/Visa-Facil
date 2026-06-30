@@ -715,28 +715,9 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
-  let ultimoReporte   = null;
-  let ultimasFacturas = [];   // caché de la última carga de ingresos_factura
-  let tabActiva       = "resumen";
+  let ultimoReporte = null;
 
-  // ----- Tabs del modal ----------------------------------------
-  function initTabsReporte(modal) {
-    modal.querySelectorAll("[data-tab-reporte]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        tabActiva = btn.dataset.tabReporte;
-        modal.querySelectorAll("[data-tab-reporte]").forEach(b =>
-          b.classList.toggle("rep-com__tab--activo", b === btn)
-        );
-        modal.querySelectorAll("[data-panel-reporte]").forEach(p => {
-          p.hidden = p.dataset.panelReporte !== tabActiva;
-        });
-        // Cargar facturas la primera vez que se activa la pestaña
-        if (tabActiva === "facturas") cargarYRenderFacturas();
-      });
-    });
-  }
-
-  // ----- Resumen por asesor (tab 1) ----------------------------
+  // ----- Resumen por asesor ------------------------------------
   function calcularReporte() {
     const desde        = document.getElementById("rep-com-desde")?.value  || "";
     const hasta        = document.getElementById("rep-com-hasta")?.value  || "";
@@ -822,277 +803,24 @@
     }
   }
 
-  // ----- Ingresos facturados (tab 2) ---------------------------
-  async function cargarYRenderFacturas() {
-    const tbody = document.getElementById("rep-com-facturas-tbody");
-    if (!tbody) return;
-
-    tbody.innerHTML = `<tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Cargando…</td></tr>`;
-
-    const desde    = document.getElementById("rep-com-desde")?.value  || "";
-    const hasta    = document.getElementById("rep-com-hasta")?.value  || "";
-    const asesorId = document.getElementById("rep-com-asesor")?.value || "";
-
-    try {
-      const resp = await window.Api.comisiones.ajustes(
-        { desde, hasta, ...(asesorId ? { asesor_id: asesorId } : {}) }
-      );
-      if (!resp?.ok || !Array.isArray(resp.data)) throw new Error("Respuesta inválida");
-      ultimasFacturas = resp.data;
-      renderTablaFacturas(resp.data);
-    } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Error al cargar: ${escHtml(e.message)}</td></tr>`;
-    }
-  }
-
-  function renderTablaFacturas(facturas) {
-    const tbody = document.getElementById("rep-com-facturas-tbody");
-    if (!tbody) return;
-
-    const fmt     = v => window.formatearMoneda(v, "COP");
-    const fmtDate = s => s ? new Date(s + "T12:00:00").toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric" }) : "—";
-
-    if (!facturas.length) {
-      tbody.innerHTML = `<tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Sin facturas en el período seleccionado.</td></tr>`;
-      ["rep-com-fact-foot-monto","rep-com-fact-foot-sugerida","rep-com-fact-foot-final"].forEach(id => {
-        const el = document.getElementById(id); if (el) el.textContent = "—";
-      });
-      return;
-    }
-
-    tbody.innerHTML = facturas.map(f => {
-      const sugerida     = parseFloat(f.comision_sugerida || 0);
-      const ajustada     = f.comision_ajustada !== null ? parseFloat(f.comision_ajustada) : null;
-      const comisionFinal = ajustada !== null ? ajustada : sugerida;
-      const esAjustada   = ajustada !== null && Math.round(ajustada) !== Math.round(sugerida);
-
-      const badgeAjustado = esAjustada
-        ? `<span class="badge-ajustado" title="Ajustado manualmente el ${fmtDate(f.ultimo_ajuste_at)}">Ajustado</span>`
-        : "";
-      const badgeHistorial = parseInt(f.n_ajustes || 0) > 0
-        ? `<button class="btn-icono-mini com-btn-historial" title="Ver historial (${f.n_ajustes} ajuste${f.n_ajustes > 1 ? 's' : ''})">
-             <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v3l4-4-4-4v3Zm-1 5v5l4.25 2.52.77-1.33-3.52-2.09V8H12Z"/></svg>
-             <span class="historial-cnt">${f.n_ajustes}</span>
-           </button>`
-        : "";
-
-      return `
-        <tr data-factura-id="${escHtml(f.id)}">
-          <td>
-            <div class="celda-avatar">
-              <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${window.obtenerIniciales(f.asesor || "?")}</span>
-              <span>${escHtml(f.asesor || "—")}</span>
-            </div>
-          </td>
-          <td>
-            <span class="factura-titulo">${escHtml(f.titulo || f.hubspot_inv_id || "—")}</span>
-            <span class="factura-ref">${escHtml(f.hubspot_inv_id || "")}</span>
-          </td>
-          <td class="fecha-celda">${fmtDate(f.fecha_pago)}</td>
-          <td class="num">${fmt(f.monto)}</td>
-          <td class="num">${parseFloat(f.porcentaje || 0).toFixed(1)}%</td>
-          <td class="num">${fmt(sugerida)}</td>
-          <td class="num com-celda-ajustada">
-            <span class="com-valor-display">${fmt(comisionFinal)}${badgeAjustado}</span>
-            <div class="com-editor" hidden>
-              <input type="number" class="form-input form-input--sm com-input-ajuste"
-                     value="${comisionFinal}" min="0" step="1000" style="width:140px" />
-              <input type="text" class="form-input form-input--sm com-input-motivo"
-                     placeholder="Motivo del ajuste…" style="width:200px" />
-              <button class="btn btn--xs btn--naranja com-btn-guardar">Guardar</button>
-              <button class="btn btn--xs btn--ghost com-btn-cancelar">Cancelar</button>
-            </div>
-          </td>
-          <td class="com-acciones">
-            <button class="btn-icono-mini com-btn-editar" title="Ajustar comisión">
-              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
-            </button>
-            ${badgeHistorial}
-          </td>
-        </tr>
-        <tr class="historial-row" data-for-factura="${escHtml(f.id)}" hidden>
-          <td colspan="8">
-            <div class="historial-comision" id="historial-${escHtml(f.id)}"></div>
-          </td>
-        </tr>`;
-    }).join("");
-
-    // Totales en tfoot
-    const totMonto    = facturas.reduce((s, f) => s + parseFloat(f.monto || 0), 0);
-    const totSugerida = facturas.reduce((s, f) => s + parseFloat(f.comision_sugerida || 0), 0);
-    const totFinal    = facturas.reduce((s, f) => {
-      const aj = f.comision_ajustada !== null ? parseFloat(f.comision_ajustada) : parseFloat(f.comision_sugerida || 0);
-      return s + aj;
-    }, 0);
-
-    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    setTxt("rep-com-fact-foot-monto",    fmt(totMonto));
-    setTxt("rep-com-fact-foot-sugerida", fmt(totSugerida));
-    setTxt("rep-com-fact-foot-final",    fmt(totFinal));
-
-    // Delegación de clicks para edición e historial
-    tbody.onclick = null;
-    tbody.addEventListener("click", onTbodyFacturasClick);
-  }
-
-  function onTbodyFacturasClick(e) {
-    const tbody = document.getElementById("rep-com-facturas-tbody");
-
-    // Abrir editor
-    if (e.target.closest(".com-btn-editar")) {
-      const tr = e.target.closest("tr[data-factura-id]");
-      if (!tr) return;
-      tr.querySelector(".com-valor-display").hidden = true;
-      const editor = tr.querySelector(".com-editor");
-      editor.hidden = false;
-      editor.querySelector(".com-input-ajuste").focus();
-      return;
-    }
-
-    // Cancelar editor
-    if (e.target.closest(".com-btn-cancelar")) {
-      const tr = e.target.closest("tr[data-factura-id]");
-      if (!tr) return;
-      tr.querySelector(".com-valor-display").hidden = false;
-      tr.querySelector(".com-editor").hidden = true;
-      return;
-    }
-
-    // Guardar ajuste
-    if (e.target.closest(".com-btn-guardar")) {
-      const btn = e.target.closest(".com-btn-guardar");
-      const tr  = btn.closest("tr[data-factura-id]");
-      if (!tr) return;
-      const facturaId     = parseInt(tr.dataset.facturaId, 10);
-      const nuevaComision = parseFloat(tr.querySelector(".com-input-ajuste").value);
-      const motivo        = tr.querySelector(".com-input-motivo").value.trim();
-
-      if (isNaN(nuevaComision) || nuevaComision < 0) {
-        window.mostrarToast?.("⚠ Valor de comisión inválido"); return;
-      }
-
-      const txtOrig = btn.textContent;
-      btn.disabled  = true;
-      btn.textContent = "Guardando…";
-
-      guardarAjuste(facturaId, nuevaComision, motivo)
-        .then(() => {
-          window.mostrarToast?.("✓ Comisión ajustada y guardada");
-          return cargarYRenderFacturas();
-        })
-        .catch(err => {
-          window.mostrarToast?.(`⚠ ${err.message.slice(0, 70)}`);
-          btn.disabled  = false;
-          btn.textContent = txtOrig;
-        });
-      return;
-    }
-
-    // Ver / ocultar historial
-    if (e.target.closest(".com-btn-historial")) {
-      const tr         = e.target.closest("tr[data-factura-id]");
-      if (!tr) return;
-      const facturaId  = tr.dataset.facturaId;
-      const histRow    = tbody?.querySelector(`[data-for-factura="${facturaId}"]`);
-      if (!histRow) return;
-      const wasHidden  = histRow.hidden;
-      histRow.hidden   = !wasHidden;
-      if (wasHidden) cargarHistorial(facturaId, document.getElementById(`historial-${facturaId}`));
-    }
-  }
-
-  async function guardarAjuste(facturaId, comisionAjustada, motivo) {
-    if (!window.Api) throw new Error("API no disponible");
-    const resp = await window.Api.comisiones.ajustar({
-      ingreso_factura_id: facturaId,
-      comision_ajustada:  comisionAjustada,
-      motivo:             motivo || null,
-    });
-    if (!resp?.ok) throw new Error(resp?.error || "Error al guardar");
-    return resp;
-  }
-
-  async function cargarHistorial(facturaId, containerEl) {
-    if (!containerEl) return;
-    containerEl.innerHTML = `<div class="historial-comision__estado">Cargando historial…</div>`;
-
-    const fmt     = v => window.formatearMoneda(v, "COP");
-    const fmtDate = s => s ? new Date(s).toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
-
-    try {
-      const resp = await window.Api.comisiones.historial(facturaId);
-      if (!resp?.ok || !Array.isArray(resp.data)) throw new Error();
-
-      if (!resp.data.length) {
-        containerEl.innerHTML = `<div class="historial-comision__estado">Sin ajustes registrados para esta factura.</div>`;
-        return;
-      }
-
-      containerEl.innerHTML = `
-        <table class="historial-comision__tabla">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th class="num">Com. sugerida</th>
-              <th class="num">Valor anterior</th>
-              <th class="num">Valor ajustado</th>
-              <th>Motivo</th>
-              <th>Usuario</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${resp.data.map(h => `
-              <tr>
-                <td class="fecha-celda">${fmtDate(h.created_at)}</td>
-                <td class="num">${fmt(h.comision_sugerida)}</td>
-                <td class="num">${h.comision_anterior !== null ? fmt(h.comision_anterior) : '<span class="com-estado-texto">Inicial</span>'}</td>
-                <td class="num"><strong>${fmt(h.comision_ajustada)}</strong></td>
-                <td>${escHtml(h.motivo || "—")}</td>
-                <td>${escHtml(h.usuario || "—")}</td>
-              </tr>`).join("")}
-          </tbody>
-        </table>`;
-    } catch (_) {
-      containerEl.innerHTML = `<div class="historial-comision__estado historial-comision__estado--error">Error al cargar el historial.</div>`;
-    }
-  }
-
   // ----- Init del modal ----------------------------------------
   function initModalReporteComisiones() {
     const modal = document.getElementById("modal-reporte-comisiones");
     if (!modal) return;
 
-    initTabsReporte(modal);
-
     const observer = new MutationObserver(() => {
       if (!modal.hasAttribute("hidden")) {
         prefijarFiltros();
-        tabActiva = "resumen";
-        // Asegurar que el tab resumen esté activo visualmente
-        modal.querySelectorAll("[data-tab-reporte]").forEach(b =>
-          b.classList.toggle("rep-com__tab--activo", b.dataset.tabReporte === "resumen")
-        );
-        modal.querySelectorAll("[data-panel-reporte]").forEach(p => {
-          p.hidden = p.dataset.panelReporte !== "resumen";
-        });
         renderReporte();
       }
     });
     observer.observe(modal, { attributes: true, attributeFilter: ["hidden"] });
 
-    document.getElementById("btn-rep-com-aplicar")?.addEventListener("click", () => {
-      if (tabActiva === "resumen") renderReporte();
-      else cargarYRenderFacturas();
-    });
+    document.getElementById("btn-rep-com-aplicar")?.addEventListener("click", renderReporte);
 
     document.getElementById("btn-exportar-comisiones")?.addEventListener("click", () => {
-      if (tabActiva === "resumen") {
-        if (!ultimoReporte?.filas?.length) { window.mostrarToast?.("⚠ Sin datos para exportar"); return; }
-        exportarReporteCSVResumen(ultimoReporte);
-      } else {
-        if (!ultimasFacturas.length) { window.mostrarToast?.("⚠ Sin datos para exportar"); return; }
-        exportarReporteCSVFacturas(ultimasFacturas);
-      }
+      if (!ultimoReporte?.filas?.length) { window.mostrarToast?.("⚠ Sin datos para exportar"); return; }
+      exportarReporteCSVResumen(ultimoReporte);
     });
   }
 
@@ -1123,24 +851,6 @@
     const blob = utils.matrizAXLSX([header, ...filas]);
     utils.descargarBlob(blob, utils.nombreArchivo("reporte-comisiones-resumen"));
     window.mostrarToast?.(`✓ Exportado (${reporte.filas.length} asesores)`);
-  }
-
-  function exportarReporteCSVFacturas(facturas) {
-    const utils = window.utilsExport;
-    if (!utils) return;
-    const header = ["Asesor","Factura","Fecha","Valor facturado","% Comisión","Com. sugerida","Com. final","Ajustado","Motivo último ajuste"];
-    const filas  = facturas.map(f => {
-      const sug = parseFloat(f.comision_sugerida || 0);
-      const aj  = f.comision_ajustada !== null ? parseFloat(f.comision_ajustada) : sug;
-      return [
-        f.asesor || "", f.titulo || f.hubspot_inv_id || "", f.fecha_pago || "",
-        parseFloat(f.monto || 0), parseFloat(f.porcentaje || 0),
-        sug, aj, aj !== sug ? "Sí" : "No", ""
-      ];
-    });
-    const blob = utils.matrizAXLSX([header, ...filas]);
-    utils.descargarBlob(blob, utils.nombreArchivo("comisiones-facturas"));
-    window.mostrarToast?.(`✓ Exportado (${facturas.length} facturas)`);
   }
 
   // -----------------------------------------------------------------

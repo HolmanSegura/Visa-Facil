@@ -1540,7 +1540,7 @@
             </div>
             <div class="form-grupo form-grupo--fila">
               <div>
-                <label class="form-label" for="g-responsable"
+                <label class="form-label form-label--req" for="g-responsable"
                   >Responsable</label
                 >
                 <select id="g-responsable" class="form-select">
@@ -1548,7 +1548,7 @@
                 </select>
               </div>
               <div>
-                <label class="form-label" for="g-metodo">Método de pago</label>
+                <label class="form-label form-label--req" for="g-metodo">Método de pago</label>
                 <select id="g-metodo" class="form-select">
                   <option value="efectivo">Efectivo</option>
                   <option value="transferencia">Transferencia</option>
@@ -1694,7 +1694,7 @@
             </div>
             <div class="form-grupo form-grupo--fila">
               <div>
-                <label class="form-label" for="editar-responsable"
+                <label class="form-label form-label--req" for="editar-responsable"
                   >Responsable</label
                 >
                 <select id="editar-responsable" class="form-select">
@@ -1702,7 +1702,7 @@
                 </select>
               </div>
               <div>
-                <label class="form-label" for="editar-metodo"
+                <label class="form-label form-label--req" for="editar-metodo"
                   >Método de pago</label
                 >
                 <select id="editar-metodo" class="form-select">
@@ -2575,14 +2575,8 @@
             </div>
           </div>
 
-          <!-- Tabs de navegación -->
-          <div class="rep-com__tabs">
-            <button class="rep-com__tab rep-com__tab--activo" data-tab-reporte="resumen">Resumen por asesor</button>
-            <button class="rep-com__tab" data-tab-reporte="facturas">Ingresos facturados</button>
-          </div>
-
-          <!-- ── Panel: Resumen por asesor ── -->
-          <div data-panel-reporte="resumen">
+          <!-- ── Resumen por asesor ── -->
+          <div>
             <div class="reporte-comisiones__resumen">
               <div class="reporte-comisiones__kpi">
                 <div class="reporte-comisiones__kpi-titulo">Comisiones registradas</div>
@@ -2628,36 +2622,6 @@
             </table>
           </div>
 
-          <!-- ── Panel: Ingresos facturados ── -->
-          <div data-panel-reporte="facturas" hidden>
-            <table class="tabla-reporte-comisiones tabla-facturas-comision">
-              <thead>
-                <tr>
-                  <th>Asesor</th>
-                  <th>Factura</th>
-                  <th>Fecha</th>
-                  <th class="num">Valor facturado</th>
-                  <th class="num">% Com.</th>
-                  <th class="num">Com. sugerida</th>
-                  <th class="num">Com. final</th>
-                  <th style="width:72px"></th>
-                </tr>
-              </thead>
-              <tbody id="rep-com-facturas-tbody">
-                <tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Aplica filtros y presiona Aplicar.</td></tr>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th colspan="3">Total</th>
-                  <th class="num" id="rep-com-fact-foot-monto">—</th>
-                  <th></th>
-                  <th class="num" id="rep-com-fact-foot-sugerida">—</th>
-                  <th class="num" id="rep-com-fact-foot-final">—</th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
 
         </div>
         <div class="modal__footer">

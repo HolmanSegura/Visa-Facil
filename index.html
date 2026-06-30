@@ -1458,7 +1458,7 @@
           <form id="form-cotizacion" class="cot-form-grid">
             <div class="form-grupo form-grupo--full">
               <label class="form-label form-label--req" for="cot-titulo"
-                >Nombre de la cotización (hs_title)</label
+                >Nombre de la cotización</label
               >
               <input
                 type="text"
@@ -1467,7 +1467,6 @@
                 placeholder="Ej: Servicios CRM 2026 - Cliente X"
                 required
               />
-              <span class="form-help">Propiedad: hs_title</span>
             </div>
             <div class="form-grupo form-grupo--full">
               <label class="form-label" for="cot-cliente"
@@ -1499,8 +1498,8 @@
               <input type="hidden" id="cot-contacto-id" />
             </div>
             <div class="form-grupo">
-              <label class="form-label" for="cot-moneda"
-                >Moneda (hs_currency)</label
+              <label class="form-label form-label--req" for="cot-moneda"
+                >Moneda</label
               >
               <select id="cot-moneda" class="form-select">
                 <option value="COP">COP - Peso Colombiano</option>
@@ -1508,10 +1507,7 @@
                 <option value="EUR">EUR - Euro</option>
                 <option value="MXN">MXN - Peso Mexicano</option>
               </select>
-              <span class="form-help"
-                >La cantidad total (hs_quote_amount) se calcula
-                automáticamente.</span
-              >
+              <span class="form-help">El total se calcula automáticamente según los productos.</span>
             </div>
             <div class="form-grupo">
               <label class="form-label" for="cot-idioma">Idioma</label>
@@ -1531,7 +1527,7 @@
               <label
                 class="form-label form-label--req"
                 for="cot-fecha-vencimiento"
-                >Fecha de vencimiento (hs_expiration_date)</label
+                >Fecha de vencimiento</label
               >
               <input
                 type="date"
@@ -1541,7 +1537,7 @@
             </div>
             <div class="form-grupo">
               <label class="form-label" for="cot-estado"
-                >Estado (hs_quote_status)</label
+                >Estado</label
               >
               <select id="cot-estado" class="form-select">
                 <option value="borrador">Borrador</option>
@@ -1551,7 +1547,7 @@
               </select>
             </div>
             <div class="form-grupo">
-              <label class="form-label" for="cot-propietario">Propietario</label>
+              <label class="form-label form-label--req" for="cot-propietario">Propietario</label>
               <div style="position:relative" id="propietario-create-wrap">
                 <input type="text" id="cot-propietario" class="form-input"
                   placeholder="Buscar propietario…" autocomplete="off"
@@ -1889,7 +1885,7 @@
         <div class="modal__body">
           <input type="hidden" id="editar-cot-id"/>
           <div class="form-grupo">
-            <label class="form-label" for="editar-cot-nombre">Título</label>
+            <label class="form-label form-label--req" for="editar-cot-nombre">Título</label>
             <input type="text" id="editar-cot-nombre" class="form-input" placeholder="Título de la cotización"/>
           </div>
           <div class="cot-form-grid">
@@ -1914,7 +1910,7 @@
           </div>
           <div class="cot-form-grid">
             <div class="form-grupo">
-              <label class="form-label" for="editar-cot-propietario">Propietario</label>
+              <label class="form-label form-label--req" for="editar-cot-propietario">Propietario</label>
               <div style="position:relative" id="propietario-edit-wrap">
                 <input type="text" id="editar-cot-propietario" class="form-input"
                   placeholder="Buscar propietario…" autocomplete="off"
@@ -1924,7 +1920,7 @@
               </div>
             </div>
             <div class="form-grupo">
-              <label class="form-label" for="editar-cot-fvencimiento">Fecha de vencimiento</label>
+              <label class="form-label form-label--req" for="editar-cot-fvencimiento">Fecha de vencimiento</label>
               <input type="date" id="editar-cot-fvencimiento" class="form-input"/>
             </div>
           </div>
