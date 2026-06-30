@@ -1216,10 +1216,9 @@
           window.mostrarToast("⚠ El nombre de la cotización es obligatorio");
           return;
         }
-        if (!cliente && !negocio) {
+        if (!cliente) {
           _marcarCampoError("cot-cliente");
-          _marcarCampoError("cot-negocio");
-          window.mostrarToast("⚠ Indica el cliente o el negocio (deal) de la cotización");
+          window.mostrarToast("⚠ El cliente o empresa es obligatorio");
           return;
         }
         if (!propietario) {

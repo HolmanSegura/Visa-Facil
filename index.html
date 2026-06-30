@@ -1464,8 +1464,8 @@
                 required
               />
             </div>
-            <div class="form-grupo form-grupo--full">
-              <label class="form-label" for="cot-cliente"
+            <div class="form-grupo">
+              <label class="form-label form-label--req" for="cot-cliente"
                 >Empresa o cliente</label
               >
               <div
@@ -1492,6 +1492,30 @@
                 ></ul>
               </div>
               <input type="hidden" id="cot-contacto-id" />
+            </div>
+            <div class="form-grupo" id="negocio-autocomplete-wrap">
+              <label class="form-label" for="cot-negocio">Negocio / Deal <span style="font-weight:400;color:var(--color-texto-suave)">(opcional)</span></label>
+              <div class="contacto-autocomplete">
+                <input
+                  type="text"
+                  id="cot-negocio"
+                  class="form-input"
+                  placeholder="Escribe para buscar un deal…"
+                  autocomplete="off"
+                  aria-expanded="false"
+                  aria-haspopup="listbox"
+                  aria-controls="negocio-sugerencias"
+                />
+                <input type="hidden" id="cot-deal-id" />
+                <ul
+                  id="negocio-sugerencias"
+                  class="contacto-sugerencias"
+                  hidden
+                  role="listbox"
+                  aria-label="Deals sugeridos"
+                ></ul>
+              </div>
+              <p id="deal-cliente-hint" class="form-hint deal-hint" hidden></p>
             </div>
             <div class="form-grupo">
               <label class="form-label form-label--req" for="cot-moneda"
@@ -1551,30 +1575,6 @@
                 <input type="hidden" id="cot-propietario-id"/>
                 <ul id="propietario-create-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
               </div>
-            </div>
-            <div class="form-grupo form-grupo--full" id="negocio-autocomplete-wrap">
-              <label class="form-label" for="cot-negocio">Negocio / Deal de HubSpot</label>
-              <div class="contacto-autocomplete">
-                <input
-                  type="text"
-                  id="cot-negocio"
-                  class="form-input"
-                  placeholder="Escribe para buscar un deal…"
-                  autocomplete="off"
-                  aria-expanded="false"
-                  aria-haspopup="listbox"
-                  aria-controls="negocio-sugerencias"
-                />
-                <input type="hidden" id="cot-deal-id" />
-                <ul
-                  id="negocio-sugerencias"
-                  class="contacto-sugerencias"
-                  hidden
-                  role="listbox"
-                  aria-label="Deals sugeridos"
-                ></ul>
-              </div>
-              <p id="deal-cliente-hint" class="form-hint deal-hint" hidden></p>
             </div>
             <div class="form-grupo">
               <label class="form-label" for="cot-punto-venta">Punto de Venta</label>

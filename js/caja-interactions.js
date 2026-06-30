@@ -1110,17 +1110,34 @@
       });
     }
 
-    // Poblar asesores
-    const listaAse = document.getElementById("lista-asesores");
-    if (listaAse) {
-      const unicos = [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable))].sort();
-      listaAse.innerHTML = unicos.map(n => `
+    // Poblar asesores — lazy: se repobla cada vez que el popover abre
+    function poblarListaAsesores() {
+      const listaAse = document.getElementById("lista-asesores");
+      if (!listaAse) return;
+      const previos = new Set([...listaAse.querySelectorAll("input:checked")].map(c => c.dataset.ase));
+      const fuente = Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0
+        ? window.ownersCatalogo.map(o => o.nombre)
+        : [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable).filter(Boolean))];
+      listaAse.innerHTML = fuente.sort().map(n => `
         <label class="check-lista__item">
-          <input type="checkbox" data-ase="${n}"/>
+          <input type="checkbox" data-ase="${escHtml(n)}" ${previos.has(n) ? "checked" : ""}/>
           <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${window.obtenerIniciales(n)}</span>
-          ${n}
+          ${escHtml(n)}
         </label>
       `).join("");
+    }
+
+    window.poblarListaAsesoresCaja = poblarListaAsesores;
+
+    const popoverAse = document.getElementById("popover-filtro-asesor");
+    if (popoverAse) {
+      new MutationObserver(() => {
+        if (!popoverAse.hasAttribute("hidden")) poblarListaAsesores();
+      }).observe(popoverAse, { attributes: true, attributeFilter: ["hidden"] });
+    }
+
+    const listaAse = document.getElementById("lista-asesores");
+    if (listaAse) {
       listaAse.addEventListener("change", (e) => {
         if (e.target.matches('input[type="checkbox"]')) {
           window.estadoApp.filtros.asesor = [...listaAse.querySelectorAll('input:checked')].map(c => c.dataset.ase);

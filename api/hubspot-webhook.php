@@ -106,7 +106,7 @@ exit;
  */
 function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
 {
-    $campos  = 'hs_amount_billed,hs_invoice_status,hubspot_owner_id,hs_invoice_label,punto_de_venta,hs_currency_code,metodo_de_pago';
+    $campos  = 'hs_amount_billed,hs_invoice_status,hubspot_owner_id,hs_invoice_label,hs_number,punto_de_venta,hs_currency_code,metodo_de_pago';
     $invoice = hsGet("/crm/v3/objects/invoices/{$invoiceId}?properties={$campos}", $token);
 
     if (!$invoice || empty($invoice['properties'])) {
@@ -118,7 +118,7 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
     $status     = $p['hs_invoice_status'] ?? '';
     $monto      = (float) ($p['hs_amount_billed'] ?? 0);
     $ownerId    = $p['hubspot_owner_id']   ?? null;
-    $titulo     = $p['hs_invoice_label']   ?? "Factura #{$invoiceId}";
+    $titulo     = $p['hs_number'] ?? $p['hs_invoice_label'] ?? "Factura #{$invoiceId}";
     $pdv        = $p['punto_de_venta']     ?? null;
     $moneda     = $p['hs_currency_code']   ?? 'COP';
     $metodoPago = strtolower(trim($p['metodo_de_pago'] ?? ''));
@@ -132,6 +132,10 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
         error_log("[Webhook] Factura #{$invoiceId}: monto={$monto}, sin valor que registrar.");
         return;
     }
+
+    // ── 0. Datos relacionales de la factura (cliente + productos) ──
+    $clienteNombre = obtenerClienteFactura($invoiceId, $token);
+    $productosStr  = obtenerProductosFactura($invoiceId, $token);
 
     // ── 1. Comisión del asesor ────────────────────────────
     $asesorId = null;
@@ -196,6 +200,9 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
 
     // ── 2. Ingreso en movimientos_caja — TODOS los métodos ──
     $metodoDesc = $metodoPago ?: 'otro';
+    $obsIngreso  = sprintf('HubSpot %s · Método: %s', $invoiceId, $metodoDesc);
+    if ($productosStr) $obsIngreso .= " · Productos: {$productosStr}";
+
     upsertMovimiento($db, [
         'referencia'     => "hs-inv-ing-{$invoiceId}",
         'tipo'           => 'ingreso',
@@ -205,14 +212,22 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
         'estado'         => 'pagado',
         'responsable_id' => $asesorId,
         'metodo_pago'    => $metodoPago ?: null,
-        'observaciones'  => sprintf('HubSpot %s · Método: %s', $invoiceId, $metodoDesc),
+        'observaciones'  => $obsIngreso,
         'punto_venta'    => $pdv,
         'categoria_id'   => buscarCategoriaIngreso($db),
     ]);
     $movCajaId = buscarMovimientoId($db, "hs-inv-ing-{$invoiceId}");
+
+    // Guardar cliente en el ingreso de caja
+    if ($clienteNombre && $movCajaId) {
+        $db->prepare('UPDATE movimientos_caja SET cliente = ? WHERE id = ? AND deleted_at IS NULL')
+           ->execute([$clienteNombre, $movCajaId]);
+    }
+
     error_log(sprintf(
-        '[Webhook] Ingreso Caja: %s %s (método: %s) — %s',
-        number_format($monto, 0, '.', '.'), $moneda, $metodoDesc, $titulo
+        '[Webhook] Ingreso Caja: %s %s (método: %s) — %s%s',
+        number_format($monto, 0, '.', '.'), $moneda, $metodoDesc, $titulo,
+        $clienteNombre ? " · Cliente: {$clienteNombre}" : ''
     ));
 
     // ── 3. Ingreso en ingresos_factura — TODOS los métodos ─
@@ -241,6 +256,12 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
                SET ingreso_factura_id = ?
              WHERE referencia = ? AND deleted_at IS NULL
         ')->execute([$ingresoFacturaId, "hs-inv-com-{$invoiceId}"]);
+    }
+
+    // Guardar cliente en el gasto de comisión
+    if ($clienteNombre) {
+        $db->prepare('UPDATE movimientos_caja SET cliente = ? WHERE referencia = ? AND deleted_at IS NULL')
+           ->execute([$clienteNombre, "hs-inv-com-{$invoiceId}"]);
     }
 }
 
@@ -420,6 +441,52 @@ function buscarIngresoFacturaId(PDO $db, string $referencia): ?int
     $stmt->execute([$referencia]);
     $row = $stmt->fetch();
     return $row ? (int) $row['id'] : null;
+}
+
+/**
+ * Devuelve el nombre del primer contacto asociado a la factura,
+ * o cadena vacía si no hay asociación o falla la llamada.
+ */
+function obtenerClienteFactura(string $invoiceId, string $token): string
+{
+    try {
+        $assoc = hsGet("/crm/v3/objects/invoices/{$invoiceId}/associations/contacts?limit=1", $token);
+        if (empty($assoc['results'][0]['id'])) return '';
+        $contactId = $assoc['results'][0]['id'];
+        $contact = hsGet("/crm/v3/objects/contacts/{$contactId}?properties=firstname,lastname,company", $token);
+        if (empty($contact['properties'])) return '';
+        $p = $contact['properties'];
+        $nombre = trim(($p['firstname'] ?? '') . ' ' . ($p['lastname'] ?? ''));
+        if ($nombre === '') $nombre = $p['company'] ?? '';
+        return $nombre;
+    } catch (Throwable $e) {
+        error_log("[Webhook] obtenerClienteFactura #{$invoiceId}: " . $e->getMessage());
+        return '';
+    }
+}
+
+/**
+ * Devuelve los nombres de los productos (line items) asociados a la factura,
+ * separados por coma, o cadena vacía si no hay o falla.
+ */
+function obtenerProductosFactura(string $invoiceId, string $token): string
+{
+    try {
+        $assoc = hsGet("/crm/v3/objects/invoices/{$invoiceId}/associations/line_items?limit=10", $token);
+        if (empty($assoc['results'])) return '';
+        $nombres = [];
+        foreach ($assoc['results'] as $li) {
+            if (empty($li['id'])) continue;
+            $item = hsGet("/crm/v3/objects/line_items/{$li['id']}?properties=name", $token);
+            if (!empty($item['properties']['name'])) {
+                $nombres[] = $item['properties']['name'];
+            }
+        }
+        return implode(', ', $nombres);
+    } catch (Throwable $e) {
+        error_log("[Webhook] obtenerProductosFactura #{$invoiceId}: " . $e->getMessage());
+        return '';
+    }
 }
 
 function buscarCategoria(PDO $db, string $valor): ?int

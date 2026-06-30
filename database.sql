@@ -704,7 +704,34 @@ ALTER TABLE `movimientos_caja`
 --   ADD CONSTRAINT `fk_mov_ingfactura`
 --     FOREIGN KEY (`ingreso_factura_id`) REFERENCES `ingresos_factura` (`id`) ON DELETE SET NULL;
 
--- Backfill: vincular gastos de comisión existentes a ingresos_factura vía referencia HubSpot
+-- ── BACKFILL: poblar ingresos_factura desde movimientos_caja existentes ──────────
+-- Ejecutar si ingresos_factura está vacía pero ya hay ingresos HubSpot en mov_caja.
+INSERT INTO `ingresos_factura`
+  (`hubspot_inv_id`, `referencia`, `fecha_pago`, `monto`, `moneda`, `metodo_pago`,
+   `titulo`, `punto_venta`, `asesor_id`, `mov_caja_id`, `estado`)
+SELECT
+  REPLACE(mc.referencia, 'hs-inv-ing-', '')              AS hubspot_inv_id,
+  CONCAT('hs-inv-', REPLACE(mc.referencia, 'hs-inv-ing-', '')) AS referencia,
+  mc.fecha                                                AS fecha_pago,
+  mc.valor                                                AS monto,
+  mc.moneda,
+  mc.metodo_pago,
+  mc.descripcion                                          AS titulo,
+  mc.punto_venta,
+  mc.responsable_id                                       AS asesor_id,
+  mc.id                                                   AS mov_caja_id,
+  'activo'                                                AS estado
+FROM movimientos_caja mc
+WHERE mc.referencia LIKE 'hs-inv-ing-%'
+  AND mc.deleted_at IS NULL
+  AND mc.tipo = 'ingreso'
+ON DUPLICATE KEY UPDATE
+  monto       = VALUES(monto),
+  titulo      = VALUES(titulo),
+  asesor_id   = COALESCE(VALUES(asesor_id), asesor_id),
+  mov_caja_id = VALUES(mov_caja_id);
+
+-- ── BACKFILL: vincular gastos de comisión a ingresos_factura ─────────────────────
 UPDATE `movimientos_caja` mc
 JOIN `ingresos_factura` inf
   ON mc.referencia = CONCAT('hs-inv-com-', inf.hubspot_inv_id)

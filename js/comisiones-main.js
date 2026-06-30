@@ -49,7 +49,7 @@ const estadoApp = {
   vistaActivaId: "todas",
   periodoActual: { desde: "", hasta: "" },
   configTabla: { altura: "default", zebra: false },
-  columnasActivas: ["asesor", "titulo", "fecha_pago", "monto", "porcentaje", "comision_sugerida", "comision_final", "acciones"]
+  columnasActivas: ["asesor", "titulo", "fecha_pago", "monto", "porcentaje", "comision_sugerida", "comision_final", "estado_comision", "acciones"]
 };
 
 /* ============================================================
@@ -97,21 +97,25 @@ function normalizarFactura(f) {
   const ajustada  = f.comision_ajustada !== null && f.comision_ajustada !== undefined
                     ? parseFloat(f.comision_ajustada) : null;
   return {
-    id:                 f.id,
-    hubspot_inv_id:     f.hubspot_inv_id || "",
-    titulo:             f.titulo || f.hubspot_inv_id || "—",
-    fecha_pago:         f.fecha_pago || "",
-    monto:              parseFloat(f.monto) || 0,
-    moneda:             f.moneda || "COP",
-    metodo_pago:        f.metodo_pago || "",
-    asesor:             f.asesor || "—",
-    asesor_id:          f.asesor_id || null,
-    porcentaje:         parseFloat(f.porcentaje) || 0,
-    comision_sugerida:  sugerida,
-    comision_ajustada:  ajustada,
-    comision_final:     ajustada !== null ? ajustada : sugerida,
-    ultimo_ajuste_at:   f.ultimo_ajuste_at || null,
-    n_ajustes:          parseInt(f.n_ajustes, 10) || 0,
+    id:                    f.id,
+    hubspot_inv_id:        f.hubspot_inv_id || "",
+    titulo:                f.titulo || f.hubspot_inv_id || "—",
+    fecha_pago:            f.fecha_pago || "",
+    monto:                 parseFloat(f.monto) || 0,
+    moneda:                f.moneda || "COP",
+    metodo_pago:           f.metodo_pago || "",
+    asesor:                f.asesor || "—",
+    asesor_id:             f.asesor_id || null,
+    porcentaje:            parseFloat(f.porcentaje) || 0,
+    comision_sugerida:     sugerida,
+    comision_ajustada:     ajustada,
+    comision_final:        ajustada !== null ? ajustada : sugerida,
+    ultimo_ajuste_at:      f.ultimo_ajuste_at || null,
+    n_ajustes:             parseInt(f.n_ajustes, 10) || 0,
+    comision_caja_id:      f.comision_caja_id ? parseInt(f.comision_caja_id, 10) : null,
+    estado_comision:       f.estado_comision || null,
+    comision_pagada_valor: parseFloat(f.comision_pagada_valor) || 0,
+    comision_pagada_fecha: f.comision_pagada_fecha || null,
   };
 }
 
