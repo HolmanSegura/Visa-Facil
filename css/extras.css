@@ -825,10 +825,12 @@
   line-height: 1.6;
   align-self: flex-start;
 }
+
 .contacto-sug__tipo--contacto {
   background: var(--color-fondo-hover);
   color: var(--color-texto-suave);
 }
+
 .contacto-sug__tipo--empresa {
   background: #e8f0fe;
   color: #1a73e8;
@@ -916,10 +918,11 @@
   background: var(--color-fondo-panel, #fff);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-lg);
-  box-shadow: 0 4px 20px rgba(0,0,0,.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
   max-height: 260px;
   overflow-y: auto;
 }
+
 .prod-autocomplete__item {
   display: flex;
   align-items: center;
@@ -928,11 +931,13 @@
   cursor: pointer;
   transition: background var(--trans-rapida);
 }
+
 .prod-autocomplete__item:hover,
 .prod-autocomplete__item:focus {
   background: var(--color-fondo-hover);
   outline: none;
 }
+
 .prod-ac__nombre {
   flex: 1;
   font-size: var(--font-tam-md);
@@ -942,6 +947,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .prod-ac__precio {
   font-size: var(--font-tam-sm);
   font-weight: var(--font-peso-semibold);
@@ -1187,12 +1193,6 @@
   display: none;
 }
 
-/* Solo el link y el botón "Vista previa" son accionables.
-   Todas las celdas son pointer-events:none; se reactiva solo en esos dos. */
-.tabla-cotizaciones tbody td {
-  pointer-events: none;
-  user-select: none;
-}
 .tabla-cotizaciones tbody td .celda-titulo__link,
 .tabla-cotizaciones tbody td .btn-vista-previa-fila {
   pointer-events: auto;
@@ -1201,7 +1201,8 @@
 /* Vista previa: botón inline junto al texto de la celda de descripción */
 .tabla-cotizaciones tbody tr td.td-vista-previa {
   position: relative;
-  pointer-events: auto;   /* rehabilita el área completa para no perder tr:hover en el gap */
+  pointer-events: auto;
+  /* rehabilita el área completa para no perder tr:hover en el gap */
 }
 
 .vista-previa__logo-img {
@@ -1248,6 +1249,7 @@
   .panel-detalle__card {
     width: 380px;
   }
+
   .panel-detalle.abierto {
     width: calc(380px + var(--esp-6));
   }
@@ -1257,10 +1259,12 @@
   .contenido__body {
     flex-direction: column;
   }
+
   .panel-detalle.abierto {
     width: 100%;
     height: 280px;
   }
+
   .panel-detalle__card {
     width: 100%;
     margin: 0 var(--esp-4) var(--esp-4);
