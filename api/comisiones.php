@@ -192,53 +192,6 @@ try {
         $usuarioId = !empty($_GET['asesor_id']) ? (int) $_GET['asesor_id'] : null;
 
         $sql = "
-<<<<<<< Updated upstream
-            SELECT inf.id,
-                   inf.hubspot_inv_id,
-                   inf.referencia,
-                   inf.fecha_pago,
-                   inf.monto,
-                   inf.moneda,
-                   inf.metodo_pago,
-                   inf.titulo,
-                   inf.asesor_id,
-                   u.nombre                                         AS asesor,
-                   cca.tipo,
-                   cca.porcentaje,
-                   cca.valor_fijo,
-                   CASE cca.tipo
-                     WHEN 'fijo' THEN COALESCE(cca.valor_fijo, 0)
-                     ELSE ROUND(inf.monto * COALESCE(cca.porcentaje, 0) / 100, 0)
-                   END                                              AS comision_sugerida,
-                   (SELECT ca.comision_ajustada
-                      FROM comisiones_ajustes ca
-                     WHERE ca.ingreso_factura_id = inf.id
-                     ORDER BY ca.created_at DESC LIMIT 1)          AS comision_ajustada,
-                   (SELECT ca.created_at
-                      FROM comisiones_ajustes ca
-                     WHERE ca.ingreso_factura_id = inf.id
-                     ORDER BY ca.created_at DESC LIMIT 1)          AS ultimo_ajuste_at,
-                   (SELECT COUNT(*)
-                      FROM comisiones_ajustes ca
-                     WHERE ca.ingreso_factura_id = inf.id)         AS n_ajustes,
-                   mc_com.id                                        AS comision_caja_id,
-                   mc_com.estado                                    AS estado_comision,
-                   mc_com.valor                                     AS comision_pagada_valor,
-                   mc_com.fecha                                     AS comision_pagada_fecha
-            FROM ingresos_factura inf
-            LEFT JOIN usuarios u
-                   ON u.id = inf.asesor_id
-            LEFT JOIN config_comisiones_asesores cca
-                   ON cca.usuario_id = inf.asesor_id AND cca.activo = 1
-            LEFT JOIN movimientos_caja mc_com
-                   ON mc_com.ingreso_factura_id = inf.id
-                  AND mc_com.tipo = 'gasto'
-                  AND mc_com.deleted_at IS NULL
-                  AND EXISTS (
-                    SELECT 1 FROM categorias_caja cc
-                    WHERE cc.id = mc_com.categoria_id AND cc.valor = 'comisiones'
-                  )
-=======
             SELECT
                 inf.id,
                 inf.hubspot_inv_id,
@@ -254,22 +207,27 @@ try {
                 u.nombre AS asesor,
                 COALESCE(cp.tipo_comision, cca.tipo_comision, 'porcentaje') AS tipo_comision,
                 COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) AS valor_comision,
+                COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) AS porcentaje,
                 CASE
                     WHEN COALESCE(cp.tipo_comision, cca.tipo_comision, 'porcentaje') = 'fijo'
                         THEN ROUND(COALESCE(cp.valor_comision, cca.valor_comision, 0), 0)
                     ELSE ROUND(inf.monto * COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) / 100, 0)
                 END AS comision_sugerida,
                 (SELECT ca.comision_ajustada
-                FROM comisiones_ajustes ca
-                WHERE ca.ingreso_factura_id = inf.id
-                ORDER BY ca.created_at DESC LIMIT 1) AS comision_ajustada,
+                    FROM comisiones_ajustes ca
+                    WHERE ca.ingreso_factura_id = inf.id
+                    ORDER BY ca.created_at DESC LIMIT 1) AS comision_ajustada,
                 (SELECT ca.created_at
-                FROM comisiones_ajustes ca
-                WHERE ca.ingreso_factura_id = inf.id
-                ORDER BY ca.created_at DESC LIMIT 1) AS ultimo_ajuste_at,
+                    FROM comisiones_ajustes ca
+                    WHERE ca.ingreso_factura_id = inf.id
+                    ORDER BY ca.created_at DESC LIMIT 1) AS ultimo_ajuste_at,
                 (SELECT COUNT(*)
-                FROM comisiones_ajustes ca
-                WHERE ca.ingreso_factura_id = inf.id) AS n_ajustes
+                    FROM comisiones_ajustes ca
+                    WHERE ca.ingreso_factura_id = inf.id) AS n_ajustes,
+                mc_com.id AS comision_caja_id,
+                mc_com.estado AS estado_comision,
+                mc_com.valor AS comision_pagada_valor,
+                mc_com.fecha AS comision_pagada_fecha
             FROM ingresos_factura inf
             LEFT JOIN usuarios u ON u.id = inf.asesor_id
             LEFT JOIN config_comisiones_asesores cca
@@ -282,7 +240,14 @@ try {
                         OR
                         (cp.nombre_producto IS NOT NULL AND cp.nombre_producto = inf.producto_nombre)
                     )
->>>>>>> Stashed changes
+            LEFT JOIN movimientos_caja mc_com
+                ON mc_com.ingreso_factura_id = inf.id
+               AND mc_com.tipo = 'gasto'
+               AND mc_com.deleted_at IS NULL
+               AND EXISTS (
+                 SELECT 1 FROM categorias_caja cc
+                 WHERE cc.id = mc_com.categoria_id AND cc.valor = 'comisiones'
+               )
             WHERE inf.estado = 'activo'
             AND inf.fecha_pago BETWEEN :desde AND :hasta
         ";
@@ -388,17 +353,6 @@ try {
 
         if (isset($b['porAsesor']) && is_array($b['porAsesor'])) {
             $stmt = $db->prepare("
-<<<<<<< Updated upstream
-                INSERT INTO config_comisiones_asesores (usuario_id, tipo, porcentaje, valor_fijo, base, activo)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE
-                  tipo       = VALUES(tipo),
-                  porcentaje = VALUES(porcentaje),
-                  valor_fijo = VALUES(valor_fijo),
-                  base       = VALUES(base),
-                  activo     = VALUES(activo),
-                  updated_at = NOW()
-=======
                 INSERT INTO config_comisiones_asesores
                     (usuario_id, porcentaje, base, activo, tipo_comision, valor_comision)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -409,7 +363,6 @@ try {
                     tipo_comision  = VALUES(tipo_comision),
                     valor_comision = VALUES(valor_comision),
                     updated_at     = NOW()
->>>>>>> Stashed changes
             ");
 
             foreach ($b['porAsesor'] as $a) {
@@ -420,19 +373,9 @@ try {
                     $a['usuario_id'] = $r ? $r['id'] : null;
                 }
                 if (empty($a['usuario_id'])) continue;
-<<<<<<< Updated upstream
-                $tipo = in_array($a['tipo'] ?? '', ['porcentaje', 'fijo']) ? $a['tipo'] : 'porcentaje';
-                $stmt->execute([
-                    $a['usuario_id'],
-                    $tipo,
-                    $a['porcentaje'] ?? 5,
-                    isset($a['valor_fijo']) && $a['valor_fijo'] !== null ? (float) $a['valor_fijo'] : null,
-                    $a['base']       ?? 'ingresos',
-                    isset($a['activo']) ? (int)(bool)$a['activo'] : 1,
-=======
 
-                $tipo = in_array(($a['tipo_comision'] ?? 'porcentaje'), ['porcentaje', 'fijo'], true)
-                    ? $a['tipo_comision']
+                $tipo = in_array(($a['tipo_comision'] ?? $a['tipo'] ?? 'porcentaje'), ['porcentaje', 'fijo'], true)
+                    ? ($a['tipo_comision'] ?? $a['tipo'])
                     : 'porcentaje';
 
                 $valor = isset($a['valor_comision'])
@@ -446,7 +389,6 @@ try {
                     isset($a['activo']) ? (int) (bool) $a['activo'] : 1,
                     $tipo,
                     $valor,
->>>>>>> Stashed changes
                 ]);
             }
         }
@@ -456,41 +398,26 @@ try {
 
             $stmt = $db->prepare("
                 INSERT INTO config_comisiones_productos
-<<<<<<< Updated upstream
-                  (producto_id, hubspot_product_id, nombre_producto, tipo, porcentaje, valor_fijo)
-=======
                     (producto_id, hubspot_product_id, nombre_producto, porcentaje, tipo_comision, valor_comision)
->>>>>>> Stashed changes
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
 
             foreach ($b['porProducto'] as $p) {
-<<<<<<< Updated upstream
-                $tipo = in_array($p['tipo'] ?? '', ['porcentaje', 'fijo']) ? $p['tipo'] : 'porcentaje';
-=======
-                $tipo = in_array(($p['tipo_comision'] ?? 'porcentaje'), ['porcentaje', 'fijo'], true)
-                    ? $p['tipo_comision']
+                $tipo = in_array(($p['tipo_comision'] ?? $p['tipo'] ?? 'porcentaje'), ['porcentaje', 'fijo'], true)
+                    ? ($p['tipo_comision'] ?? $p['tipo'])
                     : 'porcentaje';
 
                 $valor = isset($p['valor_comision'])
                     ? (float) $p['valor_comision']
                     : (float) ($p['porcentaje'] ?? 5);
 
->>>>>>> Stashed changes
                 $stmt->execute([
                     $p['producto_id'] ?? null,
                     $p['hubspot_product_id'] ?? $p['productoId'] ?? null,
-<<<<<<< Updated upstream
-                    $p['nombre_producto']    ?? $p['producto']   ?? '',
-                    $tipo,
-                    $p['porcentaje']         ?? 5,
-                    isset($p['valor_fijo']) && $p['valor_fijo'] !== null ? (float) $p['valor_fijo'] : null,
-=======
                     $p['nombre_producto'] ?? $p['producto'] ?? '',
                     $p['porcentaje'] ?? ($tipo === 'porcentaje' ? $valor : 0),
                     $tipo,
                     $valor,
->>>>>>> Stashed changes
                 ]);
             }
         }

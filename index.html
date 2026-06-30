@@ -543,25 +543,6 @@
        POPOVERS (dropdowns flotantes)
        ============================================================ -->
 
-<<<<<<< Updated upstream
-    <!-- Popover: Usuario activo -->
-    <div class="popover" id="popover-usuario" hidden style="width:260px">
-      <div style="padding:var(--esp-4);border-bottom:1px solid var(--color-borde);">
-        <div style="font-weight:var(--font-peso-semibold);font-size:var(--font-tam-md);margin-bottom:2px;" id="user-pop-nombre">—</div>
-        <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="user-pop-email">—</div>
-        <div style="font-size:var(--font-tam-xs);color:var(--color-texto-debil);margin-top:4px;" id="user-pop-rol">—</div>
-      </div>
-      <div class="popover__lista">
-        <button class="popover__item" id="btn-ir-hubspot">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M14 3v2h4.6l-9.3 9.3 1.4 1.4L20 6.4V11h2V3h-8Zm-1 14H5V7h6V5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-4h-2v4Z"/></svg>
-          Ir a HubSpot
-        </button>
-        <button class="popover__item" id="btn-logout" style="color:#dc2626">
-          <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0"><path fill="currentColor" d="M5 3h7v2H5v14h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm11 4 1.4 1.4L14.8 11H21v2h-6.2l2.6 2.6L16 17l-5-5 5-5Z"/></svg>
-          Cerrar sesión
-        </button>
-      </div>
-=======
   <!-- Popover: Usuario activo -->
   <div class="popover" id="popover-usuario" hidden style="width:260px">
     <div style="padding:var(--esp-4);border-bottom:1px solid var(--color-borde);">
@@ -569,16 +550,8 @@
         id="user-pop-nombre">—</div>
       <div style="font-size:var(--font-tam-sm);color:var(--color-texto-suave);" id="user-pop-email">—</div>
       <div style="font-size:var(--font-tam-xs);color:var(--color-texto-debil);margin-top:4px;" id="user-pop-rol">—</div>
->>>>>>> Stashed changes
     </div>
     <div class="popover__lista">
-      <button class="popover__item" id="btn-perfil">
-        <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0">
-          <path fill="currentColor"
-            d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4Z" />
-        </svg>
-        Mi perfil
-      </button>
       <button class="popover__item" id="btn-ir-hubspot">
         <svg viewBox="0 0 24 24" width="14" height="14" style="margin-right:6px;flex-shrink:0">
           <path fill="currentColor"
@@ -895,536 +868,9 @@
                       top: 50%;
                       transform: translateY(-50%);
                       color: #7c98b6;
-<<<<<<< Updated upstream
-                    "
-                    viewBox="0 0 24 24"
-                    width="14"
-                    height="14"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-                    />
-                  </svg>
-                </div>
-                <select class="form-select" style="width: 120px">
-                  <option>Categoría</option>
-                  <option>Mis vistas</option>
-                  <option>Compartidas</option>
-                </select>
-              </div>
-              <div class="modal-vistas__lista">
-                <div class="modal-vistas__grupo">
-                  Proporcionado por HubSpot (4)
-                </div>
-                <div
-                  class="modal-vistas__item"
-                  data-vista="pendiente_aceptacion"
-                >
-                  <svg viewBox="0 0 24 24" width="14" height="14">
-                    <path
-                      fill="currentColor"
-                      d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"
-                    />
-                  </svg>
-                  Pendiente de aceptación
-                </div>
-                <div
-                  class="modal-vistas__item"
-                  data-vista="pendiente_aprobacion"
-                >
-                  <svg viewBox="0 0 24 24" width="14" height="14">
-                    <path
-                      fill="currentColor"
-                      d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"
-                    />
-                  </svg>
-                  Pendiente de aprobación
-                </div>
-                <div
-                  class="modal-vistas__item modal-vistas__item--seleccionado"
-                  data-vista="todas"
-                >
-                  <svg viewBox="0 0 24 24" width="14" height="14">
-                    <path
-                      fill="currentColor"
-                      d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"
-                    />
-                  </svg>
-                  Todas las cotizaciones
-                </div>
-                <div class="modal-vistas__item" data-vista="vence_pronto">
-                  <svg viewBox="0 0 24 24" width="14" height="14">
-                    <path
-                      fill="currentColor"
-                      d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"
-                    />
-                  </svg>
-                  Vence pronto
-                </div>
-                <div class="modal-vistas__grupo">
-                  Recomendado por administrador (4)
-                </div>
-                <div class="modal-vistas__item" data-vista="rec_pendiente">
-                  <svg viewBox="0 0 24 24" width="14" height="14">
-                    <path
-                      fill="currentColor"
-                      d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"
-                    />
-                  </svg>
-                  Pendiente de aceptación
-                </div>
-              </div>
-            </div>
-            <div class="modal-vistas__col">
-              <div class="modal-vistas__detalle">
-                <div class="modal-vistas__detalle-titulo">
-                  <svg viewBox="0 0 24 24" width="14" height="14">
-                    <path
-                      fill="currentColor"
-                      d="M4 4h16v16H4V4Zm2 2v12h12V6H6Z"
-                    />
-                  </svg>
-                  Todas las cotizaciones
-                </div>
-                <div class="modal-vistas__campo">
-                  <span class="modal-vistas__campo-label">Creado por:</span>
-                  <span class="modal-vistas__campo-valor"
-                    >Proporcionado por HubSpot</span
-                  >
-                </div>
-                <div class="modal-vistas__campo">
-                  <span class="modal-vistas__campo-label">Tipo de vista:</span>
-                  <span class="modal-vistas__campo-valor">Tabla</span>
-                </div>
-                <div class="modal-vistas__vacio">
-                  Esta vista no tiene filtros aplicados.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal__footer">
-          <button class="btn btn--naranja" id="confirmar-agregar-vista">
-            Agregar
-          </button>
-          <button class="btn btn--ghost" data-cerrar-modal>Cancelar</button>
-          <div class="modal__footer-spacer"></div>
-          <a href="#" class="btn--link" style="color: var(--color-acento)"
-            >Todas las vistas</a
-          >
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Crear cotización (formulario API HubSpot Quotes) -->
-    <div class="modal-overlay" id="modal-crear-cotizacion" hidden>
-      <div class="modal modal--xl">
-        <div class="modal__header">
-          <div class="modal__titulo">Crear cotización</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16">
-              <path
-                fill="currentColor"
-                d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"
-              />
-            </svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <!-- Cantidad total calculada (oculto, lo llenan los productos) -->
-          <input type="hidden" id="cot-cantidad" value="0" />
-          <form id="form-cotizacion" class="cot-form-grid">
-            <div class="form-grupo form-grupo--full">
-              <label class="form-label form-label--req" for="cot-titulo"
-                >Nombre de la cotización</label
-              >
-              <input
-                type="text"
-                id="cot-titulo"
-                class="form-input"
-                placeholder="Ej: Servicios CRM 2026 - Cliente X"
-                required
-              />
-            </div>
-            <div class="form-grupo">
-              <label class="form-label form-label--req" for="cot-cliente"
-                >Empresa o cliente</label
-              >
-              <div
-                class="contacto-autocomplete"
-                id="contacto-autocomplete-wrap"
-              >
-                <input
-                  type="text"
-                  id="cot-cliente"
-                  class="form-input"
-                  placeholder="Buscar contacto o empresa…"
-                  autocomplete="off"
-                  role="combobox"
-                  aria-expanded="false"
-                  aria-owns="contacto-sugerencias"
-                  aria-autocomplete="list"
-                />
-                <ul
-                  id="contacto-sugerencias"
-                  class="contacto-sugerencias"
-                  hidden
-                  role="listbox"
-                  aria-label="Sugerencias de contacto"
-                ></ul>
-              </div>
-              <input type="hidden" id="cot-contacto-id" />
-            </div>
-            <div class="form-grupo" id="negocio-autocomplete-wrap">
-              <label class="form-label" for="cot-negocio">Negocio / Deal <span style="font-weight:400;color:var(--color-texto-suave)">(opcional)</span></label>
-              <div class="contacto-autocomplete">
-                <input
-                  type="text"
-                  id="cot-negocio"
-                  class="form-input"
-                  placeholder="Escribe para buscar un deal…"
-                  autocomplete="off"
-                  aria-expanded="false"
-                  aria-haspopup="listbox"
-                  aria-controls="negocio-sugerencias"
-                />
-                <input type="hidden" id="cot-deal-id" />
-                <ul
-                  id="negocio-sugerencias"
-                  class="contacto-sugerencias"
-                  hidden
-                  role="listbox"
-                  aria-label="Deals sugeridos"
-                ></ul>
-              </div>
-              <p id="deal-cliente-hint" class="form-hint deal-hint" hidden></p>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label form-label--req" for="cot-moneda"
-                >Moneda</label
-              >
-              <select id="cot-moneda" class="form-select">
-                <option value="COP">COP - Peso Colombiano</option>
-                <option value="USD">USD - Dólar</option>
-                <option value="EUR">EUR - Euro</option>
-                <option value="MXN">MXN - Peso Mexicano</option>
-              </select>
-              <span class="form-help">El total se calcula automáticamente según los productos.</span>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="cot-idioma">Idioma</label>
-              <select id="cot-idioma" class="form-select">
-                <option value="es">Español</option>
-                <option value="en">English</option>
-                <option value="pt">Português</option>
-              </select>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="cot-fecha-creacion"
-                >Fecha de creación</label
-              >
-              <input type="date" id="cot-fecha-creacion" class="form-input" />
-            </div>
-            <div class="form-grupo">
-              <label
-                class="form-label form-label--req"
-                for="cot-fecha-vencimiento"
-                >Fecha de vencimiento</label
-              >
-              <input
-                type="date"
-                id="cot-fecha-vencimiento"
-                class="form-input"
-              />
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="cot-estado"
-                >Estado</label
-              >
-              <select id="cot-estado" class="form-select">
-                <option value="borrador">Borrador</option>
-                <option value="publicado">Publicado</option>
-                <option value="aprobado">Aprobado</option>
-                <option value="en_revision">En revisión</option>
-              </select>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label form-label--req" for="cot-propietario">Propietario</label>
-              <div style="position:relative" id="propietario-create-wrap">
-                <input type="text" id="cot-propietario" class="form-input"
-                  placeholder="Buscar propietario…" autocomplete="off"
-                  aria-autocomplete="list" aria-expanded="false"/>
-                <input type="hidden" id="cot-propietario-id"/>
-                <ul id="propietario-create-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
-              </div>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="cot-punto-venta">Punto de Venta</label>
-              <select id="cot-punto-venta" class="form-select">
-                <option value="">— Sin especificar —</option>
-              </select>
-            </div>
-            <div class="form-grupo form-grupo--full">
-              <label class="form-label" for="cot-comentarios"
-                >Términos y comentarios</label
-              >
-              <textarea
-                id="cot-comentarios"
-                class="form-textarea"
-                placeholder="Términos de pago, comentarios al cliente, etc."
-              ></textarea>
-            </div>
-          </form>
-
-          <!-- ── TAB: PRODUCTOS Y DESCUENTOS ─────────────────────── -->
-          <div
-            class="cot-seccion"
-            id="cot-seccion-productos"
-            style="margin-top: 20px"
-          >
-            <div class="cot-seccion__titulo">
-              <svg
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                aria-hidden="true"
-                style="margin-right: 6px; vertical-align: -2px"
-              >
-                <path
-                  fill="currentColor"
-                  d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 2h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h7v2H7v-2Z"
-                />
-              </svg>
-              Productos / Líneas de artículo
-              <button
-                class="btn btn--ghost btn--sm"
-                id="btn-recargar-productos"
-                style="margin-left: auto; font-size: 11px"
-                title="Recargar catálogo desde HubSpot"
-              >
-                Actualizar catálogo
-              </button>
-            </div>
-
-            <!-- Layout: buscador izquierda | líneas derecha -->
-            <div class="cot-productos-layout">
-              <!-- Panel: Buscador de catálogo -->
-              <div class="cot-catalogo">
-                <div class="cot-catalogo__buscar">
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="13"
-                    height="13"
-                    style="color: #7c98b6; flex-shrink: 0"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
-                    />
-                  </svg>
-                  <input
-                    type="search"
-                    id="input-buscar-producto"
-                    class="campo-busqueda__input"
-                    placeholder="Buscar producto..."
-                    aria-label="Buscar en el catálogo"
-                  />
-                </div>
-                <ul
-                  id="productos-lista"
-                  class="productos-lista"
-                  role="listbox"
-                  aria-label="Catálogo de productos"
-                >
-                  <li class="productos-lista__vacio">Cargando catálogo…</li>
-                </ul>
-              </div>
-
-              <!-- Panel: Tabla de líneas de la cotización -->
-              <div class="cot-lineas">
-                <table class="tabla-lineas">
-                  <thead>
-                    <tr>
-                      <th>Producto / Servicio</th>
-                      <th class="th--num" style="width: 110px">Precio unit.</th>
-                      <th class="th--num" style="width: 70px">Cant.</th>
-                      <th style="width: 140px">Descuento</th>
-                      <th class="th--num" style="width: 110px">Subtotal</th>
-                      <th style="width: 36px"></th>
-                    </tr>
-                  </thead>
-                  <tbody id="cotizacion-lineas-tbody"></tbody>
-                </table>
-                <button
-                  class="btn btn--ghost btn--sm"
-                  id="btn-agregar-linea-custom"
-                  style="margin-top: 8px"
-                >
-                  + Línea personalizada
-                </button>
-              </div>
-            </div>
-
-            <!-- ── DESCUENTOS ──────────────────────────────────────── -->
-            <div class="cot-descuentos" id="cot-descuento-global">
-              <div class="cot-descuentos__titulo">Descuento global</div>
-              <div class="cot-descuentos__fila">
-                <label
-                  class="form-label"
-                  for="cot-desc-valor"
-                  style="min-width: 56px"
-                  >Valor</label
-                >
-                <input
-                  type="number"
-                  id="cot-desc-valor"
-                  class="form-input form-input--sm"
-                  min="0"
-                  step="0.01"
-                  placeholder="0"
-                  data-desc-campo="valor"
-                  style="width: 90px"
-                />
-                <select
-                  class="form-select form-select--sm"
-                  data-desc-campo="tipo"
-                  aria-label="Tipo de descuento global"
-                  style="width: 68px"
-                >
-                  <option value="porcentaje">%</option>
-                  <option value="fijo">$</option>
-                </select>
-                <input
-                  type="text"
-                  class="form-input form-input--sm"
-                  data-desc-campo="motivo"
-                  placeholder="Motivo (opcional)"
-                  style="flex: 1; max-width: 220px"
-                />
-                <span id="cot-desc-pct-label" class="form-help" hidden></span>
-              </div>
-            </div>
-
-            <!-- ── RESUMEN DE TOTALES ──────────────────────────────── -->
-            <div class="cot-resumen">
-              <table class="cot-resumen__tabla">
-                <tbody>
-                  <tr>
-                    <td class="cot-resumen__label">Subtotal</td>
-                    <td class="cot-resumen__valor" id="cot-resumen-subtotal">
-                      —
-                    </td>
-                  </tr>
-                  <tr id="cot-resumen-fila-descuento" hidden>
-                    <td
-                      class="cot-resumen__label"
-                      style="color: var(--color-error, #e53e3e)"
-                    >
-                      Descuento
-                    </td>
-                    <td
-                      class="cot-resumen__valor"
-                      id="cot-resumen-descuento"
-                      style="color: var(--color-error, #e53e3e)"
-                    >
-                      —
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="cot-resumen__label">
-                      IVA
-                      <span
-                        style="
-                          font-weight: 400;
-                          color: var(--color-texto-suave);
-                        "
-                      >
-                        (<input
-                          type="number"
-                          id="cot-tasa-iva"
-                          class="form-input form-input--sm"
-                          min="0"
-                          max="100"
-                          step="1"
-                          value="19"
-                          style="
-                            width: 40px;
-                            display: inline-block;
-                            padding: 1px 4px;
-                          "
-                          aria-label="Tasa de IVA en %"
-                        />
-                        %)
-                      </span>
-                    </td>
-                    <td class="cot-resumen__valor" id="cot-resumen-iva">—</td>
-                  </tr>
-                  <tr class="cot-resumen__fila--total">
-                    <td class="cot-resumen__label">Total</td>
-                    <td class="cot-resumen__valor" id="cot-resumen-total">—</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ── TAB: ENVÍO POR CORREO ───────────────────────────── -->
-          <div
-            class="cot-seccion"
-            id="cot-seccion-email"
-            style="margin-top: 20px"
-          >
-            <div class="cot-seccion__titulo">
-              <svg
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                aria-hidden="true"
-                style="margin-right: 6px; vertical-align: -2px"
-              >
-                <path
-                  fill="currentColor"
-                  d="M2 4h20v16H2V4Zm2 2v1.4l8 5.1 8-5.1V6H4Zm16 2.6-8 5.1-8-5.1V18h16V8.6Z"
-                />
-              </svg>
-              Enviar por correo
-            </div>
-            <div
-              class="form-grupo form-grupo--fila"
-              style="align-items: flex-end; gap: 8px"
-            >
-              <div style="flex: 1">
-                <label class="form-label" for="cot-email-destinatario">
-                  Destinatario
-                </label>
-                <input
-                  type="email"
-                  id="cot-email-destinatario"
-                  class="form-input"
-                  placeholder="email@cliente.com"
-                />
-              </div>
-              <button
-                class="btn btn--naranja"
-                data-accion-email="enviar"
-                style="white-space: nowrap"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="13"
-                  height="13"
-                  style="margin-right: 4px; vertical-align: -1px"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M3 3l18 9-18 9V13l13-4-13-4V3Z"
-                  />
-=======
                     " viewBox="0 0 24 24" width="14" height="14">
                   <path fill="currentColor"
                     d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
->>>>>>> Stashed changes
                 </svg>
               </div>
               <select class="form-select" style="width: 120px">
@@ -1506,59 +952,6 @@
     </div>
   </div>
 
-<<<<<<< Updated upstream
-    <!-- Modal: Editar cotización -->
-    <div class="modal-overlay" id="modal-editar-cotizacion" hidden>
-      <div class="modal">
-        <div class="modal__header">
-          <div class="modal__titulo">Editar cotización</div>
-          <button class="modal__cerrar" data-cerrar-modal>
-            <svg viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M3 5l2-2 7 7 7-7 2 2-7 7 7 7-2 2-7-7-7 7-2-2 7-7L3 5Z"/>
-            </svg>
-          </button>
-        </div>
-        <div class="modal__body">
-          <input type="hidden" id="editar-cot-id"/>
-          <div class="form-grupo">
-            <label class="form-label form-label--req" for="editar-cot-nombre">Título</label>
-            <input type="text" id="editar-cot-nombre" class="form-input" placeholder="Título de la cotización"/>
-          </div>
-          <div class="cot-form-grid">
-            <div class="form-grupo">
-              <label class="form-label" for="editar-cot-estado">Estado</label>
-              <select id="editar-cot-estado" class="form-select">
-                <option value="borrador">Borrador</option>
-                <option value="en_revision">En revisión</option>
-                <option value="publicado">Enviado</option>
-                <option value="aprobado">Aprobado ✓</option>
-                <option value="rechazado">Rechazado</option>
-                <option value="vencido">Vencido</option>
-              </select>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label" for="editar-cot-moneda">Moneda</label>
-              <select id="editar-cot-moneda" class="form-select">
-                <option value="COP">COP — Peso colombiano</option>
-                <option value="USD">USD — Dólar americano</option>
-              </select>
-            </div>
-          </div>
-          <div class="cot-form-grid">
-            <div class="form-grupo">
-              <label class="form-label form-label--req" for="editar-cot-propietario">Propietario</label>
-              <div style="position:relative" id="propietario-edit-wrap">
-                <input type="text" id="editar-cot-propietario" class="form-input"
-                  placeholder="Buscar propietario…" autocomplete="off"
-                  aria-autocomplete="list" aria-expanded="false"/>
-                <input type="hidden" id="editar-cot-propietario-id"/>
-                <ul id="propietario-edit-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
-              </div>
-            </div>
-            <div class="form-grupo">
-              <label class="form-label form-label--req" for="editar-cot-fvencimiento">Fecha de vencimiento</label>
-              <input type="date" id="editar-cot-fvencimiento" class="form-input"/>
-=======
   <!-- Modal: Crear cotización (formulario API HubSpot Quotes) -->
   <div class="modal-overlay" id="modal-crear-cotizacion" hidden>
     <div class="modal modal--xl">
@@ -1575,33 +968,30 @@
         <input type="hidden" id="cot-cantidad" value="0" />
         <form id="form-cotizacion" class="cot-form-grid">
           <div class="form-grupo form-grupo--full">
-            <label class="form-label form-label--req" for="cot-titulo">Nombre de la cotización (hs_title)</label>
+            <label class="form-label form-label--req" for="cot-titulo">Nombre de la cotización</label>
             <input type="text" id="cot-titulo" class="form-input" placeholder="Ej: Servicios CRM 2026 - Cliente X"
               required />
-            <span class="form-help">Propiedad: hs_title</span>
           </div>
-          <div class="form-grupo form-grupo--full">
-            <label class="form-label" for="cot-cliente">Empresa o cliente</label>
+          <div class="form-grupo">
+            <label class="form-label form-label--req" for="cot-cliente">Empresa o cliente</label>
             <div class="contacto-autocomplete" id="contacto-autocomplete-wrap">
               <input type="text" id="cot-cliente" class="form-input" placeholder="Buscar contacto o empresa…"
                 autocomplete="off" role="combobox" aria-expanded="false" aria-owns="contacto-sugerencias"
                 aria-autocomplete="list" />
               <ul id="contacto-sugerencias" class="contacto-sugerencias" hidden role="listbox"
                 aria-label="Sugerencias de contacto"></ul>
->>>>>>> Stashed changes
             </div>
             <input type="hidden" id="cot-contacto-id" />
           </div>
           <div class="form-grupo">
-            <label class="form-label" for="cot-moneda">Moneda (hs_currency)</label>
+            <label class="form-label" for="cot-moneda">Moneda</label>
             <select id="cot-moneda" class="form-select">
               <option value="COP">COP - Peso Colombiano</option>
               <option value="USD">USD - Dólar</option>
               <option value="EUR">EUR - Euro</option>
               <option value="MXN">MXN - Peso Mexicano</option>
             </select>
-            <span class="form-help">La cantidad total (hs_quote_amount) se calcula
-              automáticamente.</span>
+            <span class="form-help">La cantidad total se calcula automáticamente.</span>
           </div>
           <div class="form-grupo">
             <label class="form-label" for="cot-idioma">Idioma</label>
@@ -1616,12 +1006,11 @@
             <input type="date" id="cot-fecha-creacion" class="form-input" />
           </div>
           <div class="form-grupo">
-            <label class="form-label form-label--req" for="cot-fecha-vencimiento">Fecha de vencimiento
-              (hs_expiration_date)</label>
+            <label class="form-label form-label--req" for="cot-fecha-vencimiento">Fecha de vencimiento</label>
             <input type="date" id="cot-fecha-vencimiento" class="form-input" />
           </div>
           <div class="form-grupo">
-            <label class="form-label" for="cot-estado">Estado (hs_quote_status)</label>
+            <label class="form-label" for="cot-estado">Estado</label>
             <select id="cot-estado" class="form-select">
               <option value="borrador">Borrador</option>
               <option value="publicado">Publicado</option>
@@ -1638,8 +1027,8 @@
               <ul id="propietario-create-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
             </div>
           </div>
-          <div class="form-grupo form-grupo--full" id="negocio-autocomplete-wrap">
-            <label class="form-label" for="cot-negocio">Negocio / Deal de HubSpot</label>
+          <div class="form-grupo" id="negocio-autocomplete-wrap">
+            <label class="form-label" for="cot-negocio">Negocio / Deal</label>
             <div class="contacto-autocomplete">
               <input type="text" id="cot-negocio" class="form-input" placeholder="Escribe para buscar un deal…"
                 autocomplete="off" aria-expanded="false" aria-haspopup="listbox" aria-controls="negocio-sugerencias" />
@@ -1650,9 +1039,9 @@
             <p id="deal-cliente-hint" class="form-hint deal-hint" hidden></p>
           </div>
           <div class="form-grupo">
-            <label class="form-label" for="cot-punto-venta">Punto de Venta</label>
+            <label class="form-label form-label--req" for="cot-punto-venta">Punto de Venta</label>
             <select id="cot-punto-venta" class="form-select">
-              <option value="">— Sin especificar —</option>
+              <option value="">— Selecciona —</option>
             </select>
           </div>
           <div class="form-grupo form-grupo--full">
@@ -2612,7 +2001,6 @@
 
   <!-- Scripts principales -->
   <script src="js/app-session.js"></script>
-  <script src="js/perfil.js"></script>
   <script src="js/api-client.js"></script>
   <script src="js/main.js"></script>
   <script src="js/sidebar.js"></script>
@@ -2729,32 +2117,6 @@
           </div>
         </div>
       </div>
-<<<<<<< Updated upstream
-    </div>
-
-    <!-- SheetJS (Excel) — necesario para exportarHistorico().xlsx en cotizaciones-email.js -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-
-    <!-- Scripts principales -->
-    <script src="js/app-session.js"></script>
-    <script src="js/api-client.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/sidebar.js"></script>
-    <script src="js/views.js"></script>
-    <script src="js/table.js"></script>
-    <script src="js/filters.js"></script>
-    <script src="js/cotizaciones-export.js"></script>
-    <script src="js/cotizaciones-comisiones.js"></script>
-
-    <!-- Módulos HubSpot API (deben cargarse antes que los módulos que los consumen) -->
-    <script src="js/hubspot-api.js"></script>
-    <script src="js/cotizaciones-contactos.js"></script>
-    <script src="js/cotizaciones-productos.js"></script>
-    <script src="js/cotizaciones-descuentos.js"></script>
-    <script src="js/cotizaciones-deals.js"></script>
-    <script src="js/cotizaciones-email.js"></script>
-
-    <script src="js/ui-interactions.js"></script>
 
     <!-- Modal: Filtros avanzados -->
     <div class="modal-overlay" id="modal-filtros-avanzados" hidden>
@@ -2951,10 +2313,6 @@
           </button>
         </div>
       </div>
-    </div>
-  </body>
-</html>
-=======
       <div class="modal__footer">
         <button class="btn btn--naranja" data-avanzados-aplicar>
           Aplicar filtros
@@ -2968,4 +2326,3 @@
 </body>
 
 </html>
->>>>>>> Stashed changes

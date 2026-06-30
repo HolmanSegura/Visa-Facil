@@ -178,7 +178,7 @@
       if (!r) return;
       switch (accion) {
         case "config":
-          if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones");
+          Modales.abrir("modal-config-comisiones");
           break;
         case "pago":
           abrirModalRegistrarPago(r);
@@ -576,8 +576,8 @@
   /* ================================================================
      CONFIG COMISIONES — PERSISTENCIA
      ================================================================ */
-  const KEYLS = "caja:configComisiones";
-  const DEFAULTCFG = {
+  const KEY_LS = "caja:configComisiones";
+  const DEFAULT_CFG = {
     version: 3,
     porAsesor: [],
     porProducto: [],
@@ -1154,7 +1154,7 @@
       popover.addEventListener("click", e => {
         const accion = e.target.closest("[data-accion]")?.dataset.accion;
         if (!accion) return;
-        if (accion === "cab-config-comisiones") { if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones"); Popovers.cerrar(); return; }
+        if (accion === "cab-config-comisiones") { Modales.abrir("modal-config-comisiones"); Popovers.cerrar(); return; }
         if (accion === "cab-exportar-todos") { exportarTodosCSV("todos"); Popovers.cerrar(); return; }
         if (accion === "cab-exportar-visibles") { exportarTodosCSV("visibles"); Popovers.cerrar(); return; }
         Popovers.cerrar();
@@ -1162,7 +1162,7 @@
     }
     // Botón principal "Configurar"
     document.getElementById("btn-configurar-comisiones")?.addEventListener("click", () => {
-      if (window.AppSession?.user?.rol === 'admin') Modales.abrir("modal-config-comisiones");
+      Modales.abrir("modal-config-comisiones");
     });
   }
 

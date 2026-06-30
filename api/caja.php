@@ -24,6 +24,39 @@ $id     = isset($_GET['id']) ? (int) $_GET['id'] : null;
 try {
     $db = getDB();
 
+    // ── GET backfill: sincronizar ingresos a ingresos_factura ──
+    if ($method === 'GET' && !empty($_GET['backfill_ingresos'])) {
+        $stmt = $db->prepare("
+            SELECT mc.id, mc.fecha, mc.valor, mc.moneda, mc.metodo_pago,
+                   mc.descripcion, mc.punto_venta, mc.responsable_id, mc.referencia
+            FROM movimientos_caja mc
+            WHERE mc.tipo = 'ingreso'
+              AND mc.estado = 'pagado'
+              AND mc.deleted_at IS NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM ingresos_factura inf WHERE inf.mov_caja_id = mc.id
+              )
+        ");
+        $stmt->execute();
+        $pendientes = $stmt->fetchAll();
+        $count = 0;
+        foreach ($pendientes as $mc) {
+            sincronizarIngresoFactura($db, (int) $mc['id'], [
+                'hubspot_inv_id' => "caja-{$mc['id']}",
+                'referencia'     => "caja-ref-{$mc['id']}",
+                'fecha_pago'     => $mc['fecha'],
+                'monto'          => $mc['valor'],
+                'moneda'         => $mc['moneda'] ?? 'COP',
+                'metodo_pago'    => $mc['metodo_pago'] ?? 'efectivo',
+                'titulo'         => $mc['descripcion'] ?? '',
+                'punto_venta'    => $mc['punto_venta'] ?? null,
+                'asesor_id'      => $mc['responsable_id'] ?? null,
+            ]);
+            $count++;
+        }
+        jsonResponse(['ok' => true, 'sincronizados' => $count]);
+    }
+
     // ── GET detalle ──────────────────────────────────────────
     if ($method === 'GET' && $id) {
         $stmt = $db->prepare("

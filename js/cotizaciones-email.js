@@ -686,6 +686,32 @@
         return;
       }
 
+      // Validar campos obligatorios antes de enviar
+      if (!cot.titulo) {
+        window.mostrarToast?.("⚠ La cotización debe tener nombre");
+        return;
+      }
+      if (!cot.cliente) {
+        window.mostrarToast?.("⚠ La cotización debe tener empresa o cliente");
+        return;
+      }
+      if (!cot.responsable) {
+        window.mostrarToast?.("⚠ La cotización debe tener propietario");
+        return;
+      }
+      const _pv = cot.puntoVenta || document.getElementById("cot-punto-venta")?.value || "";
+      if (!_pv) {
+        window.mostrarToast?.("⚠ La cotización debe tener punto de venta");
+        return;
+      }
+      const _lineas = cot.lineas?.length
+        ? cot.lineas
+        : (window.ProductosCotizacion?.getLineas?.() || []);
+      if (_lineas.length === 0 && !(cot.cantidad > 0)) {
+        window.mostrarToast?.("⚠ La cotización debe tener al menos un producto");
+        return;
+      }
+
       // Estado: cargando
       const textoOriginal = btn.textContent;
       btn.disabled = true;

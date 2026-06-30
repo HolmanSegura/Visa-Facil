@@ -1226,6 +1226,11 @@
           window.mostrarToast("⚠ El propietario es obligatorio");
           return;
         }
+        if (!puntoVenta) {
+          _marcarCampoError("cot-punto-venta");
+          window.mostrarToast("⚠ El punto de venta es obligatorio");
+          return;
+        }
         if (lineas.length === 0) {
           window.mostrarToast("⚠ Agrega al menos un producto a la cotización");
           return;

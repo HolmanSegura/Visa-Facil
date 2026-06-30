@@ -307,6 +307,116 @@
   padding: var(--esp-3) var(--esp-4);
 }
 
+/* ── Resumen por asesor ── */
+.resumen-asesores {
+  margin: 0 var(--esp-5) var(--esp-4);
+  background: var(--color-fondo-card);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-card);
+  overflow: hidden;
+}
+
+.resumen-asesores__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--color-borde);
+  background: var(--color-fondo-suave);
+}
+
+.resumen-asesores__titulo {
+  font-size: var(--font-tam-sm);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-principal);
+  margin: 0;
+}
+
+.resumen-asesores__periodo {
+  font-size: var(--font-tam-xs);
+  color: var(--color-texto-suave);
+}
+
+.resumen-asesores__tabla-wrap {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.resumen-asesores__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-tam-sm);
+}
+
+.resumen-asesores__tabla thead tr {
+  background: var(--color-fondo-suave);
+}
+
+.resumen-asesores__tabla th {
+  padding: var(--esp-2) var(--esp-4);
+  text-align: left;
+  font-size: var(--font-tam-xs);
+  font-weight: var(--font-peso-semibold);
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.resumen-asesores__col--num { text-align: right; }
+
+.resumen-asesores__tabla td {
+  padding: var(--esp-2) var(--esp-4);
+  color: var(--color-texto-principal);
+  border-bottom: 1px solid var(--color-borde-suave, #f1f5f9);
+  vertical-align: middle;
+}
+
+.resumen-asesores__tabla tbody tr:last-child td { border-bottom: none; }
+.resumen-asesores__tabla tbody tr:hover { background: var(--color-fondo-suave); }
+
+.resumen-asesores__asesor {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.resumen-asesores__avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: var(--font-peso-semibold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.resumen-asesores__nombre { font-weight: var(--font-peso-medio); }
+
+.resumen-asesores__celda-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.resumen-asesores__vacio {
+  padding: var(--esp-5) var(--esp-4);
+  text-align: center;
+  color: var(--color-texto-suave);
+}
+
+.resumen-asesores__por-pagar--positivo {
+  color: #dc2626;
+  font-weight: var(--font-peso-semibold);
+}
+
+.resumen-asesores__por-pagar--cero { color: #059669; }
+
 /* ── Responsive ── */
 @media (max-width: 1280px) {
   .dashboard-comisiones {
@@ -318,5 +428,9 @@
   .dashboard-comisiones {
     grid-template-columns: 1fr;
     padding: var(--esp-3);
+  }
+
+  .resumen-asesores {
+    margin: 0 var(--esp-3) var(--esp-3);
   }
 }

@@ -1115,9 +1115,7 @@
       const listaAse = document.getElementById("lista-asesores");
       if (!listaAse) return;
       const previos = new Set([...listaAse.querySelectorAll("input:checked")].map(c => c.dataset.ase));
-      const fuente = Array.isArray(window.ownersCatalogo) && window.ownersCatalogo.length > 0
-        ? window.ownersCatalogo.map(o => o.nombre)
-        : [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable).filter(Boolean))];
+      const fuente = [...new Set(window.estadoApp.datosOriginales.map(m => m.responsable).filter(Boolean))];
       listaAse.innerHTML = fuente.sort().map(n => `
         <label class="check-lista__item">
           <input type="checkbox" data-ase="${escHtml(n)}" ${previos.has(n) ? "checked" : ""}/>

@@ -205,7 +205,63 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.vistasInstance)  window.vistasInstance.renderizar();
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
+  cargarResumenAsesores(desde, hasta);
 });
+
+/* ============================================================
+   RESUMEN POR ASESOR
+   ============================================================ */
+function renderResumenAsesores(filas, desde, hasta) {
+  const tbody = document.getElementById("resumen-asesores-tbody");
+  const lblPeriodo = document.getElementById("resumen-periodo");
+  if (!tbody) return;
+
+  if (lblPeriodo && desde && hasta) {
+    lblPeriodo.textContent = `${fechaCorta(desde)} – ${fechaCorta(hasta)}`;
+  }
+
+  if (!filas || filas.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="resumen-asesores__vacio">Sin comisiones registradas en este período</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filas.map(f => {
+    const devengado  = f.teorico    || 0;
+    const pagado     = f.registrado || 0;
+    const porPagar   = devengado - pagado;
+    const ini        = obtenerIniciales(f.responsable);
+    const clsPorPagar = porPagar > 0 ? "resumen-asesores__por-pagar--positivo"
+                       : "resumen-asesores__por-pagar--cero";
+    return `<tr>
+      <td>
+        <div class="resumen-asesores__asesor">
+          <div class="resumen-asesores__avatar">${ini}</div>
+          <span class="resumen-asesores__nombre">${f.responsable}</span>
+        </div>
+      </td>
+      <td class="resumen-asesores__celda-num">${f.total || 0}</td>
+      <td class="resumen-asesores__celda-num">${formatearMoneda(devengado, "COP")}</td>
+      <td class="resumen-asesores__celda-num">${formatearMoneda(pagado, "COP")}</td>
+      <td class="resumen-asesores__celda-num ${clsPorPagar}">${formatearMoneda(porPagar, "COP")}</td>
+    </tr>`;
+  }).join("");
+}
+
+async function cargarResumenAsesores(desde, hasta) {
+  const tbody = document.getElementById("resumen-asesores-tbody");
+  if (!tbody || !window.Api) return;
+  try {
+    const res = await window.Api.comisiones.reporte({ desde, hasta });
+    if (res?.ok && Array.isArray(res.filas)) {
+      renderResumenAsesores(res.filas, desde, hasta);
+    } else {
+      renderResumenAsesores([], desde, hasta);
+    }
+  } catch (e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="resumen-asesores__vacio">No disponible</td></tr>`;
+    console.warn("[Comisiones] No se pudo cargar el resumen por asesor:", e.message);
+  }
+}
 
 /* ============================================================
    API PÚBLICA: recargar con nuevo período
@@ -221,6 +277,7 @@ window.recargarComisiones = async function (desde, hasta) {
         if (window.vistasInstance)  window.vistasInstance.renderizar();
         if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
         actualizarDashboard();
+        cargarResumenAsesores(desde, hasta);
         return;
       }
     }
@@ -230,4 +287,5 @@ window.recargarComisiones = async function (desde, hasta) {
   }
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
+  cargarResumenAsesores(desde, hasta);
 };
