@@ -22,28 +22,35 @@
    ============================================================ */
 (function () {
 
-  const KEY_LS         = "caja:configComisiones";
-  const DEFAULT        = { version: 2, porAsesor: [], porProducto: [], generalProductoPorcentaje: 5 };
+  const KEY_LS = "caja:configComisiones";
+  const DEFAULT = {
+    version: 3,
+    porAsesor: [],
+    porProducto: [],
+    generalProductoPorcentaje: 5,
+    generalProductoTipo: "porcentaje",
+    generalProductoValor: 5
+  };
   const CACHE_KEY_PROD = "hubspot:productos:v1";   // clave compartida con cotizaciones-productos.js
   const CACHE_TTL_PROD = 15 * 60 * 1000;           // 15 minutos
 
   // Catálogo HubSpot en memoria (compartido entre renders)
   let catalogoProductos = [];
-  let catalogoCargando  = false;
+  let catalogoCargando = false;
 
   // Fallback idéntico al de cotizaciones-productos.js — se usa cuando la
   // API no responde y el caché también está vacío.
   const PRODUCTOS_FALLBACK = [
-    { id: "ej-1",  nombre: "Sitio web corporativo",          descripcion: "Diseño y desarrollo responsive",          precio: 4500000  },
-    { id: "ej-2",  nombre: "Tienda Shopify",                  descripcion: "E-commerce con integración de pagos",      precio: 8200000  },
-    { id: "ej-3",  nombre: "SEO técnico mensual",             descripcion: "Optimización en motores de búsqueda",      precio: 1200000  },
-    { id: "ej-4",  nombre: "Soporte y mantenimiento mensual", descripcion: "Mantenimiento + soporte 20 h/mes",         precio: 980000   },
-    { id: "ej-5",  nombre: "Consultoría HubSpot",             descripcion: "Configuración y onboarding CRM",          precio: 2800000  },
-    { id: "ej-6",  nombre: "Integración API personalizada",   descripcion: "Desarrollo de integraciones a medida",     precio: 3600000  },
-    { id: "ej-7",  nombre: "App móvil MVP (iOS y Android)",   descripcion: "Desarrollo multiplataforma React Native",  precio: 35000000 },
-    { id: "ej-8",  nombre: "Migración Google Cloud",          descripcion: "Migración, configuración e IaC en GCP",   precio: 12000000 },
-    { id: "ej-9",  nombre: "Capacitación HubSpot (4 h)",      descripcion: "Sesión de formación para el equipo",      precio: 800000   },
-    { id: "ej-10", nombre: "Auditoría UX/UI",                 descripcion: "Evaluación heurística + mapa de mejoras", precio: 4200000  }
+    { id: "ej-1", nombre: "Sitio web corporativo", descripcion: "Diseño y desarrollo responsive", precio: 4500000 },
+    { id: "ej-2", nombre: "Tienda Shopify", descripcion: "E-commerce con integración de pagos", precio: 8200000 },
+    { id: "ej-3", nombre: "SEO técnico mensual", descripcion: "Optimización en motores de búsqueda", precio: 1200000 },
+    { id: "ej-4", nombre: "Soporte y mantenimiento mensual", descripcion: "Mantenimiento + soporte 20 h/mes", precio: 980000 },
+    { id: "ej-5", nombre: "Consultoría HubSpot", descripcion: "Configuración y onboarding CRM", precio: 2800000 },
+    { id: "ej-6", nombre: "Integración API personalizada", descripcion: "Desarrollo de integraciones a medida", precio: 3600000 },
+    { id: "ej-7", nombre: "App móvil MVP (iOS y Android)", descripcion: "Desarrollo multiplataforma React Native", precio: 35000000 },
+    { id: "ej-8", nombre: "Migración Google Cloud", descripcion: "Migración, configuración e IaC en GCP", precio: 12000000 },
+    { id: "ej-9", nombre: "Capacitación HubSpot (4 h)", descripcion: "Sesión de formación para el equipo", precio: 800000 },
+    { id: "ej-10", nombre: "Auditoría UX/UI", descripcion: "Evaluación heurística + mapa de mejoras", precio: 4200000 }
   ];
 
   // -----------------------------------------------------------------
@@ -118,9 +125,9 @@
       )].sort();
       cfg.porAsesor = unicos.map(n => ({
         responsable: n,
-        porcentaje:  5,
-        base:        "por_venta",
-        activo:      true
+        porcentaje: 5,
+        base: "por_venta",
+        activo: true
       }));
       guardarConfig(cfg);
     }
@@ -251,10 +258,10 @@
       const lineas = Array.isArray(factura.lineas) && factura.lineas.length > 0
         ? factura.lineas
         : [{
-            nombre:     factura.etiqueta || factura.titulo || factura.descripcion || "Servicio",
-            productoId: null,
-            subtotal:   factura.total ?? factura.cantidad ?? factura.valor ?? 0
-          }];
+          nombre: factura.etiqueta || factura.titulo || factura.descripcion || "Servicio",
+          productoId: null,
+          subtotal: factura.total ?? factura.cantidad ?? factura.valor ?? 0
+        }];
 
       lineas.forEach(linea => {
         const montoBase = Number(linea.subtotal ?? linea.monto ?? linea.valor ?? 0);
@@ -267,27 +274,50 @@
         );
 
         // ── Prioridad 2: tasa general de productos ───────────────────
-        const pctGeneral = cfg.generalProductoPorcentaje ?? 0;
+        const reglaProducto = configProducto || null;
+        const reglaGeneral = {
+          tipo_comision: cfg.generalProductoTipo || "porcentaje",
+          valor_comision: Number(cfg.generalProductoValor ?? cfg.generalProductoPorcentaje ?? 0)
+        };
+        const reglaAsesor = configAsesor
+          ? {
+              tipo_comision: configAsesor.tipo_comision || "porcentaje",
+              valor_comision: Number(
+                configAsesor.valor_comision ?? configAsesor.porcentaje ?? 0
+              )
+            }
+          : null;
 
-        // ── Prioridad 3: tasa global del asesor ──────────────────────
-        const pctAsesor = configAsesor?.porcentaje ?? 0;
+        const regla = reglaProducto
+          ? {
+              tipo_comision: reglaProducto.tipo_comision || "porcentaje",
+              valor_comision: Number(reglaProducto.valor_comision ?? reglaProducto.porcentaje ?? 0),
+              fuente: "producto"
+            }
+          : (reglaGeneral.valor_comision > 0
+              ? { ...reglaGeneral, fuente: "producto-general" }
+              : (reglaAsesor ? { ...reglaAsesor, fuente: "asesor" } : null));
 
-        const pct  = configProducto ? configProducto.porcentaje : (pctGeneral > 0 ? pctGeneral : pctAsesor);
-        const fuente = configProducto ? "producto" : (pctGeneral > 0 ? "producto_general" : "asesor");
+        if (!regla || Number(regla.valor_comision) <= 0) return;
 
-        if (pct > 0) {
-          resultado.push({
-            facturaId:     factura.id,
-            facturaTitulo: factura.etiqueta || factura.titulo || factura.descripcion || "",
-            responsable,
-            producto:      linea.nombre,
-            fuente,
-            porcentaje:    pct,
-            base:          montoBase,
-            comision:      Math.round(montoBase * pct / 100),
-            fecha:         factura.creado || factura.fechaCreacion || factura.fecha || ""
-          });
-        }
+        const comision = regla.tipo_comision === "fijo"
+          ? Math.round(Number(regla.valor_comision))
+          : Math.round(montoBase * Number(regla.valor_comision) / 100);
+
+        resultado.push({
+          facturaId: factura.id,
+          facturaTitulo: factura.etiqueta || factura.titulo || factura.descripcion || "",
+          responsable,
+          producto: linea.nombre,
+          productoId: linea.productoId || null,
+          fuente: regla.fuente,
+          tipo_comision: regla.tipo_comision,
+          valor_comision: Number(regla.valor_comision),
+          porcentaje: regla.tipo_comision === "porcentaje" ? Number(regla.valor_comision) : 0,
+          base: montoBase,
+          comision,
+          fecha: factura.creado || factura.fechaCreacion || factura.fecha
+        });
         // Sin regla aplicable → sin comisión (no se registra)
       });
     });
@@ -412,8 +442,8 @@
     document.querySelectorAll("[data-row-asesor]").forEach(tr => {
       const nombre = tr.dataset.responsable || "";
       const activo = tr.dataset.activo !== "false";
-      const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
-      const base   = "por_venta";
+      const pct = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      const base = "por_venta";
       if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base, activo });
     });
 
@@ -421,9 +451,9 @@
 
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
       const inputEl = tr.querySelector('[data-field="producto-texto"]');
-      const prod    = inputEl?.value?.trim() || "";
-      const prodId  = inputEl?.dataset?.prodId || "";
-      const pct     = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      const prod = inputEl?.value?.trim() || "";
+      const prodId = inputEl?.dataset?.prodId || "";
+      const pct = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
       if (prod) cfg.porProducto.push({ productoId: prodId, producto: prod, porcentaje: pct });
     });
 
@@ -440,7 +470,7 @@
   function initAutocompletoProd(containerEl) {
     if (!containerEl) return;
 
-    let dropdown    = null;
+    let dropdown = null;
     let inputActivo = null;
 
     function obtenerCatalogo() {
@@ -451,28 +481,28 @@
           const { ts, data } = JSON.parse(raw);
           if (Date.now() - ts < CACHE_TTL_PROD && Array.isArray(data) && data.length > 0) return data;
         }
-      } catch (_) {}
+      } catch (_) { }
       return PRODUCTOS_FALLBACK;
     }
 
     function cerrarDropdown() {
       dropdown?.remove();
-      dropdown    = null;
+      dropdown = null;
       inputActivo = null;
     }
 
     function mostrarDropdown(input, termino) {
       cerrarDropdown();
-      const cat  = obtenerCatalogo();
+      const cat = obtenerCatalogo();
       const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-      const q    = norm(termino);
+      const q = norm(termino);
       const filtrados = q.length < 1
         ? cat.slice(0, 10)
         : cat.filter(p =>
-            norm(p.nombre).includes(q) ||
-            norm(p.sku || "").includes(q) ||
-            norm(p.descripcion || "").includes(q)
-          ).slice(0, 10);
+          norm(p.nombre).includes(q) ||
+          norm(p.sku || "").includes(q) ||
+          norm(p.descripcion || "").includes(q)
+        ).slice(0, 10);
 
       if (filtrados.length === 0) return;
 
@@ -482,7 +512,7 @@
       ul._datos = filtrados;
 
       filtrados.forEach((p, i) => {
-        const li  = document.createElement("li");
+        const li = document.createElement("li");
         li.className = "prod-autocomplete__item";
         li.setAttribute("role", "option");
         li.setAttribute("tabindex", "-1");
@@ -499,16 +529,16 @@
 
       const rect = input.getBoundingClientRect();
       ul.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;` +
-                         `width:${rect.width}px;z-index:9999;`;
+        `width:${rect.width}px;z-index:9999;`;
       document.body.appendChild(ul);
-      dropdown    = ul;
+      dropdown = ul;
       inputActivo = input;
     }
 
     function seleccionarProducto(prod) {
       if (!prod || !inputActivo) return;
-      inputActivo.value              = prod.nombre;
-      inputActivo.dataset.prodId     = prod.id    || "";
+      inputActivo.value = prod.nombre;
+      inputActivo.dataset.prodId = prod.id || "";
       inputActivo.dataset.prodPrecio = prod.precio != null ? prod.precio : 0;
       const captured = inputActivo;
       cerrarDropdown();
@@ -544,14 +574,14 @@
         }
       }
       if (!dropdown) return;
-      const li    = e.target.closest("[role='option']");
+      const li = e.target.closest("[role='option']");
       if (!li) return;
       const items = [...dropdown.querySelectorAll("[role='option']")];
-      const idx   = items.indexOf(li);
-      if      (e.key === "ArrowDown")              { e.preventDefault(); items[idx + 1]?.focus(); }
-      else if (e.key === "ArrowUp")                { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
+      const idx = items.indexOf(li);
+      if (e.key === "ArrowDown") { e.preventDefault(); items[idx + 1]?.focus(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
       else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarProducto(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); }
-      else if (e.key === "Escape")                 { cerrarDropdown(); inputActivo?.focus(); }
+      else if (e.key === "Escape") { cerrarDropdown(); inputActivo?.focus(); }
     });
 
     // Click en ítem o click fuera
@@ -614,7 +644,7 @@
       // ── Toggle activo / inactivo de asesor (soft-delete) ────────────────────
       const btnToggle = e.target.closest('[data-accion-asesor="toggle-activo"]');
       if (btnToggle) {
-        const tr        = btnToggle.closest("tr");
+        const tr = btnToggle.closest("tr");
         const eraActivo = tr.dataset.activo !== "false";
         const ahoraActivo = !eraActivo;
 
@@ -636,7 +666,7 @@
         } else {
           if (celda && !badge) {
             const sp = document.createElement("span");
-            sp.className   = "badge-inactivo";
+            sp.className = "badge-inactivo";
             sp.textContent = "Inactivo";
             celda.appendChild(sp);
           }
@@ -661,7 +691,7 @@
         if (vacia) tbody.innerHTML = "";
 
         const idx = tbody.querySelectorAll("[data-row-producto]").length;
-        const tr  = document.createElement("tr");
+        const tr = document.createElement("tr");
         tr.dataset.rowProducto = idx;
         tr.innerHTML = `
           <td>
@@ -716,17 +746,24 @@
   }
 
   let ultimoReporte = null;
+<<<<<<< Updated upstream
+=======
+  let ultimasFacturas = [];   // caché de la última carga de ingresos_factura
+  let tabActiva = "resumen";
+>>>>>>> Stashed changes
 
   // ----- Resumen por asesor ------------------------------------
   function calcularReporte() {
-    const desde        = document.getElementById("rep-com-desde")?.value  || "";
-    const hasta        = document.getElementById("rep-com-hasta")?.value  || "";
+    const desde = document.getElementById("rep-com-desde")?.value || "";
+    const hasta = document.getElementById("rep-com-hasta")?.value || "";
     const asesorFiltro = document.getElementById("rep-com-asesor")?.value || "";
 
     if (!window.Api) return null;
 
-    return window.Api.comisiones.reporte({ desde, hasta,
-      ...(asesorFiltro ? { usuario_id: asesorFiltro } : {}) });
+    return window.Api.comisiones.reporte({
+      desde, hasta,
+      ...(asesorFiltro ? { usuario_id: asesorFiltro } : {})
+    });
   }
 
   async function renderReporte() {
@@ -752,7 +789,7 @@
 
     if (filas.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="tabla-reporte-comisiones__vacio">Sin datos para el período seleccionado.</td></tr>`;
-      ["rep-com-foot-ingresos","rep-com-foot-teorico","rep-com-foot-registrado","rep-com-foot-pagos","rep-com-foot-diff"]
+      ["rep-com-foot-ingresos", "rep-com-foot-teorico", "rep-com-foot-registrado", "rep-com-foot-pagos", "rep-com-foot-diff"]
         .forEach(id => setTxt(id, "—"));
       setTxt("rep-com-kpi-registrado", fmt(0));
       setTxt("rep-com-kpi-registrado-cnt", "0 movimientos");
@@ -781,28 +818,266 @@
         </tr>`;
     }).join("");
 
-    const totIng = filas.reduce((s, f) => s + (f.ingresos   || 0), 0);
-    const totTeo = filas.reduce((s, f) => s + (f.teorico    || 0), 0);
+    const totIng = filas.reduce((s, f) => s + (f.ingresos || 0), 0);
+    const totTeo = filas.reduce((s, f) => s + (f.teorico || 0), 0);
     const totReg = filas.reduce((s, f) => s + (f.registrado || 0), 0);
-    const totPag = filas.reduce((s, f) => s + (f.pagos      || 0), 0);
+    const totPag = filas.reduce((s, f) => s + (f.pagos || 0), 0);
     const totDif = totReg - totTeo;
 
-    setTxt("rep-com-foot-ingresos",   fmt(totIng));
-    setTxt("rep-com-foot-teorico",    fmt(totTeo));
+    setTxt("rep-com-foot-ingresos", fmt(totIng));
+    setTxt("rep-com-foot-teorico", fmt(totTeo));
     setTxt("rep-com-foot-registrado", fmt(totReg));
-    setTxt("rep-com-foot-pagos",      totPag);
-    setTxt("rep-com-foot-diff",       (totDif >= 0 ? "+" : "") + fmt(totDif));
-    setTxt("rep-com-kpi-registrado",  fmt(totReg));
+    setTxt("rep-com-foot-pagos", totPag);
+    setTxt("rep-com-foot-diff", (totDif >= 0 ? "+" : "") + fmt(totDif));
+    setTxt("rep-com-kpi-registrado", fmt(totReg));
     setTxt("rep-com-kpi-registrado-cnt", `${totPag} movimientos`);
-    setTxt("rep-com-kpi-teorico",     fmt(totTeo));
+    setTxt("rep-com-kpi-teorico", fmt(totTeo));
 
     const elDiff = document.getElementById("rep-com-kpi-diff");
     if (elDiff) {
       elDiff.textContent = (totDif >= 0 ? "+" : "") + fmt(totDif);
-      elDiff.className   = "reporte-comisiones__kpi-valor " + (totDif > 0 ? "diff-neg" : totDif < 0 ? "diff-pos" : "");
+      elDiff.className = "reporte-comisiones__kpi-valor " + (totDif > 0 ? "diff-neg" : totDif < 0 ? "diff-pos" : "");
     }
   }
 
+<<<<<<< Updated upstream
+=======
+  // ----- Ingresos facturados (tab 2) ---------------------------
+  async function cargarYRenderFacturas() {
+    const tbody = document.getElementById("rep-com-facturas-tbody");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Cargando…</td></tr>`;
+
+    const desde = document.getElementById("rep-com-desde")?.value || "";
+    const hasta = document.getElementById("rep-com-hasta")?.value || "";
+    const asesorId = document.getElementById("rep-com-asesor")?.value || "";
+
+    try {
+      const resp = await window.Api.comisiones.ajustes(
+        { desde, hasta, ...(asesorId ? { asesor_id: asesorId } : {}) }
+      );
+      if (!resp?.ok || !Array.isArray(resp.data)) throw new Error("Respuesta inválida");
+      ultimasFacturas = resp.data;
+      renderTablaFacturas(resp.data);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Error al cargar: ${escHtml(e.message)}</td></tr>`;
+    }
+  }
+
+  function renderTablaFacturas(facturas) {
+    const tbody = document.getElementById("rep-com-facturas-tbody");
+    if (!tbody) return;
+
+    const fmt = v => window.formatearMoneda(v, "COP");
+    const fmtDate = s => s ? new Date(s + "T12:00:00").toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+    if (!facturas.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Sin facturas en el período seleccionado.</td></tr>`;
+      ["rep-com-fact-foot-monto", "rep-com-fact-foot-sugerida", "rep-com-fact-foot-final"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = "—";
+      });
+      return;
+    }
+
+    tbody.innerHTML = facturas.map(f => {
+      const sugerida = parseFloat(f.comision_sugerida || 0);
+      const ajustada = f.comision_ajustada !== null ? parseFloat(f.comision_ajustada) : null;
+      const comisionFinal = ajustada !== null ? ajustada : sugerida;
+      const esAjustada = ajustada !== null && Math.round(ajustada) !== Math.round(sugerida);
+
+      const badgeAjustado = esAjustada
+        ? `<span class="badge-ajustado" title="Ajustado manualmente el ${fmtDate(f.ultimo_ajuste_at)}">Ajustado</span>`
+        : "";
+      const badgeHistorial = parseInt(f.n_ajustes || 0) > 0
+        ? `<button class="btn-icono-mini com-btn-historial" title="Ver historial (${f.n_ajustes} ajuste${f.n_ajustes > 1 ? 's' : ''})">
+             <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v3l4-4-4-4v3Zm-1 5v5l4.25 2.52.77-1.33-3.52-2.09V8H12Z"/></svg>
+             <span class="historial-cnt">${f.n_ajustes}</span>
+           </button>`
+        : "";
+
+      return `
+        <tr data-factura-id="${escHtml(f.id)}">
+          <td>
+            <div class="celda-avatar">
+              <span class="celda-avatar__circulo" style="width:22px;height:22px;font-size:10px;">${window.obtenerIniciales(f.asesor || "?")}</span>
+              <span>${escHtml(f.asesor || "—")}</span>
+            </div>
+          </td>
+          <td>
+            <span class="factura-titulo">${escHtml(f.titulo || f.hubspot_inv_id || "—")}</span>
+            <span class="factura-ref">${escHtml(f.hubspot_inv_id || "")}</span>
+          </td>
+          <td class="fecha-celda">${fmtDate(f.fecha_pago)}</td>
+          <td class="num">${fmt(f.monto)}</td>
+          <td class="num">${parseFloat(f.porcentaje || 0).toFixed(1)}%</td>
+          <td class="num">${fmt(sugerida)}</td>
+          <td class="num com-celda-ajustada">
+            <span class="com-valor-display">${fmt(comisionFinal)}${badgeAjustado}</span>
+            <div class="com-editor" hidden>
+              <input type="number" class="form-input form-input--sm com-input-ajuste"
+                     value="${comisionFinal}" min="0" step="1000" style="width:140px" />
+              <input type="text" class="form-input form-input--sm com-input-motivo"
+                     placeholder="Motivo del ajuste…" style="width:200px" />
+              <button class="btn btn--xs btn--naranja com-btn-guardar">Guardar</button>
+              <button class="btn btn--xs btn--ghost com-btn-cancelar">Cancelar</button>
+            </div>
+          </td>
+          <td class="com-acciones">
+            <button class="btn-icono-mini com-btn-editar" title="Ajustar comisión">
+              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></svg>
+            </button>
+            ${badgeHistorial}
+          </td>
+        </tr>
+        <tr class="historial-row" data-for-factura="${escHtml(f.id)}" hidden>
+          <td colspan="8">
+            <div class="historial-comision" id="historial-${escHtml(f.id)}"></div>
+          </td>
+        </tr>`;
+    }).join("");
+
+    // Totales en tfoot
+    const totMonto = facturas.reduce((s, f) => s + parseFloat(f.monto || 0), 0);
+    const totSugerida = facturas.reduce((s, f) => s + parseFloat(f.comision_sugerida || 0), 0);
+    const totFinal = facturas.reduce((s, f) => {
+      const aj = f.comision_ajustada !== null ? parseFloat(f.comision_ajustada) : parseFloat(f.comision_sugerida || 0);
+      return s + aj;
+    }, 0);
+
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt("rep-com-fact-foot-monto", fmt(totMonto));
+    setTxt("rep-com-fact-foot-sugerida", fmt(totSugerida));
+    setTxt("rep-com-fact-foot-final", fmt(totFinal));
+
+    // Delegación de clicks para edición e historial
+    tbody.onclick = null;
+    tbody.addEventListener("click", onTbodyFacturasClick);
+  }
+
+  function onTbodyFacturasClick(e) {
+    const tbody = document.getElementById("rep-com-facturas-tbody");
+
+    // Abrir editor
+    if (e.target.closest(".com-btn-editar")) {
+      const tr = e.target.closest("tr[data-factura-id]");
+      if (!tr) return;
+      tr.querySelector(".com-valor-display").hidden = true;
+      const editor = tr.querySelector(".com-editor");
+      editor.hidden = false;
+      editor.querySelector(".com-input-ajuste").focus();
+      return;
+    }
+
+    // Cancelar editor
+    if (e.target.closest(".com-btn-cancelar")) {
+      const tr = e.target.closest("tr[data-factura-id]");
+      if (!tr) return;
+      tr.querySelector(".com-valor-display").hidden = false;
+      tr.querySelector(".com-editor").hidden = true;
+      return;
+    }
+
+    // Guardar ajuste
+    if (e.target.closest(".com-btn-guardar")) {
+      const btn = e.target.closest(".com-btn-guardar");
+      const tr = btn.closest("tr[data-factura-id]");
+      if (!tr) return;
+      const facturaId = parseInt(tr.dataset.facturaId, 10);
+      const nuevaComision = parseFloat(tr.querySelector(".com-input-ajuste").value);
+      const motivo = tr.querySelector(".com-input-motivo").value.trim();
+
+      if (isNaN(nuevaComision) || nuevaComision < 0) {
+        window.mostrarToast?.("⚠ Valor de comisión inválido"); return;
+      }
+
+      const txtOrig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Guardando…";
+
+      guardarAjuste(facturaId, nuevaComision, motivo)
+        .then(() => {
+          window.mostrarToast?.("✓ Comisión ajustada y guardada");
+          return cargarYRenderFacturas();
+        })
+        .catch(err => {
+          window.mostrarToast?.(`⚠ ${err.message.slice(0, 70)}`);
+          btn.disabled = false;
+          btn.textContent = txtOrig;
+        });
+      return;
+    }
+
+    // Ver / ocultar historial
+    if (e.target.closest(".com-btn-historial")) {
+      const tr = e.target.closest("tr[data-factura-id]");
+      if (!tr) return;
+      const facturaId = tr.dataset.facturaId;
+      const histRow = tbody?.querySelector(`[data-for-factura="${facturaId}"]`);
+      if (!histRow) return;
+      const wasHidden = histRow.hidden;
+      histRow.hidden = !wasHidden;
+      if (wasHidden) cargarHistorial(facturaId, document.getElementById(`historial-${facturaId}`));
+    }
+  }
+
+  async function guardarAjuste(facturaId, comisionAjustada, motivo) {
+    if (!window.Api) throw new Error("API no disponible");
+    const resp = await window.Api.comisiones.ajustar({
+      ingreso_factura_id: facturaId,
+      comision_ajustada: comisionAjustada,
+      motivo: motivo || null,
+    });
+    if (!resp?.ok) throw new Error(resp?.error || "Error al guardar");
+    return resp;
+  }
+
+  async function cargarHistorial(facturaId, containerEl) {
+    if (!containerEl) return;
+    containerEl.innerHTML = `<div class="historial-comision__estado">Cargando historial…</div>`;
+
+    const fmt = v => window.formatearMoneda(v, "COP");
+    const fmtDate = s => s ? new Date(s).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+
+    try {
+      const resp = await window.Api.comisiones.historial(facturaId);
+      if (!resp?.ok || !Array.isArray(resp.data)) throw new Error();
+
+      if (!resp.data.length) {
+        containerEl.innerHTML = `<div class="historial-comision__estado">Sin ajustes registrados para esta factura.</div>`;
+        return;
+      }
+
+      containerEl.innerHTML = `
+        <table class="historial-comision__tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th class="num">Com. sugerida</th>
+              <th class="num">Valor anterior</th>
+              <th class="num">Valor ajustado</th>
+              <th>Motivo</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${resp.data.map(h => `
+              <tr>
+                <td class="fecha-celda">${fmtDate(h.created_at)}</td>
+                <td class="num">${fmt(h.comision_sugerida)}</td>
+                <td class="num">${h.comision_anterior !== null ? fmt(h.comision_anterior) : '<span class="com-estado-texto">Inicial</span>'}</td>
+                <td class="num"><strong>${fmt(h.comision_ajustada)}</strong></td>
+                <td>${escHtml(h.motivo || "—")}</td>
+                <td>${escHtml(h.usuario || "—")}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
+    } catch (_) {
+      containerEl.innerHTML = `<div class="historial-comision__estado historial-comision__estado--error">Error al cargar el historial.</div>`;
+    }
+  }
+
+>>>>>>> Stashed changes
   // ----- Init del modal ----------------------------------------
   function initModalReporteComisiones() {
     const modal = document.getElementById("modal-reporte-comisiones");
@@ -837,22 +1112,43 @@
   function exportarReporteCSVResumen(reporte) {
     const utils = window.utilsExport;
     if (!utils) return;
-    const fmt    = v => v;
-    const header = ["Asesor","Estado","Total facturado","% Comisión","Com. devengada","Com. registrada","# Pagos","Diferencia"];
-    const filas  = reporte.filas.map(f => [
+    const fmt = v => v;
+    const header = ["Asesor", "Estado", "Total facturado", "% Comisión", "Com. devengada", "Com. registrada", "# Pagos", "Diferencia"];
+    const filas = reporte.filas.map(f => [
       f.responsable, f.activo ? "Activo" : "Inactivo",
       f.ingresos, f.porcentaje, f.teorico, f.registrado, f.pagos, f.diferencia
     ]);
-    const totIng = reporte.filas.reduce((s, f) => s + (f.ingresos   || 0), 0);
-    const totTeo = reporte.filas.reduce((s, f) => s + (f.teorico    || 0), 0);
+    const totIng = reporte.filas.reduce((s, f) => s + (f.ingresos || 0), 0);
+    const totTeo = reporte.filas.reduce((s, f) => s + (f.teorico || 0), 0);
     const totReg = reporte.filas.reduce((s, f) => s + (f.registrado || 0), 0);
-    const totPag = reporte.filas.reduce((s, f) => s + (f.pagos      || 0), 0);
-    filas.push(["TOTAL","",totIng,"",totTeo,totReg,totPag,totReg-totTeo]);
+    const totPag = reporte.filas.reduce((s, f) => s + (f.pagos || 0), 0);
+    filas.push(["TOTAL", "", totIng, "", totTeo, totReg, totPag, totReg - totTeo]);
     const blob = utils.matrizAXLSX([header, ...filas]);
     utils.descargarBlob(blob, utils.nombreArchivo("reporte-comisiones-resumen"));
     window.mostrarToast?.(`✓ Exportado (${reporte.filas.length} asesores)`);
   }
 
+<<<<<<< Updated upstream
+=======
+  function exportarReporteCSVFacturas(facturas) {
+    const utils = window.utilsExport;
+    if (!utils) return;
+    const header = ["Asesor", "Factura", "Fecha", "Valor facturado", "% Comisión", "Com. sugerida", "Com. final", "Ajustado", "Motivo último ajuste"];
+    const filas = facturas.map(f => {
+      const sug = parseFloat(f.comision_sugerida || 0);
+      const aj = f.comision_ajustada !== null ? parseFloat(f.comision_ajustada) : sug;
+      return [
+        f.asesor || "", f.titulo || f.hubspot_inv_id || "", f.fecha_pago || "",
+        parseFloat(f.monto || 0), parseFloat(f.porcentaje || 0),
+        sug, aj, aj !== sug ? "Sí" : "No", ""
+      ];
+    });
+    const blob = utils.matrizAXLSX([header, ...filas]);
+    utils.descargarBlob(blob, utils.nombreArchivo("comisiones-facturas"));
+    window.mostrarToast?.(`✓ Exportado (${facturas.length} facturas)`);
+  }
+
+>>>>>>> Stashed changes
   // -----------------------------------------------------------------
   // INIT
   // -----------------------------------------------------------------

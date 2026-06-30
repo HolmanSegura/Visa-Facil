@@ -20,12 +20,14 @@
    ============================================================ */
 (function () {
 
-  const KEY_LS  = "caja:configComisiones";  // misma clave que módulo Caja
+  const KEY_LS = "caja:configComisiones";  // misma clave que módulo Caja
   const DEFAULT = {
-    version: 1,
+    version: 3,
     porAsesor: [],
     porProducto: [],
-    generalProductoPorcentaje: 5
+    generalProductoPorcentaje: 5,
+    generalProductoTipo: "porcentaje",
+    generalProductoValor: 5
   };
 
   // Catálogo de productos HubSpot en memoria
@@ -57,7 +59,7 @@
           return catalogoProductos;
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     // 3. HubSpot API
     try {
@@ -127,12 +129,13 @@
   // -----------------------------------------------------------------
   function asegurarConfigInicial() {
     const cfg = cargarConfig();
-    if (cfg.porAsesor.length === 0 && window.estadoApp) {
-      const unicos = [...new Set(window.estadoApp.datosOriginales.map(c => c.responsable))].sort();
+    const datos = window.estadoApp?.datosOriginales;
+    if (cfg.porAsesor.length === 0 && Array.isArray(datos) && datos.length > 0) {
+      const unicos = [...new Set(datos.map(c => c.responsable).filter(Boolean))].sort();
       cfg.porAsesor = unicos.map(n => ({
         responsable: n,
-        porcentaje:  5,
-        base:        "por_venta"
+        porcentaje: 5,
+        base: "por_venta"
       }));
       guardarConfig(cfg);
     }
@@ -143,28 +146,28 @@
   // MODAL: CONFIGURAR COMISIONES (Task 4)
   // -----------------------------------------------------------------
   function filaAsesor(row, idx) {
-    const ini = (window.obtenerIniciales || (n => (n||"?")[0]))(row.responsable);
+    const ini = (window.obtenerIniciales || (n => (n || "?")[0]))(row.responsable);
     return `
-      <tr data-row-asesor="${idx}">
-        <td>
-          <div class="celda-avatar">
-            <span class="celda-avatar__circulo" style="width:24px;height:24px;font-size:10px;">${ini}</span>
-            ${escHtml(row.responsable)}
-          </div>
-        </td>
-        <td>
-          <div class="input-pct">
-            <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
-                   value="${row.porcentaje}" data-field="porcentaje" />
-            <span class="input-pct__suffix">%</span>
-          </div>
-        </td>
-        <td>
-          <button class="btn-icono-mini" data-accion-asesor="quitar" title="Quitar">
-            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
-          </button>
-        </td>
-      </tr>`;
+    <tr data-row-asesor="${idx}" data-responsable="${escHtml(row.responsable)}">
+      <td>
+        <div class="celda-avatar">
+          <span class="celda-avatar__circulo" style="width:24px;height:24px;font-size:10px;">${ini}</span>
+          <span class="celda-avatar__nombre">${escHtml(row.responsable)}</span>
+        </div>
+      </td>
+      <td>
+        <div class="input-pct">
+          <input type="number" class="form-input form-input--sm" min="0" max="100" step="0.1"
+                 value="${row.porcentaje}" data-field="porcentaje" />
+          <span class="input-pct__suffix">%</span>
+        </div>
+      </td>
+      <td>
+        <button class="btn-icono-mini" data-accion-asesor="quitar" title="Quitar">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg>
+        </button>
+      </td>
+    </tr>`;
   }
 
   function renderConfigComisiones() {
@@ -228,18 +231,56 @@
     const cfg = clonarDefault();
 
     document.querySelectorAll("[data-row-asesor]").forEach(tr => {
-      const nombre = tr.querySelector(".celda-avatar")?.textContent.trim() || "";
-      const pct    = parseFloat(tr.querySelector('[data-field="porcentaje"]').value) || 0;
-      const base   = "por_venta";
-      if (nombre) cfg.porAsesor.push({ responsable: nombre, porcentaje: pct, base });
+      const nombre = (tr.dataset.responsable || "").trim();
+      const pct = parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value) || 0;
+      const tipo = tr.querySelector('[data-field="tipo_comision"]')?.value || "porcentaje";
+      const valor = parseFloat(tr.querySelector('[data-field="valor_comision"]')?.value) || pct || 0;
+      const base = "por_venta";
+
+      if (nombre) {
+        cfg.porAsesor.push({
+          responsable: nombre,
+          porcentaje: tipo === "porcentaje" ? valor : 0,
+          tipo_comision: tipo,
+          valor_comision: valor,
+          base
+        });
+      }
     });
 
     cfg.generalProductoPorcentaje = parseFloat(document.getElementById("config-com-general-pct")?.value) || 5;
+    cfg.generalProductoTipo = document.getElementById("config-com-general-tipo")?.value || "porcentaje";
+    cfg.generalProductoValor =
+      parseFloat(document.getElementById("config-com-general-valor")?.value)
+      || cfg.generalProductoPorcentaje
+      || 0;
 
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
-      const prod = tr.querySelector('[data-field="producto"]').value.trim();
-      const pct  = parseFloat(tr.querySelector('[data-field="porcentaje"]').value) || 0;
-      if (prod) cfg.porProducto.push({ producto: prod, porcentaje: pct });
+      const prod =
+        tr.querySelector('[data-field="producto"]')?.value?.trim()
+        || tr.querySelector('[data-field="producto-texto"]')?.value?.trim()
+        || "";
+
+      const prodId =
+        tr.querySelector('[data-field="producto"]')?.dataset?.prodId
+        || tr.querySelector('[data-field="producto-texto"]')?.dataset?.prodId
+        || "";
+
+      const tipo = tr.querySelector('[data-field="tipo_comision"]')?.value || "porcentaje";
+      const valor =
+        parseFloat(tr.querySelector('[data-field="valor_comision"]')?.value)
+        || parseFloat(tr.querySelector('[data-field="porcentaje"]')?.value)
+        || 0;
+
+      if (prod) {
+        cfg.porProducto.push({
+          producto: prod,
+          productoId: prodId || null,
+          porcentaje: tipo === "porcentaje" ? valor : 0,
+          tipo_comision: tipo,
+          valor_comision: valor
+        });
+      }
     });
 
     return cfg;
@@ -407,10 +448,10 @@
       if (!li) return;
       const items = [...dropdown.querySelectorAll("[role='option']")];
       const idx = items.indexOf(li);
-      if      (e.key === "ArrowDown")              { e.preventDefault(); items[idx + 1]?.focus(); }
-      else if (e.key === "ArrowUp")                { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
+      if (e.key === "ArrowDown") { e.preventDefault(); items[idx + 1]?.focus(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); idx <= 0 ? inputActivo?.focus() : items[idx - 1]?.focus(); }
       else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); seleccionarProd(dropdown._datos[parseInt(li.dataset.prodIdx, 10)]); }
-      else if (e.key === "Escape")                 { cerrarDrop(); inputActivo?.focus(); }
+      else if (e.key === "Escape") { cerrarDrop(); inputActivo?.focus(); }
     });
 
     document.addEventListener("click", e => {
@@ -426,8 +467,8 @@
   // -----------------------------------------------------------------
   function fechaIso(d) {
     const yyyy = d.getFullYear();
-    const mm   = String(d.getMonth() + 1).padStart(2, "0");
-    const dd   = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   }
 
@@ -460,16 +501,20 @@
     const filas = responsables
       .filter(r => !asesorFiltro || r === asesorFiltro)
       .map(r => {
-        const propias  = cots.filter(c => c.responsable === r);
+        const propias = cots.filter(c => c.responsable === r);
         const cerradas = propias.filter(c => ESTADOS_CERRADA.includes(c.estado));
         const pipeline = propias.filter(c => ESTADOS_PIPELINE.includes(c.estado));
 
-        const totalVendido  = cerradas.reduce((s, c) => s + normalizar(c), 0);
+        const totalVendido = cerradas.reduce((s, c) => s + normalizar(c), 0);
         const totalPipeline = pipeline.reduce((s, c) => s + normalizar(c), 0);
 
         const cfgAsesor = cfg.porAsesor.find(c => c.responsable === r);
-        const pct = cfgAsesor ? cfgAsesor.porcentaje : 0;
-        const teorico = Math.round(totalVendido * pct / 100);
+        const tipo = cfgAsesor?.tipo_comision || "porcentaje";
+        const valor = Number(cfgAsesor?.valor_comision ?? cfgAsesor?.porcentaje ?? 0);
+        const teorico = tipo === "fijo"
+          ? cerradas.length * valor
+          : Math.round(totalVendido * valor / 100);
+        const pct = tipo === "porcentaje" ? valor : 0;
 
         return {
           responsable: r,
@@ -497,12 +542,12 @@
 
     if (reporte.filas.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" class="tabla-reporte-comisiones__vacio">Sin datos para el período seleccionado.</td></tr>`;
-      ["rep-com-foot-cerradas","rep-com-foot-vendido","rep-com-foot-teorico","rep-com-foot-pipeline"].forEach(id => {
+      ["rep-com-foot-cerradas", "rep-com-foot-vendido", "rep-com-foot-teorico", "rep-com-foot-pipeline"].forEach(id => {
         const el = document.getElementById(id); if (el) el.textContent = "—";
       });
       document.getElementById("rep-com-kpi-cerradas").textContent = "0";
-      document.getElementById("rep-com-kpi-vendido").textContent  = window.formatearMoneda(0, "COP");
-      document.getElementById("rep-com-kpi-teorico").textContent  = window.formatearMoneda(0, "COP");
+      document.getElementById("rep-com-kpi-vendido").textContent = window.formatearMoneda(0, "COP");
+      document.getElementById("rep-com-kpi-teorico").textContent = window.formatearMoneda(0, "COP");
       return;
     }
 
@@ -528,17 +573,17 @@
     const totPipCnt = reporte.filas.reduce((s, f) => s + f.pipeline, 0);
     const totPipVal = reporte.filas.reduce((s, f) => s + f.totalPipeline, 0);
 
-    document.getElementById("rep-com-foot-cerradas").textContent  = totCer;
-    document.getElementById("rep-com-foot-vendido").textContent   = window.formatearMoneda(totVen, "COP");
-    document.getElementById("rep-com-foot-teorico").textContent   = window.formatearMoneda(totTeo, "COP");
-    document.getElementById("rep-com-foot-pipeline").textContent  = `${totPipCnt} · ${window.formatearMoneda(totPipVal, "COP")}`;
+    document.getElementById("rep-com-foot-cerradas").textContent = totCer;
+    document.getElementById("rep-com-foot-vendido").textContent = window.formatearMoneda(totVen, "COP");
+    document.getElementById("rep-com-foot-teorico").textContent = window.formatearMoneda(totTeo, "COP");
+    document.getElementById("rep-com-foot-pipeline").textContent = `${totPipCnt} · ${window.formatearMoneda(totPipVal, "COP")}`;
 
     // KPIs
     document.getElementById("rep-com-kpi-cerradas").textContent = totCer;
     const subCer = document.getElementById("rep-com-kpi-cerradas-sub");
     if (subCer) subCer.textContent = `Estado: Aprobado · ${reporte.filas.length} asesores`;
-    document.getElementById("rep-com-kpi-vendido").textContent  = window.formatearMoneda(totVen, "COP");
-    document.getElementById("rep-com-kpi-teorico").textContent  = window.formatearMoneda(totTeo, "COP");
+    document.getElementById("rep-com-kpi-vendido").textContent = window.formatearMoneda(totVen, "COP");
+    document.getElementById("rep-com-kpi-teorico").textContent = window.formatearMoneda(totTeo, "COP");
   }
 
   function initModalReporteComisiones() {
@@ -567,7 +612,7 @@
   function prefijarFiltros() {
     const inDesde = document.getElementById("rep-com-desde");
     const inHasta = document.getElementById("rep-com-hasta");
-    const select  = document.getElementById("rep-com-asesor");
+    const select = document.getElementById("rep-com-asesor");
 
     if (inDesde && !inDesde.value) {
       // Default: año actual hasta hoy
@@ -610,11 +655,25 @@
     window.mostrarToast(`✓ Reporte exportado (${reporte.filas.length} asesores)`);
   }
 
+  function intentarSeedInicial(reintentos = 12, esperaMs = 500) {
+    const datos = window.estadoApp?.datosOriginales;
+    const listo = Array.isArray(datos) && datos.length > 0;
+
+    if (listo) {
+      asegurarConfigInicial();
+      return;
+    }
+
+    if (reintentos <= 0) return;
+
+    setTimeout(() => intentarSeedInicial(reintentos - 1, esperaMs), esperaMs);
+  }
+
   // -----------------------------------------------------------------
   // INIT
   // -----------------------------------------------------------------
   document.addEventListener("DOMContentLoaded", () => {
-    asegurarConfigInicial();
+    intentarSeedInicial();
     sincronizarConfigConAPI();
     initModalConfigComisiones();
     initModalReporteComisiones();
