@@ -31,12 +31,7 @@ const vistasInicialesCom = [
 
 // Mock para modo sin backend
 const datosEjemploCom = [
-  { id: 1, hubspot_inv_id: "hs-001", titulo: "Sitio web Acme Corp",    fecha_pago: "2026-06-05", monto: 4500000, porcentaje: 5, comision_sugerida: 225000, comision_ajustada: null,   asesor: "Néstor Goyes",   n_ajustes: 0 },
-  { id: 2, hubspot_inv_id: "hs-002", titulo: "CRM HubSpot JMF",        fecha_pago: "2026-06-10", monto: 8200000, porcentaje: 5, comision_sugerida: 410000, comision_ajustada: 350000, asesor: "Néstor Goyes",   n_ajustes: 1 },
-  { id: 3, hubspot_inv_id: "hs-003", titulo: "Shopify Work for Treats", fecha_pago: "2026-06-12", monto: 3500000, porcentaje: 5, comision_sugerida: 175000, comision_ajustada: null,   asesor: "Laura Herrera",  n_ajustes: 0 },
-  { id: 4, hubspot_inv_id: "hs-004", titulo: "Mantenimiento VTEX",      fecha_pago: "2026-06-18", monto: 1200000, porcentaje: 3, comision_sugerida:  36000, comision_ajustada: null,   asesor: "Carlos Mejía",   n_ajustes: 0 },
-  { id: 5, hubspot_inv_id: "hs-005", titulo: "Auditoría UX Virtud SAS", fecha_pago: "2026-06-20", monto: 4200000, porcentaje: 5, comision_sugerida: 210000, comision_ajustada: 200000, asesor: "Ana Rodríguez",  n_ajustes: 2 },
-];
+ ];
 
 const estadoApp = {
   datosOriginales: [],
