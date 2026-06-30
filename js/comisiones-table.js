@@ -104,6 +104,22 @@
         return td;
       }
     },
+    estado_comision: {
+      th: "COMISIÓN", thClass: "th",
+      sort: r => r.estado_comision || "sin_registro",
+      render(r) {
+        const td = document.createElement("td");
+        const estado = r.estado_comision || (r.comision_caja_id ? "pendiente" : "sin_registro");
+        const cfg = {
+          pagado:       { label: "Pagada",       cls: "com-estado--pagada" },
+          pendiente:    { label: "Pendiente",     cls: "com-estado--pendiente" },
+          sin_registro: { label: "Sin registro",  cls: "com-estado--sin-registro" },
+        };
+        const { label, cls } = cfg[estado] || cfg.sin_registro;
+        td.innerHTML = `<span class="com-estado-badge ${cls}">${label}</span>`;
+        return td;
+      }
+    },
     acciones: {
       th: "", thClass: "th",
       sort: null,
@@ -126,7 +142,7 @@
     }
   };
 
-  const COLUMNAS_DEFECTO = ["asesor", "titulo", "fecha_pago", "monto", "porcentaje", "comision_sugerida", "comision_final", "acciones"];
+  const COLUMNAS_DEFECTO = ["asesor", "titulo", "fecha_pago", "monto", "porcentaje", "comision_sugerida", "comision_final", "estado_comision", "acciones"];
 
   const MAPA_TEXTO = {
     asesor:            "Asesor",
@@ -136,6 +152,7 @@
     porcentaje:        "% Comisión",
     comision_sugerida: "Com. sugerida",
     comision_final:    "Com. final",
+    estado_comision:   "Estado comisión",
     acciones:          ""
   };
 

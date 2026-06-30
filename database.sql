@@ -221,23 +221,26 @@ CREATE TABLE IF NOT EXISTS `movimientos_caja` (
   `punto_venta`    VARCHAR(100)    NULL DEFAULT NULL,
   `cliente_id`     INT UNSIGNED    NULL DEFAULT NULL,
   `cotizacion_id`  INT UNSIGNED    NULL DEFAULT NULL,
-  `referencia`     VARCHAR(50)     NULL DEFAULT NULL COMMENT 'REF-YYYY-NNNN (manual) o hs-inv-com/ing-{id} (webhook HubSpot)',
-  `created_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `deleted_at`     TIMESTAMP       NULL DEFAULT NULL,
+  `referencia`          VARCHAR(50)     NULL DEFAULT NULL COMMENT 'REF-YYYY-NNNN (manual) o hs-inv-com/ing-{id} (webhook HubSpot)',
+  `ingreso_factura_id`  INT UNSIGNED    NULL DEFAULT NULL COMMENT 'FK a ingresos_factura — solo para gastos de comisión',
+  `created_at`          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at`          TIMESTAMP       NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_mov_referencia` (`referencia`),
-  KEY `idx_mov_fecha`          (`fecha`),
-  KEY `idx_mov_tipo`           (`tipo`),
-  KEY `idx_mov_estado`         (`estado`),
-  KEY `idx_mov_categoria`      (`categoria_id`),
-  KEY `idx_mov_responsable`    (`responsable_id`),
-  KEY `idx_mov_cliente`        (`cliente_id`),
-  KEY `idx_mov_cotizacion`     (`cotizacion_id`),
-  CONSTRAINT `fk_mov_categoria`   FOREIGN KEY (`categoria_id`)   REFERENCES `categorias_caja` (`id`),
-  CONSTRAINT `fk_mov_responsable` FOREIGN KEY (`responsable_id`) REFERENCES `usuarios` (`id`)      ON DELETE SET NULL,
-  CONSTRAINT `fk_mov_cliente`     FOREIGN KEY (`cliente_id`)     REFERENCES `clientes` (`id`)      ON DELETE SET NULL,
-  CONSTRAINT `fk_mov_cotizacion`  FOREIGN KEY (`cotizacion_id`)  REFERENCES `cotizaciones` (`id`)  ON DELETE SET NULL
+  KEY `idx_mov_fecha`             (`fecha`),
+  KEY `idx_mov_tipo`              (`tipo`),
+  KEY `idx_mov_estado`            (`estado`),
+  KEY `idx_mov_categoria`         (`categoria_id`),
+  KEY `idx_mov_responsable`       (`responsable_id`),
+  KEY `idx_mov_cliente`           (`cliente_id`),
+  KEY `idx_mov_cotizacion`        (`cotizacion_id`),
+  KEY `idx_mov_ingfactura`        (`ingreso_factura_id`),
+  CONSTRAINT `fk_mov_categoria`    FOREIGN KEY (`categoria_id`)       REFERENCES `categorias_caja`  (`id`),
+  CONSTRAINT `fk_mov_responsable`  FOREIGN KEY (`responsable_id`)     REFERENCES `usuarios`         (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_mov_cliente`      FOREIGN KEY (`cliente_id`)         REFERENCES `clientes`         (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_mov_cotizacion`   FOREIGN KEY (`cotizacion_id`)      REFERENCES `cotizaciones`     (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_mov_ingfactura`   FOREIGN KEY (`ingreso_factura_id`) REFERENCES `ingresos_factura` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -677,3 +680,36 @@ INSERT INTO `vistas_guardadas` (`usuario_id`, `modulo`, `nombre`, `filtros_json`
 -- Ejecutar solo en instalaciones existentes (no aplica a instalaciones nuevas):
 -- ALTER TABLE `movimientos_caja` ADD COLUMN `punto_venta` VARCHAR(100) NULL DEFAULT NULL AFTER `observaciones`;
 -- ALTER TABLE `cotizaciones`     ADD COLUMN `punto_venta` VARCHAR(100) NULL DEFAULT NULL AFTER `hubspot_invoice_id`;
+
+-- ── Migración: Columnas tipo/valor_fijo en tablas de comisiones ──────────────
+ALTER TABLE `config_comisiones_asesores`
+  ADD COLUMN IF NOT EXISTS `tipo`       ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' AFTER `usuario_id`,
+  ADD COLUMN IF NOT EXISTS `valor_fijo` DECIMAL(15,2) NULL DEFAULT NULL AFTER `porcentaje`;
+
+ALTER TABLE `config_comisiones_productos`
+  ADD COLUMN IF NOT EXISTS `tipo`       ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' AFTER `nombre_producto`,
+  ADD COLUMN IF NOT EXISTS `valor_fijo` DECIMAL(15,2) NULL DEFAULT NULL AFTER `porcentaje`;
+
+-- ── Migración: Enlace gasto-comisión → ingresos_factura ──────────────────────
+ALTER TABLE `movimientos_caja`
+  ADD COLUMN IF NOT EXISTS `ingreso_factura_id` INT UNSIGNED NULL DEFAULT NULL
+    COMMENT 'FK a ingresos_factura — solo para gastos de comisión'
+    AFTER `referencia`;
+
+ALTER TABLE `movimientos_caja`
+  ADD KEY IF NOT EXISTS `idx_mov_ingfactura` (`ingreso_factura_id`);
+
+-- Solo ejecutar si la FK no existe aún:
+-- ALTER TABLE `movimientos_caja`
+--   ADD CONSTRAINT `fk_mov_ingfactura`
+--     FOREIGN KEY (`ingreso_factura_id`) REFERENCES `ingresos_factura` (`id`) ON DELETE SET NULL;
+
+-- Backfill: vincular gastos de comisión existentes a ingresos_factura vía referencia HubSpot
+UPDATE `movimientos_caja` mc
+JOIN `ingresos_factura` inf
+  ON mc.referencia = CONCAT('hs-inv-com-', inf.hubspot_inv_id)
+SET mc.ingreso_factura_id = inf.id
+WHERE mc.tipo = 'gasto'
+  AND mc.deleted_at IS NULL
+  AND mc.ingreso_factura_id IS NULL
+  AND inf.hubspot_inv_id IS NOT NULL;

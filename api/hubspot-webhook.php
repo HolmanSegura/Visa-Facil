@@ -232,6 +232,16 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
         number_format($monto, 0, '.', '.'), $moneda,
         $metodoDesc, $titulo
     ));
+
+    // ── 4. Vincular gasto de comisión → ingresos_factura ───
+    $ingresoFacturaId = buscarIngresoFacturaId($db, "hs-inv-{$invoiceId}");
+    if ($ingresoFacturaId) {
+        $db->prepare('
+            UPDATE movimientos_caja
+               SET ingreso_factura_id = ?
+             WHERE referencia = ? AND deleted_at IS NULL
+        ')->execute([$ingresoFacturaId, "hs-inv-com-{$invoiceId}"]);
+    }
 }
 
 /**
@@ -396,6 +406,16 @@ function buscarMovimientoId(PDO $db, string $referencia): ?int
 {
     $stmt = $db->prepare(
         'SELECT id FROM movimientos_caja WHERE referencia = ? AND deleted_at IS NULL LIMIT 1'
+    );
+    $stmt->execute([$referencia]);
+    $row = $stmt->fetch();
+    return $row ? (int) $row['id'] : null;
+}
+
+function buscarIngresoFacturaId(PDO $db, string $referencia): ?int
+{
+    $stmt = $db->prepare(
+        'SELECT id FROM ingresos_factura WHERE referencia = ? AND estado = "activo" LIMIT 1'
     );
     $stmt->execute([$referencia]);
     $row = $stmt->fetch();

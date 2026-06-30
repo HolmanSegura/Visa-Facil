@@ -184,22 +184,35 @@ try {
                    CASE cca.tipo
                      WHEN 'fijo' THEN COALESCE(cca.valor_fijo, 0)
                      ELSE ROUND(inf.monto * COALESCE(cca.porcentaje, 0) / 100, 0)
-                   END                                                        AS comision_sugerida,
+                   END                                              AS comision_sugerida,
                    (SELECT ca.comision_ajustada
                       FROM comisiones_ajustes ca
                      WHERE ca.ingreso_factura_id = inf.id
-                     ORDER BY ca.created_at DESC LIMIT 1)           AS comision_ajustada,
+                     ORDER BY ca.created_at DESC LIMIT 1)          AS comision_ajustada,
                    (SELECT ca.created_at
                       FROM comisiones_ajustes ca
                      WHERE ca.ingreso_factura_id = inf.id
-                     ORDER BY ca.created_at DESC LIMIT 1)           AS ultimo_ajuste_at,
+                     ORDER BY ca.created_at DESC LIMIT 1)          AS ultimo_ajuste_at,
                    (SELECT COUNT(*)
                       FROM comisiones_ajustes ca
-                     WHERE ca.ingreso_factura_id = inf.id)          AS n_ajustes
+                     WHERE ca.ingreso_factura_id = inf.id)         AS n_ajustes,
+                   mc_com.id                                        AS comision_caja_id,
+                   mc_com.estado                                    AS estado_comision,
+                   mc_com.valor                                     AS comision_pagada_valor,
+                   mc_com.fecha                                     AS comision_pagada_fecha
             FROM ingresos_factura inf
-            LEFT JOIN usuarios u                   ON u.id   = inf.asesor_id
+            LEFT JOIN usuarios u
+                   ON u.id = inf.asesor_id
             LEFT JOIN config_comisiones_asesores cca
                    ON cca.usuario_id = inf.asesor_id AND cca.activo = 1
+            LEFT JOIN movimientos_caja mc_com
+                   ON mc_com.ingreso_factura_id = inf.id
+                  AND mc_com.tipo = 'gasto'
+                  AND mc_com.deleted_at IS NULL
+                  AND EXISTS (
+                    SELECT 1 FROM categorias_caja cc
+                    WHERE cc.id = mc_com.categoria_id AND cc.valor = 'comisiones'
+                  )
             WHERE inf.estado = 'activo'
               AND inf.fecha_pago BETWEEN :desde AND :hasta
         ";
