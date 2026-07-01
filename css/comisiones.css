@@ -60,6 +60,26 @@
   background-color: var(--color-acento-claro);
 }
 
+/* ── Scroll natural de página: el bloque-tabla no absorbe el viewport ── */
+#contenido-principal {
+  overflow-y: auto;
+}
+
+#contenido-principal .bloque-tabla {
+  flex: none;
+  min-height: 480px;
+}
+
+#contenido-principal .bloque-tabla > .tabla-wrapper {
+  flex: none;
+  min-height: 360px;
+}
+
+#contenido-principal .bloque-tabla .tabla-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
 /* ── Dashboard de comisiones (alias de dashboard-caja) ── */
 .dashboard-comisiones {
   display: grid;
@@ -309,7 +329,7 @@
 
 /* ── Resumen por asesor ── */
 .resumen-asesores {
-  margin: 0 var(--esp-5) var(--esp-4);
+  margin: var(--esp-4) var(--esp-5) var(--esp-6);
   background: var(--color-fondo-card);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-card);
@@ -339,8 +359,6 @@
 
 .resumen-asesores__tabla-wrap {
   overflow-x: auto;
-  overflow-y: auto;
-  max-height: 240px;
 }
 
 .resumen-asesores__tabla {

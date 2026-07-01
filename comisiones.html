@@ -160,30 +160,6 @@
       </div>
     </section>
 
-    <!-- Resumen por asesor (agrupación de comisiones de Caja) -->
-    <section class="resumen-asesores" id="seccion-resumen-asesores" aria-label="Resumen por asesor">
-      <div class="resumen-asesores__cabecera">
-        <h2 class="resumen-asesores__titulo">Resumen por asesor</h2>
-        <span class="resumen-asesores__periodo" id="resumen-periodo">—</span>
-      </div>
-      <div class="resumen-asesores__tabla-wrap">
-        <table class="resumen-asesores__tabla" id="tabla-resumen-asesores">
-          <thead>
-            <tr>
-              <th>Asesor</th>
-              <th class="resumen-asesores__col--num">Comisiones</th>
-              <th class="resumen-asesores__col--num">Total devengado</th>
-              <th class="resumen-asesores__col--num">Pagado</th>
-              <th class="resumen-asesores__col--num">Por pagar</th>
-            </tr>
-          </thead>
-          <tbody id="resumen-asesores-tbody">
-            <tr><td colspan="5" class="resumen-asesores__vacio">Cargando…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
     <!-- Cabecera con selector Comisiones + tabs + acciones -->
     <section class="cabecera">
       <div class="cabecera__selector">
@@ -401,6 +377,30 @@
         </section>
       </div>
       <!-- /.bloque-tabla -->
+
+      <!-- Resumen por asesor (agrupación de comisiones de Caja) -->
+      <section class="resumen-asesores" id="seccion-resumen-asesores" aria-label="Resumen por asesor">
+        <div class="resumen-asesores__cabecera">
+          <h2 class="resumen-asesores__titulo">Resumen por asesor</h2>
+          <span class="resumen-asesores__periodo" id="resumen-periodo">—</span>
+        </div>
+        <div class="resumen-asesores__tabla-wrap">
+          <table class="resumen-asesores__tabla" id="tabla-resumen-asesores">
+            <thead>
+              <tr>
+                <th>Asesor</th>
+                <th class="resumen-asesores__col--num">Comisiones</th>
+                <th class="resumen-asesores__col--num">Total devengado</th>
+                <th class="resumen-asesores__col--num">Pagado</th>
+                <th class="resumen-asesores__col--num">Por pagar</th>
+              </tr>
+            </thead>
+            <tbody id="resumen-asesores-tbody">
+              <tr><td colspan="5" class="resumen-asesores__vacio">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <!-- Panel lateral: Detalle de comisión -->
       <aside class="panel-detalle" id="panel-detalle-com">
