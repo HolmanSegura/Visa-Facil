@@ -46,6 +46,10 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Editor inline: la regla display:flex en caja.css supera al UA [hidden].
+   Este override restaura el comportamiento esperado. */
+.com-editor[hidden] { display: none; }
+
 /* ── Filas de la tabla de comisiones: hover y activa ── */
 .tabla-comisiones tbody tr {
   cursor: default;
@@ -73,7 +77,8 @@
 }
 
 #contenido-principal .bloque-tabla {
-  flex: none;
+  flex: 1;
+  min-width: 0;
 }
 
 #contenido-principal .bloque-tabla > .tabla-wrapper {
