@@ -171,6 +171,7 @@ try {
                 'teorico'           => round($teorico, 2),
                 'registrado'        => round($registrado, 2),
                 'pendiente'         => round($pendiente, 2),
+                'total'             => $com ? $com['total'] : 0,
                 'pagos'             => $com ? $com['pagados'] : 0,
                 'pendientes_count'  => $com ? $com['pendientes'] : 0,
                 'diferencia'        => round($registrado - $teorico, 2),
