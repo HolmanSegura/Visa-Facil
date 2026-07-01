@@ -43,7 +43,7 @@ const estadoApp = {
   busquedaActual: "",
   filtros: {
     asesor: [],
-    fecha: null
+    fecha: "hoy"
   },
   vistas: vistasInicialesCom,
   vistaActivaId: "todas",
@@ -176,13 +176,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.actualizarDashboard = actualizarDashboard;
   window.normalizarFactura   = normalizarFactura;
 
-  estadoApp.periodoActual = { desde: "", hasta: "" };
+  const hoy = new Date().toISOString().slice(0, 10);
+  estadoApp.periodoActual = { desde: hoy, hasta: hoy };
 
   let cargadoDesdeAPI = false;
 
   try {
     if (window.Api) {
-      const res = await window.Api.comisiones.ajustes({});
+      const res = await window.Api.comisiones.ajustes({ desde: hoy, hasta: hoy });
       if (res?.ok && Array.isArray(res.data)) {
         estadoApp.datosOriginales = res.data.map(normalizarFactura);
         estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
@@ -202,7 +203,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.vistasInstance)  window.vistasInstance.renderizar();
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
-  cargarResumenAsesores("", "");
+  cargarResumenAsesores(hoy, hoy);
 });
 
 /* ============================================================

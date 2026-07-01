@@ -106,7 +106,7 @@ exit;
  */
 function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
 {
-    $campos  = 'hs_amount_billed,hs_invoice_status,hubspot_owner_id,hs_invoice_label,hs_number,punto_de_venta,hs_currency_code,metodo_de_pago';
+    $campos  = 'hs_amount_billed,hs_invoice_status,hubspot_owner_id,hs_invoice_label,hs_number,punto_de_venta,hs_currency_code,metodo_de_pago,hs_payment_date';
     $invoice = hsGet("/crm/v3/objects/invoices/{$invoiceId}?properties={$campos}", $token);
 
     if (!$invoice || empty($invoice['properties'])) {
@@ -122,6 +122,16 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
     $pdv        = $p['punto_de_venta']     ?? null;
     $moneda     = $p['hs_currency_code']   ?? 'COP';
     $metodoPago = strtolower(trim($p['metodo_de_pago'] ?? ''));
+
+    // hs_payment_date llega como epoch-ms (ej: "1719705600000") → fecha UTC
+    $rawFecha  = $p['hs_payment_date'] ?? '';
+    if ($rawFecha && is_numeric($rawFecha)) {
+        $fechaPago = gmdate('Y-m-d', intdiv((int) $rawFecha, 1000));
+    } elseif ($rawFecha) {
+        $fechaPago = substr($rawFecha, 0, 10);
+    } else {
+        $fechaPago = date('Y-m-d');
+    }
 
     if ($status !== 'paid') {
         error_log("[Webhook] Factura #{$invoiceId} no está pagada (status={$status}), ignorando.");
@@ -157,50 +167,15 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
         if ($usuario) {
             $asesorId = (int) $usuario['uid'];
 
-<<<<<<< Updated upstream
-            $tipoComision = $usuario['tipo'] ?? 'porcentaje';
-            if ($tipoComision === 'fijo') {
-                $comision    = (int) round((float) ($usuario['valor_fijo'] ?? 0));
-                $descComision = sprintf('Comisión fija %s — %s', number_format($comision, 0, '.', '.'), $titulo);
-                $obsComision  = sprintf('Factura HubSpot #%s · Comisión fija: %s %s', $invoiceId, number_format($comision, 0, '.', '.'), $moneda);
-            } else {
-                $comision    = (float) $usuario['porcentaje'] > 0
-                    ? (int) round($monto * ((float) $usuario['porcentaje'] / 100))
-                    : 0;
-                $descComision = sprintf('Comisión %s%% — %s', $usuario['porcentaje'], $titulo);
-                $obsComision  = sprintf('Factura HubSpot #%s · Base: %s %s · %s%%', $invoiceId, number_format($monto, 0, '.', '.'), $moneda, $usuario['porcentaje']);
-            }
-
-            if ($comision > 0) {
-                upsertMovimiento($db, [
-                    'referencia'     => "hs-inv-com-{$invoiceId}",
-                    'tipo'           => 'gasto',
-                    'descripcion'    => $descComision,
-                    'valor'          => $comision,
-                    'moneda'         => $moneda,
-                    'estado'         => 'pendiente',
-                    'responsable_id' => $asesorId,
-                    'metodo_pago'    => null,
-                    'observaciones'  => $obsComision,
-                    'punto_venta'    => $pdv,
-                    'categoria_id'   => buscarCategoria($db, 'comisiones'),
-                ]);
-                error_log(sprintf(
-                    '[Webhook] Comisión: %s %s para %s (tipo: %s) — Factura #%s',
-                    number_format($comision, 0, '.', '.'), $moneda,
-                    $usuario['nombre'], $tipoComision, $invoiceId
-                ));
-=======
             $productoFactura = extraerProductoFactura($invoice, $titulo);
-            $reglaProducto = $productoFactura ? buscarConfigProductoComision($db, $productoFactura) : null;
-            $reglaAsesor = buscarConfigAsesorComision($db, $asesorId);
-
-            $regla = $reglaProducto ?: $reglaAsesor;
+            $reglaProducto   = $productoFactura ? buscarConfigProductoComision($db, $productoFactura) : null;
+            $reglaAsesor     = buscarConfigAsesorComision($db, $asesorId);
+            $regla           = $reglaProducto ?: $reglaAsesor;
 
             if ($regla) {
                 $tipoComision = $regla['tipo_comision'] ?? 'porcentaje';
-                $valorRegla = (float) ($regla['valor_comision'] ?? $regla['porcentaje'] ?? 0);
-                $comision = calcularComisionWebhook($monto, $tipoComision, $valorRegla);
+                $valorRegla   = (float) ($regla['valor_comision'] ?? $regla['porcentaje'] ?? 0);
+                $comision     = calcularComisionWebhook($monto, $tipoComision, $valorRegla);
 
                 if ($comision > 0) {
                     $descripcion = $tipoComision === 'fijo'
@@ -225,6 +200,7 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
                         );
 
                     upsertMovimiento($db, [
+                        'fecha'          => $fechaPago,
                         'referencia'     => "hs-inv-com-{$invoiceId}",
                         'tipo'           => 'gasto',
                         'descripcion'    => $descripcion,
@@ -238,7 +214,6 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
                         'categoria_id'   => buscarCategoria($db, 'comisiones'),
                     ]);
                 }
->>>>>>> Stashed changes
             } else {
                 error_log("[Webhook] Asesor #{$ownerId} sin regla de comisión activa — omitida para factura #{$invoiceId}.");
             }
@@ -253,6 +228,7 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
     if ($productosStr) $obsIngreso .= " · Productos: {$productosStr}";
 
     upsertMovimiento($db, [
+        'fecha'          => $fechaPago,
         'referencia'     => "hs-inv-ing-{$invoiceId}",
         'tipo'           => 'ingreso',
         'descripcion'    => "{$titulo}",
@@ -285,6 +261,7 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
     upsertIngreso($db, [
         'hubspot_inv_id' => $invoiceId,
         'referencia'     => "hs-inv-{$invoiceId}",
+        'fecha_pago'     => $fechaPago,
         'monto'          => $monto,
         'moneda'         => $moneda,
         'metodo_pago'    => $metodoPago,
@@ -378,9 +355,10 @@ function upsertMovimiento(PDO $db, array $d): void
               (fecha, tipo, descripcion, valor, moneda, estado,
                responsable_id, referencia, observaciones, punto_venta, categoria_id, metodo_pago)
             VALUES
-              (CURDATE(), :tipo, :desc, :valor, :moneda, :estado,
+              (:fecha, :tipo, :desc, :valor, :moneda, :estado,
                :resp, :ref, :obs, :pdv, :cat, :metodo)
         ')->execute([
+            ':fecha'  => $d['fecha'] ?? date('Y-m-d'),
             ':tipo'   => $d['tipo'],
             ':desc'   => $d['descripcion'],
             ':valor'  => $d['valor'],
@@ -440,11 +418,12 @@ function upsertIngreso(PDO $db, array $d): void
               (hubspot_inv_id, referencia, fecha_pago, monto, moneda, metodo_pago,
                titulo, punto_venta, asesor_id, mov_caja_id, producto_id, producto_nombre, estado)
             VALUES
-              (:inv, :ref, CURDATE(), :monto, :moneda, :metodo,
+              (:inv, :ref, :fecha_pago, :monto, :moneda, :metodo,
                :titulo, :pdv, :asesor, :caja, :producto_id, :producto_nombre, "activo")
         ')->execute([
             ':inv'            => $d['hubspot_inv_id'],
             ':ref'            => $d['referencia'],
+            ':fecha_pago'     => $d['fecha_pago'] ?? date('Y-m-d'),
             ':monto'          => $d['monto'],
             ':moneda'         => $d['moneda'],
             ':metodo'         => $d['metodo_pago'],

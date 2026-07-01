@@ -16,6 +16,19 @@
   const BASE = window.location.pathname.replace(/\/[^/]*$/, '').replace(/\/$/, '');
 
   /* ----------------------------------------------------------------
+     Preloader — inyectado sincrónicamente antes de DOMContentLoaded.
+     El CSS vive en extras.css (cargado antes que este script).
+     El try-catch garantiza que un error aquí no bloquee check().
+     ---------------------------------------------------------------- */
+  try {
+    const pl = document.createElement('div');
+    pl.id = 'app-preloader';
+    pl.setAttribute('aria-hidden', 'true');
+    pl.innerHTML = '<img src="img/visafacil.png" alt="Visa Fácil"><div id="app-preloader-spinner"></div>';
+    document.body.appendChild(pl);
+  } catch (_) { /* no bloquear si falla */ }
+
+  /* ----------------------------------------------------------------
      AppSession — API pública
      ---------------------------------------------------------------- */
   const AppSession = {
@@ -83,6 +96,8 @@
     _actualizarUI() {
       const u = this.user;
       if (!u) return;
+
+      document.getElementById('app-preloader')?.remove();
 
       // Nombre en el botón del toolbar
       const nameEl = document.querySelector('.toolbar__profile-name');

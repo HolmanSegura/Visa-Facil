@@ -87,7 +87,7 @@ const estadoApp = {
   filtros: {
     tipo:       [],
     categoria:  [],
-    fecha:      null,
+    fecha:      "hoy",
     asesor:     [],
     estado:     [],
     metodoPago: [],

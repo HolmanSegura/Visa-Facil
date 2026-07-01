@@ -7,6 +7,37 @@
    Cargado tanto en caja.html como en index.html.
    ============================================================ */
 
+/* ── Preloader de autenticación ── */
+#app-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+#app-preloader img {
+  width: 130px;
+  opacity: .88;
+}
+
+#app-preloader-spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid #e2e8f0;
+  border-top-color: #6366f1;
+  animation: appPlSpin .7s linear infinite;
+}
+
+@keyframes appPlSpin {
+  to { transform: rotate(360deg); }
+}
+
 /* ----- Pill: etiqueta cuando muestra el valor del filtro de fecha ----- */
 .filtro-pill__valor {
   display: inline-flex;
