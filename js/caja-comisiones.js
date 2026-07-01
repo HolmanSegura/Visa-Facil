@@ -746,11 +746,8 @@
   }
 
   let ultimoReporte = null;
-<<<<<<< Updated upstream
-=======
-  let ultimasFacturas = [];   // caché de la última carga de ingresos_factura
+  let ultimasFacturas = [];
   let tabActiva = "resumen";
->>>>>>> Stashed changes
 
   // ----- Resumen por asesor ------------------------------------
   function calcularReporte() {
@@ -840,8 +837,6 @@
     }
   }
 
-<<<<<<< Updated upstream
-=======
   // ----- Ingresos facturados (tab 2) ---------------------------
   async function cargarYRenderFacturas() {
     const tbody = document.getElementById("rep-com-facturas-tbody");
@@ -1077,8 +1072,21 @@
     }
   }
 
->>>>>>> Stashed changes
   // ----- Init del modal ----------------------------------------
+  function setTabActiva(tab) {
+    tabActiva = tab;
+    const panelResumen = document.getElementById("rep-com-panel-resumen");
+    const panelFacturas = document.getElementById("rep-com-panel-facturas");
+    if (panelResumen) panelResumen.hidden = tab !== "resumen";
+    if (panelFacturas) panelFacturas.hidden = tab !== "facturas";
+    document.querySelectorAll(".rep-com-tab").forEach(btn => {
+      const esActivo = btn.dataset.tab === tab;
+      btn.style.fontWeight = esActivo ? "600" : "400";
+      btn.style.color = esActivo ? "var(--color-naranja)" : "var(--color-texto-suave)";
+      btn.style.borderBottom = esActivo ? "2px solid var(--color-naranja)" : "none";
+    });
+  }
+
   function initModalReporteComisiones() {
     const modal = document.getElementById("modal-reporte-comisiones");
     if (!modal) return;
@@ -1086,16 +1094,33 @@
     const observer = new MutationObserver(() => {
       if (!modal.hasAttribute("hidden")) {
         prefijarFiltros();
-        renderReporte();
+        if (tabActiva === "facturas") cargarYRenderFacturas();
+        else renderReporte();
       }
     });
     observer.observe(modal, { attributes: true, attributeFilter: ["hidden"] });
 
-    document.getElementById("btn-rep-com-aplicar")?.addEventListener("click", renderReporte);
+    document.querySelectorAll(".rep-com-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        setTabActiva(btn.dataset.tab);
+        if (btn.dataset.tab === "facturas") cargarYRenderFacturas();
+        else renderReporte();
+      });
+    });
+
+    document.getElementById("btn-rep-com-aplicar")?.addEventListener("click", () => {
+      if (tabActiva === "facturas") cargarYRenderFacturas();
+      else renderReporte();
+    });
 
     document.getElementById("btn-exportar-comisiones")?.addEventListener("click", () => {
-      if (!ultimoReporte?.filas?.length) { window.mostrarToast?.("⚠ Sin datos para exportar"); return; }
-      exportarReporteCSVResumen(ultimoReporte);
+      if (tabActiva === "facturas") {
+        if (!ultimasFacturas.length) { window.mostrarToast?.("⚠ Sin datos para exportar"); return; }
+        exportarReporteCSVFacturas(ultimasFacturas);
+      } else {
+        if (!ultimoReporte?.filas?.length) { window.mostrarToast?.("⚠ Sin datos para exportar"); return; }
+        exportarReporteCSVResumen(ultimoReporte);
+      }
     });
   }
 
@@ -1128,8 +1153,6 @@
     window.mostrarToast?.(`✓ Exportado (${reporte.filas.length} asesores)`);
   }
 
-<<<<<<< Updated upstream
-=======
   function exportarReporteCSVFacturas(facturas) {
     const utils = window.utilsExport;
     if (!utils) return;
@@ -1148,7 +1171,6 @@
     window.mostrarToast?.(`✓ Exportado (${facturas.length} facturas)`);
   }
 
->>>>>>> Stashed changes
   // -----------------------------------------------------------------
   // INIT
   // -----------------------------------------------------------------

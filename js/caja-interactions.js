@@ -1110,6 +1110,10 @@
       });
     }
 
+    function escHtml(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
     // Poblar asesores — lazy: se repobla cada vez que el popover abre
     function poblarListaAsesores() {
       const listaAse = document.getElementById("lista-asesores");

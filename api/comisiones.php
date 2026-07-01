@@ -26,8 +26,8 @@ try {
                 ca.porcentaje,
                 ca.base,
                 ca.activo,
-                COALESCE(ca.tipo_comision, 'porcentaje') AS tipo_comision,
-                COALESCE(ca.valor_comision, ca.porcentaje, 0) AS valor_comision
+                COALESCE(ca.tipo, 'porcentaje') AS tipo_comision,
+                COALESCE(ca.valor_fijo, ca.porcentaje, 0) AS valor_comision
             FROM config_comisiones_asesores ca
             JOIN usuarios u ON u.id = ca.usuario_id
             ORDER BY u.nombre
@@ -35,10 +35,14 @@ try {
 
         $productos = $db->query("
             SELECT
-                cp.*,
+                cp.id,
+                cp.producto_id,
+                cp.hubspot_product_id,
+                cp.nombre_producto,
+                cp.porcentaje,
                 p.nombre AS producto_nombre_catalogo,
-                COALESCE(cp.tipo_comision, 'porcentaje') AS tipo_comision,
-                COALESCE(cp.valor_comision, cp.porcentaje, 0) AS valor_comision
+                COALESCE(cp.tipo, 'porcentaje') AS tipo_comision,
+                COALESCE(cp.valor_fijo, cp.porcentaje, 0) AS valor_comision
             FROM config_comisiones_productos cp
             LEFT JOIN productos p ON p.id = cp.producto_id
             ORDER BY cp.nombre_producto
@@ -142,9 +146,9 @@ try {
 
             $cfg = $configMap[$uid] ?? null;
             $activo = $cfg ? (bool) $cfg['activo'] : true;
-            $tipoComision = $cfg['tipo_comision'] ?? 'porcentaje';
-            $valorComision = isset($cfg['valor_comision'])
-                ? (float) $cfg['valor_comision']
+            $tipoComision = $cfg['tipo'] ?? 'porcentaje';
+            $valorComision = ($tipoComision === 'fijo' && !empty($cfg['valor_fijo']))
+                ? (float) $cfg['valor_fijo']
                 : (float) ($cfg['porcentaje'] ?? 0);
 
             $teorico = $com ? $com['devengado'] : 0;
@@ -205,13 +209,13 @@ try {
                 inf.producto_id,
                 inf.producto_nombre,
                 u.nombre AS asesor,
-                COALESCE(cp.tipo_comision, cca.tipo_comision, 'porcentaje') AS tipo_comision,
-                COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) AS valor_comision,
-                COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) AS porcentaje,
+                COALESCE(cp.tipo, cca.tipo, 'porcentaje') AS tipo_comision,
+                COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) AS valor_comision,
+                COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) AS porcentaje,
                 CASE
-                    WHEN COALESCE(cp.tipo_comision, cca.tipo_comision, 'porcentaje') = 'fijo'
-                        THEN ROUND(COALESCE(cp.valor_comision, cca.valor_comision, 0), 0)
-                    ELSE ROUND(inf.monto * COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) / 100, 0)
+                    WHEN COALESCE(cp.tipo, cca.tipo, 'porcentaje') = 'fijo'
+                        THEN ROUND(COALESCE(cp.valor_fijo, cca.valor_fijo, 0), 0)
+                    ELSE ROUND(inf.monto * COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) / 100, 0)
                 END AS comision_sugerida,
                 (SELECT ca.comision_ajustada
                     FROM comisiones_ajustes ca
@@ -285,8 +289,8 @@ try {
                 inf.monto,
                 inf.producto_id,
                 inf.producto_nombre,
-                COALESCE(cp.tipo_comision, cca.tipo_comision, 'porcentaje') AS tipo_comision,
-                COALESCE(cp.valor_comision, cca.valor_comision, cca.porcentaje, 0) AS valor_comision,
+                COALESCE(cp.tipo, cca.tipo, 'porcentaje') AS tipo_comision,
+                COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) AS valor_comision,
                 (SELECT ca.comision_ajustada
                 FROM comisiones_ajustes ca
                 WHERE ca.ingreso_factura_id = inf.id
@@ -354,15 +358,15 @@ try {
         if (isset($b['porAsesor']) && is_array($b['porAsesor'])) {
             $stmt = $db->prepare("
                 INSERT INTO config_comisiones_asesores
-                    (usuario_id, porcentaje, base, activo, tipo_comision, valor_comision)
+                    (usuario_id, porcentaje, valor_fijo, tipo, base, activo)
                 VALUES (?, ?, ?, ?, ?, ?)
                 ON DUPLICATE KEY UPDATE
-                    porcentaje     = VALUES(porcentaje),
-                    base           = VALUES(base),
-                    activo         = VALUES(activo),
-                    tipo_comision  = VALUES(tipo_comision),
-                    valor_comision = VALUES(valor_comision),
-                    updated_at     = NOW()
+                    porcentaje = VALUES(porcentaje),
+                    valor_fijo = VALUES(valor_fijo),
+                    tipo       = VALUES(tipo),
+                    base       = VALUES(base),
+                    activo     = VALUES(activo),
+                    updated_at = NOW()
             ");
 
             foreach ($b['porAsesor'] as $a) {
@@ -384,11 +388,11 @@ try {
 
                 $stmt->execute([
                     $a['usuario_id'],
-                    $a['porcentaje'] ?? ($tipo === 'porcentaje' ? $valor : 0),
+                    $tipo === 'porcentaje' ? $valor : 0,
+                    $tipo === 'fijo' ? $valor : null,
+                    $tipo,
                     $a['base'] ?? 'ingresos',
                     isset($a['activo']) ? (int) (bool) $a['activo'] : 1,
-                    $tipo,
-                    $valor,
                 ]);
             }
         }
@@ -398,7 +402,7 @@ try {
 
             $stmt = $db->prepare("
                 INSERT INTO config_comisiones_productos
-                    (producto_id, hubspot_product_id, nombre_producto, porcentaje, tipo_comision, valor_comision)
+                    (producto_id, hubspot_product_id, nombre_producto, porcentaje, valor_fijo, tipo)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
 
@@ -415,9 +419,9 @@ try {
                     $p['producto_id'] ?? null,
                     $p['hubspot_product_id'] ?? $p['productoId'] ?? null,
                     $p['nombre_producto'] ?? $p['producto'] ?? '',
-                    $p['porcentaje'] ?? ($tipo === 'porcentaje' ? $valor : 0),
+                    $tipo === 'porcentaje' ? $valor : 0,
+                    $tipo === 'fijo' ? $valor : null,
                     $tipo,
-                    $valor,
                 ]);
             }
         }

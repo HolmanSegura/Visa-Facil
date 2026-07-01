@@ -983,15 +983,16 @@
             </div>
             <input type="hidden" id="cot-contacto-id" />
           </div>
-          <div class="form-grupo">
-            <label class="form-label" for="cot-moneda">Moneda</label>
-            <select id="cot-moneda" class="form-select">
-              <option value="COP">COP - Peso Colombiano</option>
-              <option value="USD">USD - Dólar</option>
-              <option value="EUR">EUR - Euro</option>
-              <option value="MXN">MXN - Peso Mexicano</option>
-            </select>
-            <span class="form-help">La cantidad total se calcula automáticamente.</span>
+          <div class="form-grupo" id="negocio-autocomplete-wrap">
+            <label class="form-label" for="cot-negocio">Negocio / Deal</label>
+            <div class="contacto-autocomplete">
+              <input type="text" id="cot-negocio" class="form-input" placeholder="Escribe para buscar un deal…"
+                autocomplete="off" aria-expanded="false" aria-haspopup="listbox" aria-controls="negocio-sugerencias" />
+              <input type="hidden" id="cot-deal-id" />
+              <ul id="negocio-sugerencias" class="contacto-sugerencias" hidden role="listbox"
+                aria-label="Deals sugeridos"></ul>
+            </div>
+            <p id="deal-cliente-hint" class="form-hint deal-hint" hidden></p>
           </div>
           <div class="form-grupo">
             <label class="form-label" for="cot-idioma">Idioma</label>
@@ -1027,16 +1028,15 @@
               <ul id="propietario-create-sugerencias" class="contacto-sugerencias" hidden role="listbox"></ul>
             </div>
           </div>
-          <div class="form-grupo" id="negocio-autocomplete-wrap">
-            <label class="form-label" for="cot-negocio">Negocio / Deal</label>
-            <div class="contacto-autocomplete">
-              <input type="text" id="cot-negocio" class="form-input" placeholder="Escribe para buscar un deal…"
-                autocomplete="off" aria-expanded="false" aria-haspopup="listbox" aria-controls="negocio-sugerencias" />
-              <input type="hidden" id="cot-deal-id" />
-              <ul id="negocio-sugerencias" class="contacto-sugerencias" hidden role="listbox"
-                aria-label="Deals sugeridos"></ul>
-            </div>
-            <p id="deal-cliente-hint" class="form-hint deal-hint" hidden></p>
+          <div class="form-grupo">
+            <label class="form-label" for="cot-moneda">Moneda</label>
+            <select id="cot-moneda" class="form-select">
+              <option value="COP">COP - Peso Colombiano</option>
+              <option value="USD">USD - Dólar</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="MXN">MXN - Peso Mexicano</option>
+            </select>
+            <span class="form-help">La cantidad total se calcula automáticamente.</span>
           </div>
           <div class="form-grupo">
             <label class="form-label form-label--req" for="cot-punto-venta">Punto de Venta</label>

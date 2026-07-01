@@ -718,13 +718,6 @@
     }
 
     tbody.innerHTML = cfg.porProducto.map((row, idx) => `
-<<<<<<< Updated upstream
-      <tr data-row-producto="${idx}">
-        <td><input type="text" class="form-input form-input--sm" data-field="producto-texto" data-autocomplete-prod value="${escHtml(row.producto)}" data-prod-id="${escHtml(row.productoId || "")}" placeholder="Busca un producto…" autocomplete="off" style="width:100%;max-width:260px;"/></td>
-        <td>${renderCeldaComision(row, true)}</td>
-        <td><button class="btn-icono-mini" data-accion-producto="quitar" title="Quitar"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg></button></td>
-      </tr>`
-=======
     <tr data-row-producto="${idx}">
       <td>
         <input
@@ -766,7 +759,6 @@
         </button>
       </td>
     </tr>`
->>>>>>> Stashed changes
     ).join("");
   }
 
@@ -776,19 +768,6 @@
     document.querySelectorAll("[data-row-asesor]").forEach(tr => {
       const nombre = tr.dataset.responsable || "";
       const activo = tr.dataset.activo !== "false";
-<<<<<<< Updated upstream
-      const tipo   = tr.querySelector('[data-field="tipo"]')?.value || "porcentaje";
-      const val    = parseFloat(tr.querySelector('[data-field="comision-valor"]')?.value) || 0;
-      const base   = "por_venta";
-      if (nombre) cfg.porAsesor.push({
-        responsable: nombre,
-        tipo,
-        porcentaje: tipo === "porcentaje" ? val : 0,
-        valor_fijo: tipo === "fijo" ? val : null,
-        base,
-        activo,
-      });
-=======
 
       const inputPct = tr.querySelector('[data-field="porcentaje"]');
       const inputTipo = tr.querySelector('[data-field="tipo_comision"]');
@@ -811,7 +790,6 @@
           activo
         });
       }
->>>>>>> Stashed changes
     });
 
     cfg.generalProductoPorcentaje =
@@ -825,19 +803,6 @@
 
     document.querySelectorAll("[data-row-producto]").forEach(tr => {
       const inputEl = tr.querySelector('[data-field="producto-texto"]');
-<<<<<<< Updated upstream
-      const prod    = inputEl?.value?.trim() || "";
-      const prodId  = inputEl?.dataset?.prodId || "";
-      const tipo    = tr.querySelector('[data-field="tipo"]')?.value || "porcentaje";
-      const val     = parseFloat(tr.querySelector('[data-field="comision-valor"]')?.value) || 0;
-      if (prod) cfg.porProducto.push({
-        productoId: prodId,
-        producto: prod,
-        tipo,
-        porcentaje: tipo === "porcentaje" ? val : 0,
-        valor_fijo: tipo === "fijo" ? val : null,
-      });
-=======
       const prod = inputEl?.value?.trim() || "";
       const prodId = inputEl?.dataset?.prodId || "";
 
@@ -859,7 +824,6 @@
           valor_comision: valor
         });
       }
->>>>>>> Stashed changes
     });
 
     return cfg;
@@ -1022,11 +986,6 @@
       const tr = document.createElement("tr");
       tr.dataset.rowProducto = idx;
       tr.innerHTML = `
-<<<<<<< Updated upstream
-        <td><input type="text" class="form-input form-input--sm" data-field="producto-texto" data-autocomplete-prod placeholder="Busca un producto…" autocomplete="off" style="width:100%;max-width:260px;"/></td>
-        <td>${renderCeldaComision({ tipo: "porcentaje", porcentaje: 5, valor_fijo: null }, true)}</td>
-        <td><button class="btn-icono-mini" data-accion-producto="quitar" title="Quitar"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M6 7h12l-1 13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7Zm3-3h6l1 2h4v2H5V6h4l1-2Z"/></svg></button></td>`;
-=======
       <td>
         <input
           type="text"
@@ -1064,7 +1023,6 @@
           </svg>
         </button>
       </td>`;
->>>>>>> Stashed changes
       tbody.appendChild(tr);
       tr.querySelector("[data-autocomplete-prod]").focus();
     });

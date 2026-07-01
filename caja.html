@@ -2571,8 +2571,14 @@
             </div>
           </div>
 
+          <!-- Tabs resumen / facturas -->
+          <div class="rep-com-tabs" style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--color-borde);">
+            <button class="rep-com-tab rep-com-tab--activo" data-tab="resumen" style="padding:8px 16px;background:none;border:none;border-bottom:2px solid var(--color-naranja);margin-bottom:-2px;font-weight:600;color:var(--color-naranja);cursor:pointer;">Resumen por asesor</button>
+            <button class="rep-com-tab" data-tab="facturas" style="padding:8px 16px;background:none;border:none;color:var(--color-texto-suave);cursor:pointer;">Ingresos facturados</button>
+          </div>
+
           <!-- ── Resumen por asesor ── -->
-          <div>
+          <div id="rep-com-panel-resumen">
             <div class="reporte-comisiones__resumen">
               <div class="reporte-comisiones__kpi">
                 <div class="reporte-comisiones__kpi-titulo">Comisiones registradas</div>
@@ -2618,6 +2624,36 @@
             </table>
           </div>
 
+          <!-- ── Ingresos facturados ── -->
+          <div id="rep-com-panel-facturas" hidden>
+            <table class="tabla-reporte-comisiones">
+              <thead>
+                <tr>
+                  <th>Asesor</th>
+                  <th>Factura / referencia</th>
+                  <th>Fecha</th>
+                  <th class="num">Valor</th>
+                  <th class="num">% Com.</th>
+                  <th class="num">Com. sugerida</th>
+                  <th class="num">Com. final</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="rep-com-facturas-tbody">
+                <tr><td colspan="8" class="tabla-reporte-comisiones__vacio">Selecciona el período y presiona Aplicar.</td></tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3">Total</th>
+                  <th class="num" id="rep-com-fact-foot-monto">—</th>
+                  <th></th>
+                  <th class="num" id="rep-com-fact-foot-sugerida">—</th>
+                  <th class="num" id="rep-com-fact-foot-final">—</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
 
         </div>
         <div class="modal__footer">
