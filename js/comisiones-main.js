@@ -176,16 +176,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.actualizarDashboard = actualizarDashboard;
   window.normalizarFactura   = normalizarFactura;
 
-  const hoy   = new Date();
-  const desde = primerDiaMes(hoy);
-  const hasta = fechaIsoHoy();
-  estadoApp.periodoActual = { desde, hasta };
+  estadoApp.periodoActual = { desde: "", hasta: "" };
 
   let cargadoDesdeAPI = false;
 
   try {
     if (window.Api) {
-      const res = await window.Api.comisiones.ajustes({ desde, hasta });
+      const res = await window.Api.comisiones.ajustes({});
       if (res?.ok && Array.isArray(res.data)) {
         estadoApp.datosOriginales = res.data.map(normalizarFactura);
         estadoApp.datosVisibles   = [...estadoApp.datosOriginales];
@@ -205,7 +202,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.vistasInstance)  window.vistasInstance.renderizar();
   if (window.filtrosInstance) window.filtrosInstance.aplicarFiltros();
   actualizarDashboard();
-  cargarResumenAsesores(desde, hasta);
+  cargarResumenAsesores("", "");
 });
 
 /* ============================================================

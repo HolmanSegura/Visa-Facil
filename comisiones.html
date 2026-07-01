@@ -298,23 +298,6 @@
               <path fill="currentColor" d="M.7 1.7h6.6L4 6 .7 1.7Z" />
             </svg>
           </button>
-          <div class="toolbar-tabla__sep"></div>
-          <button class="filtro-icon" id="btn-add-filtro" data-popover="popover-filtro-add">
-            <svg viewBox="0 0 12 12" width="12" height="12">
-              <path fill="currentColor" d="M5 5V0h2v5h5v2H7v5H5V7H0V5h5Z" />
-            </svg>
-          </button>
-          <button class="filtro-icon" id="btn-edit-filtros">
-            <svg viewBox="0 0 24 24" width="12" height="12">
-              <path fill="currentColor" d="m3 21 1-5 11-11 4 4-11 11-5 1Zm14-14 2-2a2 2 0 0 1 3 3l-2 2-3-3Z" />
-            </svg>
-          </button>
-          <button class="filtro-avanzados">
-            <svg viewBox="0 0 32 32" width="14" height="14">
-              <path fill="currentColor" d="M2 5h28v2H2V5Zm3 7h22v2H5v-2Zm3 7h16v2H8v-2Z" />
-            </svg>
-            Filtros avanzados
-          </button>
         </section>
 
         <!-- Tabla -->
@@ -749,22 +732,6 @@
   </div>
 
   <!-- + Agregar filtro -->
-  <div class="popover" id="popover-filtro-add" hidden style="width:280px">
-    <div class="popover__buscar">
-      <input type="search" class="popover__buscar-input" id="filtro-add-buscar" placeholder="Buscar"
-        autocomplete="off" />
-      <svg class="popover__buscar-icono" viewBox="0 0 24 24" width="14" height="14">
-        <path fill="currentColor"
-          d="M10 2a8 8 0 1 0 5 14.3l5.3 5.3 1.4-1.4-5.3-5.3A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z" />
-      </svg>
-    </div>
-    <div class="popover__lista" id="filtro-add-lista">
-      <div class="popover__grupo-titulo">Filtros de comisiones</div>
-      <button class="popover__item" data-pill-id="asesor"><span class="tipo-icono">👤</span>Asesor</button>
-      <button class="popover__item" data-pill-id="estado"><span class="tipo-icono">🔵</span>Estado</button>
-      <button class="popover__item" data-pill-id="fecha"><span class="tipo-icono">📅</span>Fecha</button>
-    </div>
-  </div>
 
   <!-- Exportar opciones -->
   <div class="popover" id="popover-export-opciones" hidden style="width:320px">

@@ -192,8 +192,8 @@ try {
 
     // ── GET facturas con comisión sugerida y ajuste vigente ──
     if ($method === 'GET' && !empty($_GET['ajustes'])) {
-        $desde     = $_GET['desde'] ?? date('Y-01-01');
-        $hasta     = $_GET['hasta'] ?? date('Y-m-d');
+        $desde     = !empty($_GET['desde']) ? $_GET['desde'] : null;
+        $hasta     = !empty($_GET['hasta']) ? $_GET['hasta'] : null;
         $usuarioId = !empty($_GET['asesor_id']) ? (int) $_GET['asesor_id'] : null;
 
         $sql = "
@@ -254,9 +254,10 @@ try {
                  WHERE cc.id = mc_com.categoria_id AND cc.valor = 'comisiones'
                )
             WHERE inf.estado = 'activo'
-            AND inf.fecha_pago BETWEEN :desde AND :hasta
         ";
-        $params = [':desde' => $desde, ':hasta' => $hasta];
+        $params = [];
+        if ($desde) { $sql .= " AND inf.fecha_pago >= :desde"; $params[':desde'] = $desde; }
+        if ($hasta) { $sql .= " AND inf.fecha_pago <= :hasta"; $params[':hasta'] = $hasta; }
         if ($usuarioId) {
             $sql .= " AND inf.asesor_id = :asesor";
             $params[':asesor'] = $usuarioId;
