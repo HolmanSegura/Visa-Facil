@@ -379,6 +379,8 @@ CREATE TABLE IF NOT EXISTS `ingresos_factura` (
   `punto_venta`    VARCHAR(100)    NULL,
   `asesor_id`      INT UNSIGNED    NULL,
   `mov_caja_id`    INT UNSIGNED    NULL                 COMMENT 'FK a movimientos_caja cuando método=efectivo',
+  `producto_id`      VARCHAR(80)   NULL DEFAULT NULL    COMMENT 'ID de producto local o hubspot_product_id — se compara contra ambos en config_comisiones_productos',
+  `producto_nombre`  VARCHAR(300)  NULL DEFAULT NULL,
   `estado`         ENUM('activo','anulado') NOT NULL DEFAULT 'activo',
   `created_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`     TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -689,6 +691,11 @@ ALTER TABLE `config_comisiones_asesores`
 ALTER TABLE `config_comisiones_productos`
   ADD COLUMN IF NOT EXISTS `tipo`       ENUM('porcentaje','fijo') NOT NULL DEFAULT 'porcentaje' AFTER `nombre_producto`,
   ADD COLUMN IF NOT EXISTS `valor_fijo` DECIMAL(15,2) NULL DEFAULT NULL AFTER `porcentaje`;
+
+-- ── Migración: Columnas producto_id/producto_nombre en ingresos_factura ──────
+ALTER TABLE `ingresos_factura`
+  ADD COLUMN IF NOT EXISTS `producto_id`     VARCHAR(80)  NULL DEFAULT NULL AFTER `mov_caja_id`,
+  ADD COLUMN IF NOT EXISTS `producto_nombre` VARCHAR(300) NULL DEFAULT NULL AFTER `producto_id`;
 
 -- ── Migración: Enlace gasto-comisión → ingresos_factura ──────────────────────
 ALTER TABLE `movimientos_caja`

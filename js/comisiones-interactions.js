@@ -769,23 +769,20 @@
       const nombre = tr.dataset.responsable || "";
       const activo = tr.dataset.activo !== "false";
 
-      const inputPct = tr.querySelector('[data-field="porcentaje"]');
-      const inputTipo = tr.querySelector('[data-field="tipo_comision"]');
-      const inputValor = tr.querySelector('[data-field="valor_comision"]');
+      const inputTipo = tr.querySelector('[data-field="tipo"]');
+      const inputValor = tr.querySelector('[data-field="comision-valor"]');
 
       const tipo = inputTipo ? (inputTipo.value || "porcentaje") : "porcentaje";
-      const valor = inputValor
-        ? (parseFloat(inputValor.value) || 0)
-        : (parseFloat(inputPct?.value) || 0);
+      const valor = parseFloat(inputValor?.value) || 0;
 
       const base = "por_venta";
 
       if (nombre) {
         cfg.porAsesor.push({
           responsable: nombre,
+          tipo,
           porcentaje: tipo === "porcentaje" ? valor : 0,
-          tipo_comision: tipo,
-          valor_comision: valor,
+          valor_fijo: tipo === "fijo" ? valor : null,
           base,
           activo
         });
@@ -1784,23 +1781,30 @@
       window.Api.comisiones.obtenerConfig()
         .then(resp => {
           if (resp && Array.isArray(resp.porAsesor)) {
-            // Normalizar formato de API → formato JS antes de guardar en localStorage
-            resp.porAsesor = resp.porAsesor.map(a => ({
-              responsable: a.responsable || a.nombre || "",
-              tipo:        a.tipo        || "porcentaje",
-              porcentaje:  parseFloat(a.porcentaje) || 0,
-              valor_fijo:  a.valor_fijo != null ? parseFloat(a.valor_fijo) : null,
-              base:        a.base        || "ingresos",
-              activo:      !!a.activo,
-            }));
+            // Normalizar formato de API (tipo_comision/valor_comision) → formato JS
+            // (tipo/valor_fijo) antes de guardar en localStorage
+            resp.porAsesor = resp.porAsesor.map(a => {
+              const tipo = a.tipo_comision || a.tipo || "porcentaje";
+              return {
+                responsable: a.responsable || a.nombre || "",
+                tipo,
+                porcentaje:  parseFloat(a.porcentaje) || 0,
+                valor_fijo:  tipo === "fijo" ? (parseFloat(a.valor_comision ?? a.valor_fijo) || 0) : null,
+                base:        a.base || "ingresos",
+                activo:      !!a.activo,
+              };
+            });
             if (Array.isArray(resp.porProducto)) {
-              resp.porProducto = resp.porProducto.map(p => ({
-                productoId: p.productoId ?? p.hubspot_product_id ?? p.producto_id ?? null,
-                producto:   p.producto   ?? p.nombre_producto ?? "",
-                tipo:       p.tipo       || "porcentaje",
-                porcentaje: parseFloat(p.porcentaje) || 0,
-                valor_fijo: p.valor_fijo != null ? parseFloat(p.valor_fijo) : null,
-              }));
+              resp.porProducto = resp.porProducto.map(p => {
+                const tipo = p.tipo_comision || p.tipo || "porcentaje";
+                return {
+                  productoId: p.productoId ?? p.hubspot_product_id ?? p.producto_id ?? null,
+                  producto:   p.producto   ?? p.nombre_producto ?? "",
+                  tipo,
+                  porcentaje: parseFloat(p.porcentaje) || 0,
+                  valor_fijo: tipo === "fijo" ? (parseFloat(p.valor_comision ?? p.valor_fijo) || 0) : null,
+                };
+              });
             }
             try { localStorage.setItem(KEY_LS, JSON.stringify(Object.assign(clonarDefault(), resp))); } catch (_) { /**/ }
           }

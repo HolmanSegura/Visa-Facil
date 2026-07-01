@@ -60,24 +60,61 @@
   background-color: var(--color-acento-claro);
 }
 
-/* ── Scroll natural de página: el bloque-tabla no absorbe el viewport ── */
+/* ── Scroll natural de página: todo el módulo vive en flujo normal
+   dentro de #contenido-principal (único scroll), sin recortes ni
+   scrolls internos anidados en la fila tabla + panel. ── */
 #contenido-principal {
   overflow-y: auto;
 }
 
+#contenido-principal .contenido__body {
+  flex: none;
+  overflow: visible;
+}
+
 #contenido-principal .bloque-tabla {
   flex: none;
-  min-height: 480px;
 }
 
 #contenido-principal .bloque-tabla > .tabla-wrapper {
   flex: none;
-  min-height: 360px;
 }
 
 #contenido-principal .bloque-tabla .tabla-scroll {
-  max-height: 480px;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+/* La cabecera de la tabla no debe quedar "sticky" contra el scroll
+   general de la página (se despegaría de la tabla al hacer scroll) */
+#contenido-principal .tabla-cotizaciones thead {
+  position: static;
+}
+
+/* Los paneles laterales deslizables (detalle / config de tabla) son
+   width:0 cuando están cerrados, pero seguían aportando su alto
+   natural (a veces muy largo) a la fila flex, dejando un hueco en
+   blanco debajo de la tabla. Al no tener ya un alto de fila fijo con
+   overflow:hidden que lo recortara, hay que anularlo explícitamente. */
+#contenido-principal .panel-detalle {
+  height: 0;
+}
+
+#contenido-principal .panel-detalle.abierto {
+  height: auto;
+}
+
+/* `.resumen-asesores` tiene overflow:hidden, lo que en flexbox hace
+   que su "automatic minimum size" sea 0 en vez de su alto de
+   contenido. Al llenarse la tabla de arriba (que ya no puede
+   encogerse por el flex:none anterior), el navegador compensaba
+   aplastando este bloque a ~2px para que la columna flex siguiera
+   cabiendo en el alto fijo de #contenido-principal, dejándolo
+   invisible. Se fija para que nunca se encoja y el desborde real
+   se resuelva con el scroll de página (#contenido-principal). */
+#contenido-principal .dashboard-comisiones,
+#contenido-principal .resumen-asesores {
+  flex-shrink: 0;
 }
 
 /* ── Dashboard de comisiones (alias de dashboard-caja) ── */
