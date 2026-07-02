@@ -18,6 +18,12 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
+  transition: opacity 0.28s ease;
+}
+
+#app-preloader.app-preloader--saliendo {
+  opacity: 0;
+  pointer-events: none;
 }
 
 #app-preloader img {

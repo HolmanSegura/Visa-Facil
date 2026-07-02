@@ -146,7 +146,7 @@
         const rango = resolverRangoFecha(est.filtros.fecha);
         if (rango) {
           r = r.filter(m => {
-            const f = new Date(m.fecha);
+            const f = new Date(m.fecha + 'T12:00:00');
             if (rango.desde && f < rango.desde) return false;
             if (rango.hasta && f > rango.hasta) return false;
             return true;

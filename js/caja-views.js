@@ -133,7 +133,7 @@
         est.filtros = {
           tipo: Array.isArray(fp.tipo) ? [...fp.tipo] : [],
           categoria: Array.isArray(fp.categoria) ? [...fp.categoria] : [],
-          fecha: fp.fecha != null ? fp.fecha : null,
+          fecha: fp.fecha != null ? fp.fecha : "hoy",
           asesor: Array.isArray(fp.asesor) ? [...fp.asesor] : [],
           estado: Array.isArray(fp.estado) ? [...fp.estado] : []
         };

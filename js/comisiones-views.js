@@ -117,7 +117,7 @@
       est.filtros = {
         asesor: Array.isArray(fp.asesor) ? [...fp.asesor] : [],
         estado: Array.isArray(fp.estado) ? [...fp.estado] : [],
-        fecha:  fp.fecha != null ? fp.fecha : null
+        fecha:  fp.fecha != null ? fp.fecha : "hoy"
       };
 
       if (window.filtrosInstance?.sincronizarPopoversUI) {

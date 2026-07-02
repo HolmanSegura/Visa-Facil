@@ -17,7 +17,7 @@ const vistasIniciales = [
     nombre: "Gastos del mes",
     filtro: (m) => {
       const hoy = new Date();
-      const f   = new Date(m.fecha);
+      const f   = new Date(m.fecha + 'T12:00:00');
       return m.tipo === "gasto" && f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
     },
     filtrosPill: { tipo: ["gasto"], fecha: "mes" },
@@ -35,7 +35,7 @@ const vistasIniciales = [
     nombre: "Ingresos del mes",
     filtro: (m) => {
       const hoy = new Date();
-      const f   = new Date(m.fecha);
+      const f   = new Date(m.fecha + 'T12:00:00');
       return m.tipo === "ingreso" && f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth();
     },
     filtrosPill: { tipo: ["ingreso"], fecha: "mes" },
@@ -113,14 +113,14 @@ function formatearMoneda(monto, moneda) {
 function formatearFecha(fechaIso) {
   if (!fechaIso) return "";
   const meses = ["ene.","feb.","mar.","abr.","may.","jun.","jul.","ago.","sep.","oct.","nov.","dic."];
-  const f = new Date(fechaIso);
+  const f = new Date(fechaIso + 'T12:00:00');
   return `${f.getDate()} de ${meses[f.getMonth()]} de ${f.getFullYear()}`;
 }
 
 function fechaCorta(fechaIso) {
   if (!fechaIso) return "";
   const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-  const f = new Date(fechaIso);
+  const f = new Date(fechaIso + 'T12:00:00');
   return `${f.getDate()} ${meses[f.getMonth()]} ${f.getFullYear()}`;
 }
 

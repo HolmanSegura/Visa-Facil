@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.actualizarDashboard = actualizarDashboard;
   window.normalizarFactura   = normalizarFactura;
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaIsoHoy();
   estadoApp.periodoActual = { desde: hoy, hasta: hoy };
 
   let cargadoDesdeAPI = false;
