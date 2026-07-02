@@ -36,10 +36,37 @@
 
 require_once __DIR__ . '/db.php';
 
+// Cuando se incluye desde sync-facturas.php solo se cargan las funciones
+if (defined('HS_WEBHOOK_FUNCTIONS_ONLY')) return;
+
+// ── Endpoint de diagnóstico (GET ?ping=1) ─────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['ping'] ?? '') === '1') {
+    header('Content-Type: application/json');
+    $dbOk = true;
+    $dbErr = '';
+    try { getDB(); } catch (Throwable $e) { $dbOk = false; $dbErr = $e->getMessage(); }
+    echo json_encode([
+        'ok'                       => true,
+        'webhook_secret_set'       => HUBSPOT_WEBHOOK_SECRET !== '',
+        'token_set'                => HUBSPOT_TOKEN !== '',
+        'curl_enabled'             => function_exists('curl_init'),
+        'db_ok'                    => $dbOk,
+        'db_error'                 => $dbErr ?: null,
+        'php_version'              => PHP_VERSION,
+        'server_https'             => $_SERVER['HTTPS'] ?? '(no set)',
+        'x_forwarded_proto'        => $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '(no set)',
+    ]);
+    exit;
+}
+
 $raw = file_get_contents('php://input');
 
 // ── 1. Verificar firma HubSpot ────────────────────────────
 if (!verificarFirma($raw)) {
+    error_log('[hubspot-webhook] Firma inválida — método=' . $_SERVER['REQUEST_METHOD']
+        . ' version=' . ($_SERVER['HTTP_X_HUBSPOT_SIGNATURE_VERSION'] ?? 'v1')
+        . ' sig=' . substr($_SERVER['HTTP_X_HUBSPOT_SIGNATURE'] ?? '', 0, 16) . '...'
+        . ' host=' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''));
     http_response_code(403);
     exit('Forbidden');
 }
@@ -170,7 +197,19 @@ function procesarFacturaPagada(PDO $db, string $invoiceId, string $token): void
             $productoFactura = extraerProductoFactura($invoice, $titulo);
             $reglaProducto   = $productoFactura ? buscarConfigProductoComision($db, $productoFactura) : null;
             $reglaAsesor     = buscarConfigAsesorComision($db, $asesorId);
-            $regla           = $reglaProducto ?: $reglaAsesor;
+            $reglaGeneral    = buscarConfigGeneralProducto($db);
+
+            // Jerarquía estricta — solo un nivel aplica:
+            // 1. Excepción de producto (si el producto tiene regla específica)
+            // 2. Asesor (solo si su valor_comision > 0)
+            // 3. General de productos (fallback)
+            if ($reglaProducto) {
+                $regla = $reglaProducto;
+            } elseif ($reglaAsesor && (float) ($reglaAsesor['valor_comision'] ?? 0) > 0) {
+                $regla = $reglaAsesor;
+            } else {
+                $regla = $reglaGeneral;
+            }
 
             if ($regla) {
                 $tipoComision = $regla['tipo_comision'] ?? 'porcentaje';
@@ -552,14 +591,28 @@ function calcularComisionWebhook(float $monto, string $tipo, float $valor): floa
     return round($monto * $valor / 100, 0);
 }
 
+function buscarConfigGeneralProducto(PDO $db): ?array
+{
+    $stmt = $db->prepare("
+        SELECT
+            COALESCE(tipo, 'porcentaje') AS tipo_comision,
+            COALESCE(valor_fijo, porcentaje, 0) AS valor_comision
+        FROM config_comisiones_productos
+        WHERE nombre_producto = '__general__'
+        LIMIT 1
+    ");
+    $stmt->execute();
+    return $stmt->fetch() ?: null;
+}
+
 function buscarConfigAsesorComision(PDO $db, int $asesorId): ?array
 {
     $stmt = $db->prepare("
         SELECT
             usuario_id,
             porcentaje,
-            COALESCE(tipo_comision, 'porcentaje') AS tipo_comision,
-            COALESCE(valor_comision, porcentaje, 0) AS valor_comision,
+            COALESCE(tipo, 'porcentaje') AS tipo_comision,
+            COALESCE(valor_fijo, porcentaje, 0) AS valor_comision,
             activo
         FROM config_comisiones_asesores
         WHERE usuario_id = ? AND activo = 1
@@ -577,8 +630,8 @@ function buscarConfigProductoComision(PDO $db, array $producto): ?array
     $stmt = $db->prepare("
         SELECT
             *,
-            COALESCE(tipo_comision, 'porcentaje') AS tipo_comision,
-            COALESCE(valor_comision, porcentaje, 0) AS valor_comision
+            COALESCE(tipo, 'porcentaje') AS tipo_comision,
+            COALESCE(valor_fijo, porcentaje, 0) AS valor_comision
         FROM config_comisiones_productos
         WHERE
             (? IS NOT NULL AND (hubspot_product_id = ? OR producto_id = ?))
@@ -621,7 +674,11 @@ function verificarFirma(string $raw): bool
     if ($signature === '') return false;
 
     $method = $_SERVER['REQUEST_METHOD'] ?? 'POST';
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    // Detectar HTTPS aunque el servidor esté detrás de un reverse proxy
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+            || ($_SERVER['HTTP_X_FORWARDED_SSL']   ?? '') === 'on';
+    $scheme = $isHttps ? 'https' : 'http';
     $url    = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '');
 
     switch ($version) {
@@ -640,12 +697,40 @@ function verificarFirma(string $raw): bool
     return hash_equals($expected, $signature);
 }
 
-function hsGet(string $path, string $token): ?array
+function hsGet(string $path, string $token, int $intentos = 3): ?array
+{
+    for ($i = 0; $i < $intentos; $i++) {
+        $ch = curl_init("https://api.hubapi.com{$path}");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_HTTPHEADER     => [
+                "Authorization: Bearer {$token}",
+                'Content-Type: application/json',
+            ],
+        ]);
+        $resp = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($code === 429) {
+            sleep(11); // esperar la ventana de 10 s de HubSpot
+            continue;
+        }
+        if ($code !== 200 || !$resp) return null;
+        return json_decode($resp, true) ?: null;
+    }
+    return null;
+}
+
+function hsPost(string $path, string $token, array $body): ?array
 {
     $ch = curl_init("https://api.hubapi.com{$path}");
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($body),
+        CURLOPT_TIMEOUT        => 15,
         CURLOPT_HTTPHEADER     => [
             "Authorization: Bearer {$token}",
             'Content-Type: application/json',
@@ -654,6 +739,6 @@ function hsGet(string $path, string $token): ?array
     $resp = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-    if ($code !== 200 || !$resp) return null;
+    if ($code < 200 || $code >= 300 || !$resp) return null;
     return json_decode($resp, true) ?: null;
 }

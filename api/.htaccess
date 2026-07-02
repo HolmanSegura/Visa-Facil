@@ -1,0 +1,10 @@
+# Desactivar ModSecurity para el directorio de API
+# Necesario para que los webhooks de HubSpot (y otros) pasen sin ser bloqueados
+<IfModule mod_security.c>
+    SecRuleEngine Off
+</IfModule>
+
+# Permitir todos los métodos HTTP necesarios para la API
+<LimitExcept GET POST PUT PATCH DELETE OPTIONS>
+    Deny from all
+</LimitExcept>

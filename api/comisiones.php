@@ -45,13 +45,31 @@ try {
                 COALESCE(cp.valor_fijo, cp.porcentaje, 0) AS valor_comision
             FROM config_comisiones_productos cp
             LEFT JOIN productos p ON p.id = cp.producto_id
+            WHERE cp.nombre_producto != '__general__'
             ORDER BY cp.nombre_producto
         ")->fetchAll();
 
+        $generalRow = $db->query("
+            SELECT
+                COALESCE(tipo, 'porcentaje') AS tipo_comision,
+                COALESCE(valor_fijo, porcentaje, 0) AS valor_comision
+            FROM config_comisiones_productos
+            WHERE nombre_producto = '__general__'
+            LIMIT 1
+        ")->fetch();
+
+        $gTipo  = $generalRow['tipo_comision'] ?? 'porcentaje';
+        $gValor = (float) ($generalRow['valor_comision'] ?? 5);
+
         jsonResponse([
-            'ok'          => true,
-            'porAsesor'   => $asesores,
-            'porProducto' => $productos,
+            'ok'                      => true,
+            'porAsesor'               => $asesores,
+            'porProducto'             => $productos,
+            // Tasa general de producto — fallback cuando no hay excepción ni tasa de asesor
+            'generalProducto'         => ['tipo_comision' => $gTipo, 'valor_comision' => $gValor],
+            'generalProductoTipo'     => $gTipo,
+            'generalProductoValor'    => $gValor,
+            'generalProductoPorcentaje' => $gTipo === 'porcentaje' ? $gValor : 0,
         ]);
     }
 
@@ -210,13 +228,40 @@ try {
                 inf.producto_id,
                 inf.producto_nombre,
                 u.nombre AS asesor,
-                COALESCE(cp.tipo, cca.tipo, 'porcentaje') AS tipo_comision,
-                COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) AS valor_comision,
-                COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) AS porcentaje,
+                -- Jerarquía: excepción producto > asesor (solo si > 0) > general producto
                 CASE
-                    WHEN COALESCE(cp.tipo, cca.tipo, 'porcentaje') = 'fijo'
-                        THEN ROUND(COALESCE(cp.valor_fijo, cca.valor_fijo, 0), 0)
-                    ELSE ROUND(inf.monto * COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) / 100, 0)
+                    WHEN cp.id IS NOT NULL
+                        THEN COALESCE(cp.tipo, 'porcentaje')
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0
+                        THEN COALESCE(cca.tipo, 'porcentaje')
+                    ELSE COALESCE(cg.tipo, 'porcentaje')
+                END AS tipo_comision,
+                CASE
+                    WHEN cp.id IS NOT NULL
+                        THEN COALESCE(cp.valor_fijo, cp.porcentaje, 0)
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0
+                        THEN COALESCE(cca.valor_fijo, cca.porcentaje, 0)
+                    ELSE COALESCE(cg.valor_fijo, cg.porcentaje, 0)
+                END AS valor_comision,
+                CASE
+                    WHEN cp.id IS NOT NULL
+                        THEN COALESCE(cp.valor_fijo, cp.porcentaje, 0)
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0
+                        THEN COALESCE(cca.valor_fijo, cca.porcentaje, 0)
+                    ELSE COALESCE(cg.valor_fijo, cg.porcentaje, 0)
+                END AS porcentaje,
+                CASE
+                    WHEN cp.id IS NOT NULL AND COALESCE(cp.tipo, 'porcentaje') = 'fijo'
+                        THEN ROUND(COALESCE(cp.valor_fijo, 0), 0)
+                    WHEN cp.id IS NOT NULL
+                        THEN ROUND(inf.monto * COALESCE(cp.valor_fijo, cp.porcentaje, 0) / 100, 0)
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0 AND COALESCE(cca.tipo, 'porcentaje') = 'fijo'
+                        THEN ROUND(COALESCE(cca.valor_fijo, 0), 0)
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0
+                        THEN ROUND(inf.monto * COALESCE(cca.valor_fijo, cca.porcentaje, 0) / 100, 0)
+                    WHEN COALESCE(cg.tipo, 'porcentaje') = 'fijo'
+                        THEN ROUND(COALESCE(cg.valor_fijo, 0), 0)
+                    ELSE ROUND(inf.monto * COALESCE(cg.valor_fijo, cg.porcentaje, 0) / 100, 0)
                 END AS comision_sugerida,
                 (SELECT ca.comision_ajustada
                     FROM comisiones_ajustes ca
@@ -238,13 +283,15 @@ try {
             LEFT JOIN config_comisiones_asesores cca
                 ON cca.usuario_id = inf.asesor_id AND cca.activo = 1
             LEFT JOIN config_comisiones_productos cp
-                ON (
+                ON cp.nombre_producto != '__general__'
+               AND (
                         (cp.producto_id IS NOT NULL AND cp.producto_id = inf.producto_id)
                         OR
                         (cp.hubspot_product_id IS NOT NULL AND cp.hubspot_product_id = inf.producto_id)
                         OR
                         (cp.nombre_producto IS NOT NULL AND cp.nombre_producto = inf.producto_nombre)
                     )
+            LEFT JOIN config_comisiones_productos cg ON cg.nombre_producto = '__general__'
             LEFT JOIN movimientos_caja mc_com
                 ON mc_com.ingreso_factura_id = inf.id
                AND mc_com.tipo = 'gasto'
@@ -291,8 +338,20 @@ try {
                 inf.monto,
                 inf.producto_id,
                 inf.producto_nombre,
-                COALESCE(cp.tipo, cca.tipo, 'porcentaje') AS tipo_comision,
-                COALESCE(cp.valor_fijo, cp.porcentaje, cca.valor_fijo, cca.porcentaje, 0) AS valor_comision,
+                CASE
+                    WHEN cp.id IS NOT NULL
+                        THEN COALESCE(cp.tipo, 'porcentaje')
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0
+                        THEN COALESCE(cca.tipo, 'porcentaje')
+                    ELSE COALESCE(cg.tipo, 'porcentaje')
+                END AS tipo_comision,
+                CASE
+                    WHEN cp.id IS NOT NULL
+                        THEN COALESCE(cp.valor_fijo, cp.porcentaje, 0)
+                    WHEN cca.usuario_id IS NOT NULL AND COALESCE(cca.valor_fijo, cca.porcentaje, 0) > 0
+                        THEN COALESCE(cca.valor_fijo, cca.porcentaje, 0)
+                    ELSE COALESCE(cg.valor_fijo, cg.porcentaje, 0)
+                END AS valor_comision,
                 (SELECT ca.comision_ajustada
                 FROM comisiones_ajustes ca
                 WHERE ca.ingreso_factura_id = inf.id
@@ -301,13 +360,15 @@ try {
             LEFT JOIN config_comisiones_asesores cca
                 ON cca.usuario_id = inf.asesor_id AND cca.activo = 1
             LEFT JOIN config_comisiones_productos cp
-                ON (
+                ON cp.nombre_producto != '__general__'
+               AND (
                         (cp.producto_id IS NOT NULL AND cp.producto_id = inf.producto_id)
                         OR
                         (cp.hubspot_product_id IS NOT NULL AND cp.hubspot_product_id = inf.producto_id)
                         OR
                         (cp.nombre_producto IS NOT NULL AND cp.nombre_producto = inf.producto_nombre)
                     )
+            LEFT JOIN config_comisiones_productos cg ON cg.nombre_producto = '__general__'
             WHERE inf.id = ?
             LIMIT 1
         ");
@@ -399,8 +460,43 @@ try {
             }
         }
 
+        // Upsert tasa general de producto (sentinel __general__)
+        $gTipo = in_array(
+            $b['generalProducto']['tipo_comision'] ?? $b['generalProductoTipo'] ?? 'porcentaje',
+            ['porcentaje', 'fijo'], true
+        ) ? ($b['generalProducto']['tipo_comision'] ?? $b['generalProductoTipo'] ?? 'porcentaje') : 'porcentaje';
+        $gValor = (float) ($b['generalProducto']['valor_comision']
+            ?? $b['generalProductoValor']
+            ?? $b['generalProductoPorcentaje']
+            ?? 5);
+
+        $genExistente = $db->query(
+            "SELECT id FROM config_comisiones_productos WHERE nombre_producto = '__general__' LIMIT 1"
+        )->fetch();
+        if ($genExistente) {
+            $db->prepare("
+                UPDATE config_comisiones_productos
+                SET porcentaje = ?, valor_fijo = ?, tipo = ?, updated_at = NOW()
+                WHERE nombre_producto = '__general__'
+            ")->execute([
+                $gTipo === 'porcentaje' ? $gValor : 0,
+                $gTipo === 'fijo' ? $gValor : null,
+                $gTipo,
+            ]);
+        } else {
+            $db->prepare("
+                INSERT INTO config_comisiones_productos (nombre_producto, porcentaje, valor_fijo, tipo)
+                VALUES ('__general__', ?, ?, ?)
+            ")->execute([
+                $gTipo === 'porcentaje' ? $gValor : 0,
+                $gTipo === 'fijo' ? $gValor : null,
+                $gTipo,
+            ]);
+        }
+
         if (isset($b['porProducto']) && is_array($b['porProducto'])) {
-            $db->exec("DELETE FROM config_comisiones_productos");
+            // Preserva la fila __general__ al borrar las excepciones de producto
+            $db->exec("DELETE FROM config_comisiones_productos WHERE nombre_producto != '__general__'");
 
             $stmt = $db->prepare("
                 INSERT INTO config_comisiones_productos
